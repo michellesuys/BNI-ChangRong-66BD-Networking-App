@@ -133,9 +133,6 @@ k6 run --env BASE_URL=https://你的網域 load-test.js
 
 ## 部署（Zeabur）
 
-> **重要**：Zeabur Free Plan 不支援 Persistent Volume，資料庫會在每次重啟時清空。
-> 活動前請升級至 **Dev Plan（$5/月）** 並完成以下設定。
-
 ### 步驟一：建立專案與服務
 
 1. 登入 [Zeabur](https://zeabur.com)，點擊 **New Project**
