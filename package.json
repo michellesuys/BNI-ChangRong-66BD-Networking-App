@@ -1,0 +1,22 @@
+{
+  "name": "bni-networking-app",
+  "version": "1.0.0",
+  "description": "BNI 商務交流媒合系統 — 長榮66屆",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "nodemon server/server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.8.0",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "sql.js": "^1.14.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

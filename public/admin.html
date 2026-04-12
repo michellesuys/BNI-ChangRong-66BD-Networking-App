@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BNI 管理員後台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    #admin-toast { transition: transform 0.3s ease, opacity 0.3s ease; }
+    button:active { transform: scale(0.97); }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- ADMIN LOGIN                                   -->
+  <!-- ════════════════════════════════════════════ -->
+  <div id="admin-login" class="min-h-screen flex items-center justify-center p-6 bg-gradient-to-b from-red-50 to-white">
+    <div class="bg-white rounded-3xl shadow-xl p-8 w-full max-w-sm">
+      <div class="text-center mb-6">
+        <div class="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+          <span class="text-3xl">🔐</span>
+        </div>
+        <h1 class="text-2xl font-black text-gray-800">管理員後台</h1>
+        <p class="text-gray-500 text-sm mt-1">BNI 商務交流媒合系統</p>
+      </div>
+      <div class="space-y-4">
+        <input
+          id="admin-password"
+          type="password"
+          placeholder="請輸入管理員密碼"
+          class="w-full border-2 border-gray-200 rounded-2xl px-4 py-4 text-lg focus:border-red-500 focus:outline-none transition-colors"
+          onkeydown="if(event.key==='Enter') adminLogin()"
+          autocomplete="current-password"
+        >
+        <button
+          onclick="adminLogin()"
+          id="btn-admin-login"
+          class="w-full bg-red-600 text-white font-black py-4 rounded-2xl text-lg shadow-lg active:bg-red-700"
+        >
+          進入管理後台
+        </button>
+        <p id="login-error" class="text-red-600 text-sm text-center hidden font-semibold">密碼錯誤，請重試</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- ADMIN MAIN                                    -->
+  <!-- ════════════════════════════════════════════ -->
+  <div id="admin-main" class="hidden">
+
+    <!-- Header -->
+    <header class="bg-red-600 px-6 py-4 shadow-lg sticky top-0 z-20">
+      <div class="max-w-3xl mx-auto flex items-center justify-between">
+        <div>
+          <h1 class="text-white font-black text-xl">BNI 管理員後台</h1>
+          <p class="text-red-200 text-xs mt-0.5">長榮66屆 · 商務交流活動</p>
+        </div>
+        <button onclick="adminLogout()" class="text-red-200 border border-red-400 rounded-xl px-4 py-2 text-sm font-semibold active:bg-red-700">
+          登出
+        </button>
+      </div>
+    </header>
+
+    <div class="max-w-3xl mx-auto p-4 space-y-5 pb-24">
+
+      <!-- ── Stats ── -->
+      <section class="grid grid-cols-5 gap-2">
+        <div class="bg-white rounded-2xl p-3 text-center shadow-sm col-span-1">
+          <div id="stat-participants" class="text-2xl font-black text-red-600">-</div>
+          <div class="text-gray-500 text-xs mt-0.5">參與者</div>
+        </div>
+        <div class="bg-white rounded-2xl p-3 text-center shadow-sm col-span-1">
+          <div id="stat-users" class="text-2xl font-black text-red-600">-</div>
+          <div class="text-gray-500 text-xs mt-0.5">使用者</div>
+        </div>
+        <div class="bg-white rounded-2xl p-3 text-center shadow-sm col-span-1">
+          <div id="stat-connections" class="text-2xl font-black text-red-600">-</div>
+          <div class="text-gray-500 text-xs mt-0.5">總媒合</div>
+        </div>
+        <div class="bg-white rounded-2xl p-3 text-center shadow-sm col-span-1">
+          <div id="stat-want" class="text-2xl font-black text-red-600">-</div>
+          <div class="text-gray-500 text-xs mt-0.5">想認識</div>
+        </div>
+        <div class="bg-white rounded-2xl p-3 text-center shadow-sm col-span-1">
+          <div id="stat-provide" class="text-2xl font-black text-red-600">-</div>
+          <div class="text-gray-500 text-xs mt-0.5">可提供</div>
+        </div>
+      </section>
+      <div class="flex justify-end">
+        <button onclick="loadStats()" class="text-xs text-gray-400 underline">重新整理數據</button>
+      </div>
+
+      <!-- ── Current Speaker ── -->
+      <section class="bg-white rounded-3xl shadow-sm p-5">
+        <h2 class="text-lg font-black text-gray-800 mb-3">🎤 目前發言者</h2>
+        <div id="current-speaker-display" class="text-gray-500 text-sm mb-4 p-3 bg-gray-50 rounded-2xl min-h-[44px] flex items-center">
+          載入中...
+        </div>
+        <button
+          onclick="clearSpeaker()"
+          class="w-full border-2 border-gray-300 text-gray-600 font-bold py-3 rounded-2xl text-sm active:bg-gray-50 transition-colors"
+        >
+          🔕 清除目前發言者
+        </button>
+      </section>
+
+      <!-- ── CSV Upload ── -->
+      <section class="bg-white rounded-3xl shadow-sm p-5">
+        <h2 class="text-lg font-black text-gray-800 mb-1">📤 匯入參與者名單</h2>
+        <p class="text-gray-500 text-xs mb-4">
+          CSV 格式（UTF-8，第一列為標題）：
+          <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono">name,industry,table,needs</code>
+          <br>其中 <code class="font-mono text-xs">needs</code> 欄位為選填
+        </p>
+
+        <div class="space-y-3">
+          <label class="block">
+            <div class="border-2 border-dashed border-gray-300 rounded-2xl p-5 text-center cursor-pointer hover:border-red-400 transition-colors">
+              <div class="text-3xl mb-2">📁</div>
+              <p class="text-gray-500 text-sm">點擊選擇 CSV 檔案</p>
+              <input id="csv-file" type="file" accept=".csv,text/csv" class="hidden">
+            </div>
+          </label>
+          <div id="file-name" class="text-center text-gray-400 text-xs hidden"></div>
+          <button
+            onclick="uploadCSV()"
+            class="w-full bg-red-600 text-white font-black py-4 rounded-2xl shadow active:bg-red-700 transition-colors"
+          >
+            上傳並匯入
+          </button>
+          <div id="upload-result" class="text-sm text-center hidden"></div>
+        </div>
+
+        <div class="mt-4 pt-4 border-t border-gray-100">
+          <button
+            onclick="clearAllParticipants()"
+            class="w-full border-2 border-red-200 text-red-500 font-bold py-3 rounded-2xl text-sm active:bg-red-50 transition-colors"
+          >
+            🗑️ 清除所有參與者資料（含媒合記錄）
+          </button>
+        </div>
+      </section>
+
+      <!-- ── Participants List ── -->
+      <section class="bg-white rounded-3xl shadow-sm p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-black text-gray-800">👥 所有參與者</h2>
+          <span id="admin-count" class="text-gray-400 text-sm"></span>
+        </div>
+
+        <!-- Search -->
+        <input
+          id="admin-search"
+          type="search"
+          placeholder="🔍 搜尋姓名或桌號..."
+          oninput="filterAdminList()"
+          class="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none mb-4 transition-colors"
+        >
+
+        <div id="admin-participants-list">
+          <div class="text-center py-12 text-gray-400">
+            <div class="text-4xl mb-2">📋</div>
+            <p>載入中...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Export ── -->
+      <section class="bg-white rounded-3xl shadow-sm p-5">
+        <h2 class="text-lg font-black text-gray-800 mb-1">📊 匯出媒合報表</h2>
+        <p class="text-gray-500 text-xs mb-4">
+          匯出所有用戶的媒合記錄，含姓名、身份、交流對象、時間等欄位。
+          檔案以 UTF-8 with BOM 編碼，可直接用 Excel 開啟。
+        </p>
+        <button
+          onclick="exportCSV()"
+          class="w-full bg-green-600 text-white font-black py-4 rounded-2xl shadow active:bg-green-700 transition-colors"
+        >
+          📥 下載 CSV 報表
+        </button>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- TOAST                                         -->
+  <!-- ════════════════════════════════════════════ -->
+  <div
+    id="admin-toast"
+    style="transform: translateY(120px); opacity: 0;"
+    class="fixed bottom-6 left-4 right-4 max-w-sm mx-auto bg-gray-800 text-white text-center py-3.5 px-5 rounded-2xl shadow-2xl z-50 text-base font-semibold"
+  >
+    訊息
+  </div>
+
+  <script>
+    'use strict';
+
+    let _adminPassword = '';
+    let _allParticipants = [];
+
+    // ── API helper ─────────────────────────────
+    async function adminApi(method, url, body) {
+      const opts = {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-password': _adminPassword,
+        },
+      };
+      if (body) opts.body = JSON.stringify(body);
+      const res = await fetch(url, opts);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '請求失敗');
+      return data;
+    }
+
+    // ── Login ───────────────────────────────────
+    async function adminLogin() {
+      const pw = document.getElementById('admin-password').value;
+      if (!pw) return;
+
+      const btn = document.getElementById('btn-admin-login');
+      btn.disabled = true;
+      btn.textContent = '驗證中...';
+
+      try {
+        _adminPassword = pw;
+        await loadStats();
+        document.getElementById('admin-login').classList.add('hidden');
+        document.getElementById('admin-main').classList.remove('hidden');
+        document.getElementById('login-error').classList.add('hidden');
+        loadParticipants();
+      } catch {
+        document.getElementById('login-error').classList.remove('hidden');
+        _adminPassword = '';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '進入管理後台';
+      }
+    }
+
+    function adminLogout() {
+      _adminPassword = '';
+      _allParticipants = [];
+      document.getElementById('admin-login').classList.remove('hidden');
+      document.getElementById('admin-main').classList.add('hidden');
+      document.getElementById('admin-password').value = '';
+    }
+
+    // ── Stats ───────────────────────────────────
+    async function loadStats() {
+      const s = await adminApi('GET', '/api/admin/stats');
+      document.getElementById('stat-participants').textContent = s.participants;
+      document.getElementById('stat-users').textContent        = s.users;
+      document.getElementById('stat-connections').textContent  = s.connections;
+      document.getElementById('stat-want').textContent         = s.wantToMeet;
+      document.getElementById('stat-provide').textContent      = s.canProvide;
+    }
+
+    // ── Participants ─────────────────────────────
+    async function loadParticipants() {
+      try {
+        _allParticipants = await adminApi('GET', '/api/admin/participants');
+        renderAdminList(_allParticipants);
+        updateCurrentSpeakerDisplay(_allParticipants);
+        document.getElementById('admin-count').textContent = `共 ${_allParticipants.length} 位`;
+      } catch (e) {
+        showAdminToast('載入失敗：' + e.message, 'error');
+      }
+    }
+
+    function filterAdminList() {
+      const q = document.getElementById('admin-search').value.toLowerCase().trim();
+      const filtered = q
+        ? _allParticipants.filter(p =>
+            p.name.toLowerCase().includes(q) ||
+            (p.industry || '').toLowerCase().includes(q) ||
+            (p.table_number || '').includes(q)
+          )
+        : _allParticipants;
+      renderAdminList(filtered);
+    }
+
+    function renderAdminList(list) {
+      const el = document.getElementById('admin-participants-list');
+      if (!list.length) {
+        el.innerHTML = `<div class="text-center py-12 text-gray-400">
+          <div class="text-4xl mb-2">📭</div>
+          <p>尚無參與者資料，請上傳 CSV</p>
+        </div>`;
+        return;
+      }
+
+      el.innerHTML = list.map(p => `
+        <div class="border border-gray-100 rounded-2xl p-4 mb-3 ${p.is_current_speaker ? 'bg-red-50 border-red-200' : 'bg-white'}">
+          <div class="flex items-start gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-black text-gray-800 text-base">${esc(p.name)}</span>
+                <span class="text-gray-500 text-sm">${esc(p.industry || '')}</span>
+                <span class="text-red-600 text-sm font-bold">第${esc(p.table_number || '?')}桌</span>
+                ${p.is_current_speaker ? '<span class="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">🎤 發言中</span>' : ''}
+              </div>
+              ${p.needs ? `<p class="text-gray-400 text-xs mt-1 truncate">需求：${esc(p.needs)}</p>` : ''}
+            </div>
+            <div class="shrink-0 flex flex-col gap-1">
+              <button
+                onclick="setSpeaker(${p.id})"
+                class="text-xs font-bold px-3 py-2 rounded-xl whitespace-nowrap transition-colors ${
+                  p.is_current_speaker
+                    ? 'bg-red-600 text-white'
+                    : 'border-2 border-red-500 text-red-600 active:bg-red-50'
+                }"
+              >
+                ${p.is_current_speaker ? '發言中' : '設為發言者'}
+              </button>
+              <button
+                onclick="deleteParticipant(${p.id}, '${esc(p.name)}')"
+                class="text-xs font-semibold px-3 py-1.5 rounded-xl border border-gray-200 text-gray-400 active:bg-gray-50 transition-colors"
+              >
+                刪除
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateCurrentSpeakerDisplay(list) {
+      const speaker = list.find(p => p.is_current_speaker);
+      const el = document.getElementById('current-speaker-display');
+      if (speaker) {
+        el.innerHTML = `
+          <span class="inline-flex items-center gap-2">
+            <span class="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">🎤 LIVE</span>
+            <span class="font-bold text-gray-800">${esc(speaker.name)}</span>
+            <span class="text-gray-500">${esc(speaker.industry || '')}</span>
+            <span class="text-red-600 font-semibold">第${esc(speaker.table_number || '?')}桌</span>
+          </span>
+        `;
+      } else {
+        el.textContent = '目前尚無發言者';
+      }
+    }
+
+    async function setSpeaker(participantId) {
+      try {
+        await adminApi('POST', '/api/admin/set-speaker', { participantId });
+        await Promise.all([loadParticipants(), loadStats()]);
+        showAdminToast('已設定發言者', 'success');
+      } catch (e) {
+        showAdminToast('設定失敗：' + e.message, 'error');
+      }
+    }
+
+    async function clearSpeaker() {
+      try {
+        await adminApi('POST', '/api/admin/set-speaker', { participantId: null });
+        await loadParticipants();
+        showAdminToast('已清除發言者', 'success');
+      } catch (e) {
+        showAdminToast('操作失敗：' + e.message, 'error');
+      }
+    }
+
+    async function deleteParticipant(id, name) {
+      if (!confirm(`確定刪除「${name}」？此操作將同步刪除其相關媒合記錄。`)) return;
+      try {
+        await adminApi('DELETE', `/api/admin/participant/${id}`);
+        await Promise.all([loadParticipants(), loadStats()]);
+        showAdminToast(`已刪除 ${name}`, 'success');
+      } catch (e) {
+        showAdminToast('刪除失敗：' + e.message, 'error');
+      }
+    }
+
+    // ── CSV Upload ──────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      const fileInput = document.getElementById('csv-file');
+      const fileLabel = fileInput?.closest('label');
+      const fileName  = document.getElementById('file-name');
+
+      if (fileInput) {
+        // Make the entire label area clickable
+        fileLabel?.querySelector('div')?.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', () => {
+          const f = fileInput.files[0];
+          if (f) {
+            fileName.textContent = `已選擇：${f.name}`;
+            fileName.classList.remove('hidden');
+          }
+        });
+      }
+    });
+
+    async function uploadCSV() {
+      const fileInput = document.getElementById('csv-file');
+      const file = fileInput?.files[0];
+      if (!file) { showAdminToast('請先選擇 CSV 檔案', 'error'); return; }
+
+      const resultEl = document.getElementById('upload-result');
+      resultEl.textContent = '上傳中...';
+      resultEl.className = 'text-sm text-center text-gray-500 block';
+
+      const formData = new FormData();
+      formData.append('csv', file);
+
+      try {
+        const res = await fetch('/api/admin/upload', {
+          method: 'POST',
+          headers: { 'x-admin-password': _adminPassword },
+          body: formData,
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        resultEl.textContent = `✅ 成功匯入 ${data.imported} 筆資料`;
+        resultEl.className = 'text-sm text-center text-green-600 font-semibold block';
+
+        if (data.errors?.length) {
+          console.warn('CSV warnings:', data.errors);
+        }
+
+        await Promise.all([loadParticipants(), loadStats()]);
+        showAdminToast(`已匯入 ${data.imported} 位參與者`, 'success');
+      } catch (e) {
+        resultEl.textContent = '❌ 匯入失敗：' + e.message;
+        resultEl.className = 'text-sm text-center text-red-600 font-semibold block';
+        showAdminToast('匯入失敗', 'error');
+      }
+    }
+
+    async function clearAllParticipants() {
+      if (!confirm('確定要清除所有參與者資料（含所有媒合記錄）？此操作無法復原！')) return;
+      try {
+        await adminApi('DELETE', '/api/admin/participants');
+        await Promise.all([loadParticipants(), loadStats()]);
+        showAdminToast('已清除所有資料', 'success');
+      } catch (e) {
+        showAdminToast('操作失敗：' + e.message, 'error');
+      }
+    }
+
+    // ── Export ──────────────────────────────────
+    async function exportCSV() {
+      try {
+        const res = await fetch('/api/admin/export', {
+          headers: { 'x-admin-password': _adminPassword },
+        });
+        if (!res.ok) {
+          const d = await res.json();
+          throw new Error(d.error);
+        }
+        const blob = await res.blob();
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = `bni-connections-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showAdminToast('報表已下載', 'success');
+      } catch (e) {
+        showAdminToast('匯出失敗：' + e.message, 'error');
+      }
+    }
+
+    // ── Toast ────────────────────────────────────
+    let _toastTimer = null;
+    function showAdminToast(msg, type = 'info') {
+      const el = document.getElementById('admin-toast');
+      el.textContent = msg;
+      el.className = 'fixed bottom-6 left-4 right-4 max-w-sm mx-auto text-white text-center py-3.5 px-5 rounded-2xl shadow-2xl z-50 text-base font-semibold';
+      if (type === 'error')        el.classList.add('bg-red-600');
+      else if (type === 'success') el.classList.add('bg-green-600');
+      else                         el.classList.add('bg-gray-800');
+
+      el.style.transform = 'translateY(0)';
+      el.style.opacity   = '1';
+      clearTimeout(_toastTimer);
+      _toastTimer = setTimeout(() => {
+        el.style.transform = 'translateY(120px)';
+        el.style.opacity   = '0';
+      }, 2500);
+    }
+
+    // ── Escape ───────────────────────────────────
+    function esc(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>

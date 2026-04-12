@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BNI 大螢幕顯示</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #111;
+      color: #fff;
+      font-family: -apple-system, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* ── Idle state ── */
+    #screen-idle {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 2rem;
+    }
+
+    #screen-idle .logo {
+      width: 160px;
+      height: 160px;
+      background: #DC2626;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+      font-weight: 900;
+      color: #fff;
+      box-shadow: 0 0 60px rgba(220, 38, 38, 0.4);
+    }
+
+    #screen-idle h1 {
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 0.05em;
+    }
+
+    #screen-idle p {
+      font-size: clamp(1rem, 2vw, 1.6rem);
+      color: #666;
+    }
+
+    /* ── Speaker state ── */
+    #screen-speaker {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100vh;
+      padding: 6vw;
+      text-align: center;
+      position: relative;
+    }
+
+    /* Top red bar */
+    .top-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #DC2626;
+      padding: 1.2rem 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .top-bar .brand {
+      font-size: clamp(1rem, 1.8vw, 1.4rem);
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 0.08em;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #fff;
+      color: #DC2626;
+      font-size: clamp(0.8rem, 1.2vw, 1rem);
+      font-weight: 900;
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      letter-spacing: 0.1em;
+      animation: pulse-badge 2s infinite;
+    }
+
+    .live-dot {
+      width: 10px;
+      height: 10px;
+      background: #DC2626;
+      border-radius: 50%;
+      animation: blink 1.2s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+
+    @keyframes pulse-badge {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.4); }
+      50%       { box-shadow: 0 0 0 10px rgba(220,38,38,0); }
+    }
+
+    /* Main content */
+    .speaker-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: clamp(1rem, 3vh, 2.5rem);
+      margin-top: 5rem; /* clear top bar */
+    }
+
+    .label-now-speaking {
+      font-size: clamp(1rem, 2vw, 1.6rem);
+      color: #DC2626;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .speaker-name {
+      font-size: clamp(4rem, 14vw, 14rem);
+      font-weight: 900;
+      color: #fff;
+      line-height: 1;
+      letter-spacing: 0.02em;
+      text-shadow: 0 4px 40px rgba(220,38,38,0.3);
+      /* Animate in */
+      animation: fadeUp 0.5s ease;
+    }
+
+    .speaker-industry {
+      font-size: clamp(1.5rem, 4vw, 4rem);
+      color: #aaa;
+      font-weight: 500;
+      animation: fadeUp 0.5s ease 0.1s both;
+    }
+
+    .speaker-table {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.4em;
+      background: #DC2626;
+      padding: 0.6em 1.6em;
+      border-radius: 999px;
+      animation: fadeUp 0.5s ease 0.2s both;
+    }
+
+    .speaker-table .table-label {
+      font-size: clamp(1rem, 2vw, 1.8rem);
+      font-weight: 700;
+      color: rgba(255,255,255,0.85);
+    }
+
+    .speaker-table .table-number {
+      font-size: clamp(2rem, 5vw, 4.5rem);
+      font-weight: 900;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .speaker-needs {
+      max-width: 80%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 1.5rem;
+      padding: 1.2rem 2.5rem;
+      font-size: clamp(1rem, 2.2vw, 2rem);
+      color: #ccc;
+      line-height: 1.6;
+      animation: fadeUp 0.5s ease 0.3s both;
+    }
+
+    .speaker-needs .needs-label {
+      color: #DC2626;
+      font-weight: 700;
+      font-size: 0.75em;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 0.4em;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Divider line ── */
+    .divider {
+      width: 8rem;
+      height: 4px;
+      background: #DC2626;
+      border-radius: 2px;
+      margin: 0 auto;
+      animation: fadeUp 0.5s ease 0.15s both;
+    }
+
+    /* ── Bottom watermark ── */
+    .watermark {
+      position: absolute;
+      bottom: 1.5rem;
+      right: 2rem;
+      font-size: clamp(0.65rem, 1vw, 0.9rem);
+      color: #333;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Fullscreen hint ── */
+    #fullscreen-hint {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.08);
+      color: #555;
+      font-size: 0.85rem;
+      padding: 0.5rem 1.2rem;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: opacity 0.3s;
+      white-space: nowrap;
+    }
+    #fullscreen-hint:hover { background: rgba(255,255,255,0.14); color: #888; }
+    #fullscreen-hint.hidden { opacity: 0; pointer-events: none; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Idle / Waiting screen ── -->
+  <div id="screen-idle">
+    <div class="logo">BNI</div>
+    <h1>BNI 長榮66屆<br>商務交流活動</h1>
+    <p>等待發言者上台…</p>
+  </div>
+
+  <!-- ── Speaker display screen ── -->
+  <div id="screen-speaker">
+
+    <!-- Top bar -->
+    <div class="top-bar">
+      <span class="brand">BNI 長榮66屆 · 商務交流活動</span>
+      <span class="live-badge">
+        <span class="live-dot"></span>
+        目前發言者
+      </span>
+    </div>
+
+    <!-- Main content -->
+    <div class="speaker-content">
+      <div class="label-now-speaking">現在發言</div>
+      <div class="speaker-name" id="disp-name">—</div>
+      <div class="divider"></div>
+      <div class="speaker-industry" id="disp-industry"></div>
+      <div class="speaker-table">
+        <span class="table-label">第</span>
+        <span class="table-number" id="disp-table">?</span>
+        <span class="table-label">桌</span>
+      </div>
+      <div class="speaker-needs" id="disp-needs" style="display:none">
+        <span class="needs-label">需求</span>
+        <span id="disp-needs-text"></span>
+      </div>
+    </div>
+
+    <div class="watermark">BNI 商務交流媒合系統</div>
+  </div>
+
+  <!-- Fullscreen hint -->
+  <div id="fullscreen-hint" onclick="toggleFullscreen()">
+    ⛶ 點擊進入全螢幕（或按 F11）
+  </div>
+
+  <script>
+    'use strict';
+
+    let currentSpeakerId = null;
+
+    function esc(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    async function fetchSpeaker() {
+      try {
+        const res = await fetch('/api/current-speaker');
+        if (!res.ok) return;
+        const speaker = await res.json();
+        render(speaker);
+      } catch (e) {
+        console.error('fetchSpeaker:', e);
+      }
+    }
+
+    function render(speaker) {
+      const idle    = document.getElementById('screen-idle');
+      const stage   = document.getElementById('screen-speaker');
+
+      if (!speaker) {
+        // No speaker — show idle screen
+        idle.style.display  = 'flex';
+        stage.style.display = 'none';
+        currentSpeakerId = null;
+        return;
+      }
+
+      // Same speaker — no re-render needed
+      if (speaker.id === currentSpeakerId) return;
+      currentSpeakerId = speaker.id;
+
+      // Update content (set before showing to avoid flash)
+      document.getElementById('disp-name').textContent     = speaker.name || '—';
+      document.getElementById('disp-industry').textContent = speaker.industry || '';
+      document.getElementById('disp-table').textContent    = speaker.table_number || '?';
+
+      const needsEl   = document.getElementById('disp-needs');
+      const needsText = document.getElementById('disp-needs-text');
+      if (speaker.needs && speaker.needs.trim()) {
+        needsText.textContent = speaker.needs;
+        needsEl.style.display = 'block';
+      } else {
+        needsEl.style.display = 'none';
+      }
+
+      // Re-trigger animations by cloning (swap display)
+      stage.style.display = 'none';
+      idle.style.display  = 'none';
+      // Force reflow
+      void stage.offsetWidth;
+      stage.style.display = 'flex';
+    }
+
+    // Fullscreen
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+      const hint = document.getElementById('fullscreen-hint');
+      hint.classList.toggle('hidden', !!document.fullscreenElement);
+    });
+
+    // Keyboard shortcut: F / F11
+    document.addEventListener('keydown', e => {
+      if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+    });
+
+    // Click anywhere on idle screen to fullscreen
+    document.getElementById('screen-idle').addEventListener('click', toggleFullscreen);
+
+    // Boot
+    fetchSpeaker();
+    setInterval(fetchSpeaker, 3000); // poll every 3s for faster response on stage
+  </script>
+</body>
+</html>
