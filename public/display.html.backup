@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BNI 大螢幕顯示</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg-deep: #090708;
+      --bg-mid: #171113;
+      --panel: rgba(22, 18, 19, 0.84);
+      --panel-border: rgba(255, 215, 140, 0.16);
+      --text-main: #fff6ea;
+      --text-soft: rgba(255, 241, 224, 0.78);
+      --text-dim: rgba(255, 241, 224, 0.48);
+      --gold: #f8c25f;
+      --gold-soft: #dca33d;
+      --red: #ff3b2f;
+      --red-deep: #b21711;
+      --white-glow: #fff8dd;
+      --tower-width: min(28vw, 23rem);
+      --tower-height: min(83vh, 64rem);
+      --lamp-gap: clamp(0.28rem, 0.65vh, 0.48rem);
+      --lamp-radius: 999px;
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+      background:
+        radial-gradient(circle at 20% 12%, rgba(186, 28, 28, 0.24), transparent 32%),
+        radial-gradient(circle at 82% 18%, rgba(255, 202, 93, 0.12), transparent 28%),
+        radial-gradient(circle at 50% 100%, rgba(124, 20, 20, 0.3), transparent 42%),
+        linear-gradient(180deg, #130f12 0%, #070607 58%, #020202 100%);
+      color: var(--text-main);
+      font-family: "Avenir Next", "Trebuchet MS", "PingFang TC", "Noto Sans TC", sans-serif;
+      user-select: none;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: auto;
+      pointer-events: none;
+      z-index: 0;
+      border-radius: 50%;
+      filter: blur(30px);
+      opacity: 0.85;
+    }
+
+    body::before {
+      width: 24vw;
+      height: 24vw;
+      left: -6vw;
+      bottom: -8vw;
+      background: radial-gradient(circle, rgba(255, 170, 60, 0.28), transparent 70%);
+    }
+
+    body::after {
+      width: 30vw;
+      height: 30vw;
+      right: -10vw;
+      top: -8vw;
+      background: radial-gradient(circle, rgba(255, 65, 54, 0.16), transparent 72%);
+    }
+
+    .ambient-glow {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.02) 48%, transparent 100%),
+        repeating-linear-gradient(
+          90deg,
+          transparent 0,
+          transparent 3.8rem,
+          rgba(255, 255, 255, 0.015) 3.8rem,
+          rgba(255, 255, 255, 0.015) 3.95rem
+        );
+      mix-blend-mode: screen;
+      opacity: 0.6;
+    }
+
+    .stage-shell {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      padding: clamp(1.6rem, 3.4vw, 3.4rem);
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.78fr);
+      gap: clamp(1.4rem, 2.4vw, 2.8rem);
+      align-items: center;
+    }
+
+    .speaker-panel,
+    .tower-panel {
+      position: relative;
+      border-radius: 2.2rem;
+      border: 1px solid var(--panel-border);
+      background:
+        linear-gradient(180deg, rgba(35, 24, 24, 0.92), rgba(14, 10, 11, 0.88)),
+        var(--panel);
+      box-shadow:
+        0 24px 50px rgba(0, 0, 0, 0.42),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+      overflow: hidden;
+      backdrop-filter: blur(14px);
+    }
+
+    .speaker-panel {
+      padding: clamp(1.7rem, 4vw, 3rem);
+      min-height: min(86vh, 58rem);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.2rem;
+    }
+
+    .speaker-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top right, rgba(255, 214, 128, 0.14), transparent 30%),
+        radial-gradient(circle at bottom left, rgba(255, 49, 44, 0.16), transparent 28%);
+      pointer-events: none;
+    }
+
+    .speaker-panel > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .event-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      align-self: flex-start;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-soft);
+      font-size: clamp(0.85rem, 1.2vw, 1rem);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    .event-kicker::before {
+      content: "";
+      width: 0.8rem;
+      height: 0.8rem;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff3d5 10%, #ff6d56 55%, #8f1111 100%);
+      box-shadow: 0 0 16px rgba(255, 98, 73, 0.6);
+      animation: pulse-dot 1.6s infinite;
+    }
+
+    .status-line {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      color: var(--text-soft);
+    }
+
+    .status-label {
+      font-size: clamp(1rem, 1.8vw, 1.35rem);
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: #ff8a7d;
+      font-weight: 900;
+    }
+
+    .sync-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.45rem 0.82rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-dim);
+      font-size: 0.86rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .sync-badge::before {
+      content: "";
+      width: 0.52rem;
+      height: 0.52rem;
+      border-radius: 50%;
+      background: #42f596;
+      box-shadow: 0 0 12px rgba(66, 245, 150, 0.48);
+    }
+
+    body.stream-offline .sync-badge {
+      color: #ffd3cf;
+      border-color: rgba(255, 121, 109, 0.24);
+      background: rgba(125, 27, 22, 0.25);
+    }
+
+    body.stream-offline .sync-badge::before {
+      background: #ff715f;
+      box-shadow: 0 0 12px rgba(255, 113, 95, 0.48);
+    }
+
+    .speaker-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .speaker-name {
+      font-size: clamp(3.8rem, 8vw, 8rem);
+      font-weight: 900;
+      line-height: 0.94;
+      letter-spacing: 0.03em;
+      text-wrap: balance;
+      text-shadow: 0 8px 30px rgba(255, 71, 61, 0.18);
+    }
+
+    .speaker-subtitle {
+      max-width: 40rem;
+      font-size: clamp(1.3rem, 2vw, 2rem);
+      color: var(--text-soft);
+      line-height: 1.5;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .meta-card {
+      border-radius: 1.6rem;
+      padding: 1.15rem 1.2rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      min-height: 8.3rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.45rem;
+    }
+
+    .meta-card.accent {
+      background:
+        linear-gradient(180deg, rgba(151, 20, 20, 0.34), rgba(70, 8, 8, 0.34)),
+        rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 138, 125, 0.18);
+    }
+
+    .meta-label {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    .meta-value {
+      color: var(--text-main);
+      font-size: clamp(1.5rem, 2.8vw, 2.75rem);
+      font-weight: 900;
+      line-height: 1.15;
+      word-break: break-word;
+    }
+
+    .meta-value.table-value {
+      font-size: clamp(2.4rem, 5vw, 4.6rem);
+      color: #fff2d7;
+    }
+
+    .needs-card {
+      border-radius: 1.8rem;
+      padding: 1.3rem 1.45rem;
+      background:
+        linear-gradient(180deg, rgba(255, 232, 187, 0.08), rgba(255, 255, 255, 0.04)),
+        rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 216, 143, 0.18);
+      display: flex;
+      flex-direction: column;
+      gap: 0.72rem;
+      min-height: 10.2rem;
+    }
+
+    .needs-card.hidden {
+      display: none;
+    }
+
+    .needs-label {
+      color: var(--gold);
+      font-size: 0.92rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 900;
+    }
+
+    .needs-text {
+      font-size: clamp(1.15rem, 1.8vw, 1.65rem);
+      line-height: 1.65;
+      color: #fff5e8;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .count-ribbon {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 1rem;
+      align-items: center;
+      border-radius: 1.8rem;
+      padding: 1rem 1.2rem;
+      background:
+        linear-gradient(90deg, rgba(255, 207, 110, 0.16), rgba(255, 255, 255, 0.04)),
+        rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 201, 106, 0.16);
+    }
+
+    .count-pill {
+      min-width: 10.5rem;
+      padding: 0.85rem 1rem;
+      border-radius: 1.3rem;
+      background: rgba(255, 255, 255, 0.08);
+      text-align: center;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    }
+
+    .count-pill-label {
+      display: block;
+      font-size: 0.82rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      font-weight: 800;
+      margin-bottom: 0.2rem;
+    }
+
+    .count-pill-value {
+      display: block;
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      font-weight: 900;
+      line-height: 1;
+      color: #fff6df;
+    }
+
+    .count-note {
+      font-size: clamp(1rem, 1.45vw, 1.18rem);
+      color: var(--text-soft);
+      line-height: 1.55;
+    }
+
+    .tower-panel {
+      padding: clamp(1rem, 2vw, 1.4rem);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: min(86vh, 58rem);
+    }
+
+    .tower-shell {
+      position: relative;
+      width: var(--tower-width);
+      height: var(--tower-height);
+      min-width: 18rem;
+      padding: 1.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 2.2rem;
+      background:
+        linear-gradient(180deg, #4e3114 0%, #bb7d30 18%, #dba34a 30%, #5a3814 100%);
+      box-shadow:
+        inset 0 0 0 2px rgba(255, 225, 176, 0.28),
+        0 18px 35px rgba(0, 0, 0, 0.45),
+        0 0 36px rgba(255, 180, 72, 0.12);
+      transition: box-shadow 0.35s ease;
+    }
+
+    .tower-shell.jackpot {
+      box-shadow:
+        inset 0 0 0 2px rgba(255, 238, 194, 0.4),
+        0 18px 35px rgba(0, 0, 0, 0.45),
+        0 0 54px rgba(255, 195, 78, 0.28);
+    }
+
+    .tower-core {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 1.6rem;
+      padding: 1rem 0.95rem 1rem;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(63, 11, 11, 0.96), rgba(18, 7, 9, 0.98));
+      border: 1px solid rgba(255, 230, 176, 0.18);
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .tower-core::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at center top, rgba(255, 111, 84, 0.24), transparent 24%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 22%);
+      pointer-events: none;
+    }
+
+    .tower-header {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.2rem 0.2rem 0.35rem;
+    }
+
+    .tower-title {
+      font-size: clamp(0.74rem, 0.95vw, 0.86rem);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255, 240, 213, 0.7);
+      font-weight: 800;
+    }
+
+    .tower-stage-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 6.5rem;
+      padding: 0.42rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: rgba(255, 255, 255, 0.07);
+      color: #ffeacf;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .lamp-list {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      display: grid;
+      grid-template-rows: repeat(20, minmax(0, 1fr));
+      gap: var(--lamp-gap);
+      min-height: 0;
+    }
+
+    .lamp {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+      border-radius: var(--lamp-radius);
+      border: 1px solid rgba(255, 240, 213, 0.1);
+      font-weight: 900;
+      color: rgba(255, 249, 237, 0.18);
+      background:
+        linear-gradient(180deg, rgba(52, 34, 25, 0.94), rgba(17, 11, 9, 0.95));
+      box-shadow:
+        inset 0 0.2rem 0.4rem rgba(255, 255, 255, 0.03),
+        inset 0 -0.3rem 0.45rem rgba(0, 0, 0, 0.22);
+      overflow: hidden;
+      transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.18s ease;
+    }
+
+    .lamp::after {
+      content: "";
+      position: absolute;
+      inset: 0.16rem 0.5rem auto;
+      height: 36%;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent);
+      opacity: 0.22;
+      pointer-events: none;
+    }
+
+    .lamp-number {
+      position: relative;
+      z-index: 1;
+      font-size: clamp(1rem, 2vw, 1.55rem);
+      line-height: 1;
+      letter-spacing: 0.04em;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
+    }
+
+    .lamp.is-active {
+      transform: scale(1.01);
+      color: #111;
+    }
+
+    .lamp.lamp-white.is-active {
+      background:
+        linear-gradient(180deg, #fffdfa 0%, #fff7df 50%, #fff1c6 100%);
+      border-color: rgba(255, 255, 255, 0.85);
+      box-shadow:
+        0 0 24px rgba(255, 245, 206, 0.68),
+        0 0 38px rgba(255, 245, 206, 0.22),
+        inset 0 0 10px rgba(255, 255, 255, 0.48);
+    }
+
+    .lamp.lamp-red.is-active {
+      background:
+        linear-gradient(180deg, #ff6d61 0%, #ff3b2f 48%, #d61e16 100%);
+      border-color: rgba(255, 182, 176, 0.78);
+      color: #fff5ef;
+      box-shadow:
+        0 0 26px rgba(255, 73, 60, 0.72),
+        0 0 42px rgba(255, 73, 60, 0.28),
+        inset 0 0 10px rgba(255, 194, 186, 0.28);
+    }
+
+    .lamp.just-lit {
+      animation: lamp-pop 0.34s var(--ease-out);
+    }
+
+    .marquee-strip {
+      position: absolute;
+      display: flex;
+      gap: 0.36rem;
+      pointer-events: none;
+    }
+
+    .marquee-strip.horizontal {
+      left: 1.1rem;
+      right: 1.1rem;
+      justify-content: space-between;
+    }
+
+    .marquee-strip.vertical {
+      top: 1.1rem;
+      bottom: 1.1rem;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .marquee-strip.reverse.horizontal {
+      flex-direction: row-reverse;
+    }
+
+    .marquee-strip.reverse.vertical {
+      flex-direction: column-reverse;
+    }
+
+    #marquee-top { top: 0.55rem; }
+    #marquee-right { right: 0.55rem; }
+    #marquee-bottom { bottom: 0.55rem; }
+    #marquee-left { left: 0.55rem; }
+
+    .marquee-bulb {
+      width: 0.72rem;
+      height: 0.72rem;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 34% 34%, #fff3ce 0%, #f0c56f 26%, #a2681e 68%, #4c2606 100%);
+      box-shadow:
+        0 0 0 1px rgba(87, 47, 10, 0.4),
+        0 0 10px rgba(233, 172, 61, 0.16);
+      opacity: 0.42;
+      transform: scale(0.95);
+      transition: opacity 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+      animation: bulb-idle 2.4s ease-in-out infinite;
+      animation-delay: calc(var(--order) * 0.05s);
+    }
+
+    .tower-shell.jackpot .marquee-bulb {
+      opacity: 1;
+      transform: scale(1.05);
+      box-shadow:
+        0 0 0 1px rgba(132, 77, 22, 0.56),
+        0 0 16px rgba(255, 191, 76, 0.68),
+        0 0 28px rgba(255, 204, 112, 0.32);
+      animation: bulb-chase 1s linear infinite;
+      animation-delay: calc(var(--order) * 0.055s);
+    }
+
+    .screen-footer {
+      position: fixed;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+      color: rgba(255, 244, 223, 0.22);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-align: center;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    #fullscreen-hint {
+      position: fixed;
+      right: 1.2rem;
+      bottom: 1.2rem;
+      z-index: 4;
+      padding: 0.72rem 1rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 225, 176, 0.14);
+      background: rgba(20, 14, 14, 0.78);
+      color: rgba(255, 241, 224, 0.84);
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.26);
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+      transition: opacity 0.28s ease, transform 0.28s ease, background 0.28s ease;
+    }
+
+    #fullscreen-hint:hover {
+      background: rgba(34, 24, 24, 0.9);
+      transform: translateY(-1px);
+    }
+
+    #fullscreen-hint.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(8px);
+    }
+
+    body.is-idle .speaker-name {
+      color: #ffe1c4;
+      text-shadow: 0 0 22px rgba(255, 146, 83, 0.12);
+    }
+
+    body.is-idle .tower-stage-badge {
+      color: #ffe8d0;
+    }
+
+    body.is-jackpot .count-ribbon {
+      border-color: rgba(255, 209, 112, 0.36);
+      box-shadow: 0 0 30px rgba(255, 199, 91, 0.12);
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(0.72); opacity: 0.45; }
+    }
+
+    @keyframes lamp-pop {
+      0% { transform: scale(0.92); }
+      55% { transform: scale(1.06); }
+      100% { transform: scale(1.01); }
+    }
+
+    @keyframes bulb-idle {
+      0%, 100% {
+        opacity: 0.34;
+        box-shadow: 0 0 10px rgba(233, 172, 61, 0.12);
+      }
+      50% {
+        opacity: 0.58;
+        box-shadow: 0 0 14px rgba(255, 191, 76, 0.2);
+      }
+    }
+
+    @keyframes bulb-chase {
+      0%, 100% {
+        opacity: 0.48;
+        filter: saturate(0.95);
+      }
+      38% {
+        opacity: 1;
+        filter: saturate(1.24);
+      }
+      62% {
+        opacity: 0.82;
+      }
+    }
+
+    @media (max-width: 1180px) {
+      .stage-shell {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+      }
+
+      .speaker-panel,
+      .tower-panel {
+        min-height: auto;
+      }
+
+      .tower-panel {
+        padding-top: 1.1rem;
+        padding-bottom: 1.4rem;
+      }
+
+      .tower-shell {
+        width: min(100%, 22rem);
+        height: min(72vh, 52rem);
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        overflow-y: auto;
+      }
+
+      .stage-shell {
+        min-height: auto;
+        padding: 1rem;
+      }
+
+      .speaker-panel {
+        padding: 1.2rem;
+        border-radius: 1.6rem;
+      }
+
+      .meta-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .count-ribbon {
+        grid-template-columns: 1fr;
+      }
+
+      .count-pill {
+        min-width: 0;
+      }
+
+      .tower-panel {
+        border-radius: 1.6rem;
+      }
+
+      .tower-shell {
+        width: min(100%, 20rem);
+        height: min(68vh, 44rem);
+        min-width: 0;
+      }
+
+      .screen-footer {
+        position: static;
+        transform: none;
+        padding-bottom: 1rem;
+      }
+
+      #fullscreen-hint {
+        right: 1rem;
+        bottom: 1rem;
+        max-width: calc(100vw - 2rem);
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body class="is-idle">
+  <div class="ambient-glow" aria-hidden="true"></div>
+
+  <main class="stage-shell">
+    <section class="speaker-panel">
+      <div class="speaker-copy">
+        <div class="event-kicker">BNI 長榮20週年商務交流活動</div>
+
+        <div class="status-line">
+          <span class="status-label" id="speaker-status">待機畫面</span>
+          <span class="sync-badge" id="sync-badge">Live Sync</span>
+        </div>
+
+        <h1 class="speaker-name" id="disp-name">等待發言者</h1>
+        <p class="speaker-subtitle" id="disp-industry">
+          管理員設定目前講者後，台下每按一次「我想認識他」或「我可以幫助他」，右側燈號就會一路往上亮。
+        </p>
+      </div>
+
+      <div class="meta-grid">
+        <div class="meta-card">
+          <span class="meta-label">舞台狀態</span>
+          <span class="meta-value" id="disp-stage-copy">準備中</span>
+        </div>
+        <div class="meta-card accent">
+          <span class="meta-label">目前桌號</span>
+          <span class="meta-value table-value" id="disp-table">--</span>
+        </div>
+      </div>
+
+      <div class="needs-card hidden" id="disp-needs-card">
+        <span class="needs-label">我在商務上需要的協助</span>
+        <p class="needs-text" id="disp-needs-text"></p>
+      </div>
+
+      <div class="count-ribbon">
+        <div class="count-pill">
+          <span class="count-pill-label">燈號進度</span>
+          <span class="count-pill-value" id="disp-count">0 / 20</span>
+        </div>
+        <p class="count-note" id="disp-count-note">
+          每有一位台下夥伴按下按鈕，就會亮起一盞燈；全部點滿時，周圍金色跑馬燈會持續點亮。
+        </p>
+      </div>
+    </section>
+
+    <aside class="tower-panel">
+      <div class="tower-shell" id="tower-shell">
+        <div class="marquee-strip horizontal" id="marquee-top" aria-hidden="true"></div>
+        <div class="marquee-strip vertical" id="marquee-right" aria-hidden="true"></div>
+        <div class="marquee-strip horizontal reverse" id="marquee-bottom" aria-hidden="true"></div>
+        <div class="marquee-strip vertical reverse" id="marquee-left" aria-hidden="true"></div>
+
+        <div class="tower-core">
+          <div class="tower-header">
+            <span class="tower-title">Connect Meter</span>
+            <span class="tower-stage-badge" id="disp-stage-badge">Standby</span>
+          </div>
+          <div class="lamp-list" id="lamp-list" aria-label="燈號進度顯示"></div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <button id="fullscreen-hint" type="button">⛶ 點一下進入全螢幕並啟用音效</button>
+
+  <div class="screen-footer">義鑫數據技術支持</div>
+
+  <script>
+    'use strict';
+
+    const MAX_LIGHTS = 20;
+    const MARQUEE_CONFIG = [
+      { id: 'marquee-top', count: 12 },
+      { id: 'marquee-right', count: 18 },
+      { id: 'marquee-bottom', count: 12 },
+      { id: 'marquee-left', count: 18 },
+    ];
+
+    const state = {
+      currentSpeakerId: null,
+      hasBooted: false,
+      renderedCount: 0,
+      targetCount: 0,
+      totalConnections: 0,
+      animationNonce: 0,
+      animationRunning: false,
+      eventSource: null,
+      audioContext: null,
+      audioUnlocked: false,
+    };
+
+    const lampElements = new Map();
+
+    function clampLightCount(value) {
+      return Math.max(0, Math.min(MAX_LIGHTS, Number(value) || 0));
+    }
+
+    function buildLampBoard() {
+      const lampList = document.getElementById('lamp-list');
+      lampList.innerHTML = '';
+      lampElements.clear();
+
+      for (let level = MAX_LIGHTS; level >= 1; level -= 1) {
+        const lamp = document.createElement('div');
+        lamp.className = `lamp ${level <= 14 ? 'lamp-white' : 'lamp-red'}`;
+        lamp.dataset.level = String(level);
+
+        const number = document.createElement('span');
+        number.className = 'lamp-number';
+        number.textContent = String(level);
+
+        lamp.appendChild(number);
+        lampList.appendChild(lamp);
+        lampElements.set(level, lamp);
+      }
+    }
+
+    function buildMarquee() {
+      let order = 0;
+
+      for (const config of MARQUEE_CONFIG) {
+        const strip = document.getElementById(config.id);
+        strip.innerHTML = '';
+
+        for (let i = 0; i < config.count; i += 1) {
+          const bulb = document.createElement('span');
+          bulb.className = 'marquee-bulb';
+          bulb.style.setProperty('--order', String(order));
+          strip.appendChild(bulb);
+          order += 1;
+        }
+      }
+    }
+
+    function setConnectionStatus(isOffline) {
+      document.body.classList.toggle('stream-offline', !!isOffline);
+    }
+
+    function updateHint() {
+      const hint = document.getElementById('fullscreen-hint');
+      const inFullscreen = !!document.fullscreenElement;
+
+      hint.textContent = state.audioUnlocked
+        ? '⛶ 點一下切換全螢幕'
+        : '⛶ 點一下進入全螢幕並啟用音效';
+
+      hint.classList.toggle('hidden', inFullscreen && state.audioUnlocked);
+    }
+
+    function unlockAudio() {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+
+      if (!state.audioContext) {
+        state.audioContext = new AudioCtx();
+      }
+
+      state.audioContext.resume()
+        .then(() => {
+          state.audioUnlocked = state.audioContext.state === 'running';
+          updateHint();
+        })
+        .catch(() => {});
+    }
+
+    function playLightSound(level) {
+      if (!state.audioUnlocked || !state.audioContext) return;
+
+      const ctx = state.audioContext;
+      const now = ctx.currentTime;
+      const gain = ctx.createGain();
+      const lead = ctx.createOscillator();
+      const body = ctx.createOscillator();
+
+      const baseFrequency = 340 + (level * 21);
+      lead.type = 'triangle';
+      body.type = 'sine';
+
+      lead.frequency.setValueAtTime(baseFrequency, now);
+      lead.frequency.exponentialRampToValueAtTime(baseFrequency * 1.85, now + 0.16);
+      body.frequency.setValueAtTime(baseFrequency / 2, now);
+      body.frequency.exponentialRampToValueAtTime(baseFrequency * 1.08, now + 0.18);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(level >= 15 ? 0.085 : 0.058, now + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
+
+      lead.connect(gain);
+      body.connect(gain);
+      gain.connect(ctx.destination);
+
+      lead.start(now);
+      body.start(now);
+      lead.stop(now + 0.26);
+      body.stop(now + 0.26);
+    }
+
+    function flashLamp(level) {
+      const lamp = lampElements.get(level);
+      if (!lamp) return;
+
+      lamp.classList.remove('just-lit');
+      void lamp.offsetWidth;
+      lamp.classList.add('just-lit');
+      window.setTimeout(() => lamp.classList.remove('just-lit'), 360);
+    }
+
+    function renderLights(count) {
+      const tower = document.getElementById('tower-shell');
+      const isJackpot = count >= MAX_LIGHTS;
+
+      for (let level = 1; level <= MAX_LIGHTS; level += 1) {
+        const lamp = lampElements.get(level);
+        if (!lamp) continue;
+        lamp.classList.toggle('is-active', level <= count);
+      }
+
+      tower.classList.toggle('jackpot', isJackpot);
+      document.body.classList.toggle('is-jackpot', isJackpot);
+    }
+
+    function updateCountText(meta) {
+      const count = clampLightCount(meta.count);
+      const totalConnections = Number(meta.totalConnections) || count;
+      const hasSpeaker = !!meta.hasSpeaker;
+
+      document.getElementById('disp-count').textContent = `${count} / ${MAX_LIGHTS}`;
+
+      let badge = 'Standby';
+      if (hasSpeaker && count >= MAX_LIGHTS) badge = 'Full 20';
+      else if (hasSpeaker && count >= 15) badge = 'Red Zone';
+      else if (hasSpeaker && count > 0) badge = 'Rising';
+      else if (hasSpeaker) badge = 'Ready';
+      document.getElementById('disp-stage-badge').textContent = badge;
+
+      let note = '每有一位台下夥伴按下按鈕，就會亮起一盞燈；全部點滿時，周圍金色跑馬燈會持續點亮。';
+      if (!hasSpeaker) {
+        note = '等待目前發言者上台，設定完成後燈號就會從 1 一路往 20 推進。';
+      } else if (count >= MAX_LIGHTS && totalConnections > MAX_LIGHTS) {
+        note = `目前已累積 ${totalConnections} 筆訊號，舞台維持 20 盞滿燈狀態。`;
+      } else if (count >= MAX_LIGHTS) {
+        note = '20 顆全亮，金色跑馬燈啟動中。';
+      } else if (count >= 15) {
+        note = `進入紅燈衝刺區，再 ${MAX_LIGHTS - count} 盞就能點滿整座燈塔。`;
+      } else if (count > 0) {
+        note = `目前已亮 ${count} 盞，距離滿燈還差 ${MAX_LIGHTS - count} 盞。`;
+      }
+
+      document.getElementById('disp-count-note').textContent = note;
+    }
+
+    function renderSpeakerInfo(speaker) {
+      const idle = !speaker;
+      document.body.classList.toggle('is-idle', idle);
+
+      document.getElementById('speaker-status').textContent = idle ? '待機畫面' : '現在發言';
+      document.getElementById('disp-name').textContent = idle ? '等待發言者' : (speaker.name || '未命名講者');
+      document.getElementById('disp-industry').textContent = idle
+        ? '管理員設定目前講者後，台下每按一次「我想認識他」或「我可以幫助他」，右側燈號就會一路往上亮。'
+        : (speaker.industry || '現場交流中，歡迎台下夥伴即時送出想認識與可提供協助的訊號。');
+      document.getElementById('disp-stage-copy').textContent = idle
+        ? '準備中'
+        : '台下訊號持續累積中';
+      document.getElementById('disp-table').textContent = idle
+        ? '--'
+        : `第 ${speaker.table_number || '?'} 桌`;
+
+      const needsCard = document.getElementById('disp-needs-card');
+      const needsText = document.getElementById('disp-needs-text');
+      if (!idle && speaker.needs && speaker.needs.trim()) {
+        needsText.textContent = speaker.needs.trim();
+        needsCard.classList.remove('hidden');
+      } else {
+        needsText.textContent = '';
+        needsCard.classList.add('hidden');
+      }
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => window.setTimeout(resolve, ms));
+    }
+
+    async function syncLights(targetCount, options = {}) {
+      const count = clampLightCount(targetCount);
+      const instant = !!options.instant;
+      const meta = {
+        count,
+        totalConnections: options.totalConnections,
+        hasSpeaker: options.hasSpeaker,
+      };
+
+      state.targetCount = count;
+      state.totalConnections = Number(options.totalConnections) || count;
+
+      if (instant || count <= state.renderedCount) {
+        state.animationNonce += 1;
+        state.animationRunning = false;
+        state.renderedCount = count;
+        renderLights(state.renderedCount);
+        updateCountText(meta);
+        return;
+      }
+
+      updateCountText(meta);
+
+      if (state.animationRunning) return;
+
+      state.animationRunning = true;
+      const nonce = ++state.animationNonce;
+
+      while (state.renderedCount < state.targetCount && nonce === state.animationNonce) {
+        state.renderedCount += 1;
+        renderLights(state.renderedCount);
+        flashLamp(state.renderedCount);
+        playLightSound(state.renderedCount);
+        updateCountText({
+          count: state.renderedCount,
+          totalConnections: state.totalConnections,
+          hasSpeaker: options.hasSpeaker,
+        });
+        await sleep(state.renderedCount >= 15 ? 190 : 150);
+      }
+
+      if (nonce === state.animationNonce) {
+        state.animationRunning = false;
+        updateCountText({
+          count: state.renderedCount,
+          totalConnections: state.totalConnections,
+          hasSpeaker: options.hasSpeaker,
+        });
+      }
+    }
+
+    function applyDisplayState(nextState, options = {}) {
+      const speaker = nextState?.speaker || null;
+      const speakerId = speaker?.id || null;
+      const speakerChanged = speakerId !== state.currentSpeakerId;
+
+      state.currentSpeakerId = speakerId;
+      renderSpeakerInfo(speaker);
+
+      syncLights(nextState?.lightCount, {
+        instant: !state.hasBooted || speakerChanged || !!options.instant,
+        totalConnections: nextState?.totalConnections,
+        hasSpeaker: !!speaker,
+      });
+
+      state.hasBooted = true;
+    }
+
+    async function fetchDisplayState(options = {}) {
+      try {
+        const res = await fetch('/api/display-state', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        applyDisplayState(data, options);
+      } catch (error) {
+        console.error('fetchDisplayState:', error);
+      }
+    }
+
+    function connectStream() {
+      if (!('EventSource' in window)) return;
+
+      if (state.eventSource) {
+        state.eventSource.close();
+      }
+
+      const source = new EventSource('/api/display-stream');
+      state.eventSource = source;
+
+      source.addEventListener('display-state', event => {
+        setConnectionStatus(false);
+        try {
+          applyDisplayState(JSON.parse(event.data));
+        } catch (error) {
+          console.error('display-state event:', error);
+        }
+      });
+
+      source.onopen = () => {
+        setConnectionStatus(false);
+      };
+
+      source.onerror = () => {
+        setConnectionStatus(true);
+      };
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+        return;
+      }
+
+      document.exitFullscreen().catch(() => {});
+    }
+
+    document.getElementById('fullscreen-hint').addEventListener('click', () => {
+      unlockAudio();
+      toggleFullscreen();
+    });
+
+    document.addEventListener('pointerdown', unlockAudio, { passive: true });
+    document.addEventListener('keydown', event => {
+      unlockAudio();
+      if (event.key === 'f' || event.key === 'F') {
+        toggleFullscreen();
+      }
+    });
+
+    document.addEventListener('fullscreenchange', updateHint);
+    window.addEventListener('beforeunload', () => {
+      if (state.eventSource) state.eventSource.close();
+    });
+
+    buildLampBoard();
+    buildMarquee();
+    updateHint();
+    fetchDisplayState({ instant: true });
+    connectStream();
+    window.setInterval(() => fetchDisplayState(), 15000);
+  </script>
+</body>
+</html>

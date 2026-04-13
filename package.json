@@ -1,7 +1,7 @@
 {
   "name": "bni-networking-app",
   "version": "1.0.0",
-  "description": "BNI 商務交流媒合系統 — 長榮66屆",
+  "description": "BNI 商務交流媒合系統 — 長榮20週年",
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",

@@ -10,8 +10,10 @@ build/
 .env.*
 !.env.example
 
-# Database (runtime file, exclude test data)
+# Database (runtime files)
 database/event.db
+database/event.db-shm
+database/event.db-wal
 
 # macOS
 .DS_Store
