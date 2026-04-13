@@ -56,7 +56,7 @@
       <div class="max-w-3xl mx-auto flex items-center justify-between">
         <div>
           <h1 class="text-white font-black text-xl">BNI 管理員後台</h1>
-          <p class="text-red-200 text-xs mt-0.5">長榮66屆 · 商務交流活動</p>
+          <p class="text-red-200 text-xs mt-0.5">長榮20週年 · 商務交流活動</p>
         </div>
         <button onclick="adminLogout()" class="text-red-200 border border-red-400 rounded-xl px-4 py-2 text-sm font-semibold active:bg-red-700">
           登出
@@ -306,7 +306,7 @@
                 <span class="text-red-600 text-sm font-bold">第${esc(p.table_number || '?')}桌</span>
                 ${p.is_current_speaker ? '<span class="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">🎤 發言中</span>' : ''}
               </div>
-              ${p.needs ? `<p class="text-gray-400 text-xs mt-1 truncate">需求：${esc(p.needs)}</p>` : ''}
+              ${p.needs ? `<p class="text-gray-400 text-xs mt-1 truncate">我在商務上需要的協助：${esc(p.needs)}</p>` : ''}
             </div>
             <div class="shrink-0 flex flex-col gap-1">
               <button

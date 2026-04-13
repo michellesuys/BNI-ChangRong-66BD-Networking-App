@@ -116,9 +116,9 @@ function getBrowseCount() {
  * Uses optimistic updates for instant UI feedback.
  */
 async function toggleConnection(participantId, type, source) {
-  const pid      = Number(participantId);
+  const pid = Number(participantId);
   const existing = state.connections[pid]?.[type];
-  const isOn     = !!existing;
+  const isOn = !!existing;
 
   // ── Browse limit check (3 unique people) ──
   if (source === 'browse' && !isOn) {
@@ -176,7 +176,7 @@ async function toggleConnection(participantId, type, source) {
 // ════════════════════════════════════════════════
 function renderSpeaker() {
   const el = document.getElementById('speaker-content');
-  const s  = state.currentSpeaker;
+  const s = state.currentSpeaker;
 
   if (!s) {
     el.innerHTML = `
@@ -189,8 +189,8 @@ function renderSpeaker() {
     return;
   }
 
-  const conns      = state.connections[s.id] || {};
-  const wantMeet   = !!conns['want_to_meet'];
+  const conns = state.connections[s.id] || {};
+  const wantMeet = !!conns['want_to_meet'];
   const canProvide = !!conns['can_provide'];
 
   el.innerHTML = `
@@ -211,7 +211,7 @@ function renderSpeaker() {
 
         ${s.needs ? `
           <div class="mt-4 bg-red-50 border border-red-100 rounded-2xl p-4">
-            <p class="text-red-600 text-xs font-bold uppercase tracking-wide mb-1">需求</p>
+            <p class="text-red-600 text-xs font-bold uppercase tracking-wide mb-1">我在商務上需要的協助</p>
             <p class="text-gray-700 text-base leading-relaxed">${esc(s.needs)}</p>
           </div>
         ` : ''}
@@ -221,23 +221,21 @@ function renderSpeaker() {
       <div class="px-5 pb-5 grid grid-cols-2 gap-3">
         <button
           onclick="toggleConnection(${s.id}, 'want_to_meet', 'speaker')"
-          class="py-5 rounded-2xl font-bold text-base border-2 transition-all ${
-            wantMeet
-              ? 'bg-red-600 text-white border-red-600 shadow-md'
-              : 'border-red-500 text-red-600 bg-white active:bg-red-50'
-          }"
+          class="py-5 rounded-2xl font-bold text-base border-2 transition-all ${wantMeet
+      ? 'bg-red-600 text-white border-red-600 shadow-md'
+      : 'border-red-500 text-red-600 bg-white active:bg-red-50'
+    }"
         >
           ${wantMeet ? '✓ 已標記' : '🤝 我想認識他'}
         </button>
         <button
           onclick="toggleConnection(${s.id}, 'can_provide', 'speaker')"
-          class="py-5 rounded-2xl font-bold text-base border-2 transition-all ${
-            canProvide
-              ? 'bg-red-600 text-white border-red-600 shadow-md'
-              : 'border-red-500 text-red-600 bg-white active:bg-red-50'
-          }"
+          class="py-5 rounded-2xl font-bold text-base border-2 transition-all ${canProvide
+      ? 'bg-red-600 text-white border-red-600 shadow-md'
+      : 'border-red-500 text-red-600 bg-white active:bg-red-50'
+    }"
         >
-          ${canProvide ? '✓ 已標記' : '💼 我可提供'}
+          ${canProvide ? '✓ 已標記' : '💼 我可以幫助他'}
         </button>
       </div>
     </div>
@@ -250,15 +248,15 @@ function renderSpeaker() {
 // RENDER: PARTICIPANT LIST
 // ════════════════════════════════════════════════
 function renderParticipantsList() {
-  const el     = document.getElementById('participants-list');
+  const el = document.getElementById('participants-list');
   const search = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
 
   const list = search
     ? state.participants.filter(p =>
-        p.name.toLowerCase().includes(search) ||
-        (p.industry || '').toLowerCase().includes(search) ||
-        (p.table_number || '').includes(search)
-      )
+      p.name.toLowerCase().includes(search) ||
+      (p.industry || '').toLowerCase().includes(search) ||
+      (p.table_number || '').includes(search)
+    )
     : state.participants;
 
   if (list.length === 0) {
@@ -270,11 +268,11 @@ function renderParticipantsList() {
   }
 
   el.innerHTML = list.map(p => {
-    const conns      = state.connections[p.id] || {};
-    const wantMeet   = !!conns['want_to_meet'];
+    const conns = state.connections[p.id] || {};
+    const wantMeet = !!conns['want_to_meet'];
     const canProvide = !!conns['can_provide'];
-    const hasAny     = wantMeet || canProvide;
-    const isSpeaker  = state.currentSpeaker?.id === p.id;
+    const hasAny = wantMeet || canProvide;
+    const isSpeaker = state.currentSpeaker?.id === p.id;
 
     return `
       <div class="bg-white rounded-2xl shadow-sm mb-3 overflow-hidden ${hasAny ? 'ring-2 ring-red-400' : 'border border-gray-100'}">
@@ -298,21 +296,19 @@ function renderParticipantsList() {
           <div class="grid grid-cols-2 gap-2">
             <button
               onclick="toggleConnection(${p.id}, 'want_to_meet', 'browse')"
-              class="py-3.5 rounded-xl font-bold text-sm border-2 transition-all ${
-                wantMeet
-                  ? 'bg-red-600 text-white border-red-600'
-                  : 'border-gray-300 text-gray-600 bg-white active:bg-gray-50'
-              }"
+              class="py-3.5 rounded-xl font-bold text-sm border-2 transition-all ${wantMeet
+        ? 'bg-red-600 text-white border-red-600'
+        : 'border-gray-300 text-gray-600 bg-white active:bg-gray-50'
+      }"
             >
               ${wantMeet ? '✓ 想交流' : '想交流'}
             </button>
             <button
               onclick="toggleConnection(${p.id}, 'can_provide', 'browse')"
-              class="py-3.5 rounded-xl font-bold text-sm border-2 transition-all ${
-                canProvide
-                  ? 'bg-red-600 text-white border-red-600'
-                  : 'border-gray-300 text-gray-600 bg-white active:bg-gray-50'
-              }"
+              class="py-3.5 rounded-xl font-bold text-sm border-2 transition-all ${canProvide
+        ? 'bg-red-600 text-white border-red-600'
+        : 'border-gray-300 text-gray-600 bg-white active:bg-gray-50'
+      }"
             >
               ${canProvide ? '✓ 可提供資源' : '可提供資源'}
             </button>
@@ -375,7 +371,7 @@ function updateHeaderUser() {
 // LOGIN / LOGOUT
 // ════════════════════════════════════════════════
 async function handleLogin() {
-  const name   = document.getElementById('input-name').value.trim();
+  const name = document.getElementById('input-name').value.trim();
   const roleEl = document.querySelector('input[name="role"]:checked');
 
   if (!name) {
@@ -389,7 +385,7 @@ async function handleLogin() {
   }
 
   const btn = document.getElementById('btn-login');
-  btn.disabled   = true;
+  btn.disabled = true;
   btn.textContent = '登入中...';
 
   try {
@@ -399,18 +395,18 @@ async function handleLogin() {
     await startApp();
   } catch (e) {
     showToast(e.message || '登入失敗，請重試', 'error');
-    btn.disabled   = false;
+    btn.disabled = false;
     btn.textContent = '進入交流系統';
   }
 }
 
 function handleLogout() {
   clearInterval(state.speakerPollTimer);
-  state.user        = null;
+  state.user = null;
   state.connections = {};
   state.participants = [];
   state.currentSpeaker = null;
-  state.activeTab   = 'speaker';
+  state.activeTab = 'speaker';
   localStorage.removeItem('bni_session');
 
   // Reset tabs
@@ -429,8 +425,8 @@ function handleLogout() {
 function updateRoleStyle() {
   const map = {
     '長榮會員': 'role-label-member',
-    '來賓':     'role-label-guest',
-    '親友':     'role-label-friend',
+    '來賓': 'role-label-guest',
+    '親友': 'role-label-friend',
   };
   document.querySelectorAll('input[name="role"]').forEach(el => {
     const label = document.getElementById(map[el.value]);
@@ -457,17 +453,17 @@ function showToast(message, type = 'info') {
   // Colors
   el.className = 'fixed bottom-6 left-4 right-4 max-w-sm mx-auto text-white text-center py-3.5 px-5 rounded-2xl shadow-2xl z-50 text-base font-semibold';
   if (type === 'error' || type === 'warning') el.classList.add('bg-red-600');
-  else if (type === 'success')               el.classList.add('bg-green-600');
-  else                                        el.classList.add('bg-gray-800');
+  else if (type === 'success') el.classList.add('bg-green-600');
+  else el.classList.add('bg-gray-800');
 
   // Animate in
   el.style.transform = 'translateY(0)';
-  el.style.opacity   = '1';
+  el.style.opacity = '1';
 
   clearTimeout(_toastTimer);
   _toastTimer = setTimeout(() => {
     el.style.transform = 'translateY(120px)';
-    el.style.opacity   = '0';
+    el.style.opacity = '0';
   }, type === 'warning' ? 4000 : 2500);
 }
 
