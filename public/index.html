@@ -67,6 +67,19 @@
           >
         </div>
 
+        <!-- Table Number -->
+        <div>
+          <label class="block text-gray-700 font-bold mb-2 text-base">你的桌號</label>
+          <input
+            id="input-table"
+            type="number"
+            placeholder="請輸入桌號"
+            min="1"
+            max="99"
+            class="w-full border-2 border-gray-200 rounded-2xl px-4 py-4 text-xl font-medium focus:border-red-500 focus:outline-none transition-colors"
+          >
+        </div>
+
         <!-- Role -->
         <div>
           <label class="block text-gray-700 font-bold mb-3 text-base">你的身份</label>
@@ -96,7 +109,7 @@
         </button>
       </div>
 
-      <p class="text-center text-gray-400 text-xs mt-6">掃描 QR Code 進入 · 不需要帳號密碼</p>
+      <p class="text-center text-gray-400 text-xs mt-6">換裝置或重新整理？輸入相同姓名和桌號，即可恢復原本的使用紀錄</p>
     </div>
   </div>
 
@@ -138,13 +151,21 @@
     </nav>
 
     <!-- ── Tab: Current Speaker ── -->
-    <div id="tab-speaker" class="flex-1 p-4">
-      <div id="speaker-content">
-        <!-- Rendered by JS -->
-        <div class="text-center py-20 text-gray-400">
-          <div class="text-6xl mb-4">🎤</div>
-          <p class="text-xl font-semibold">等待發言者...</p>
-          <p class="text-sm mt-2">請稍候，管理員將設定目前的發言者</p>
+    <div id="tab-speaker" class="flex-1">
+      <div class="sticky top-[112px] z-10 bg-gray-50 px-4 pt-3 pb-2">
+        <div class="bg-white rounded-2xl px-4 py-2.5 flex items-center justify-between shadow-sm border border-gray-100">
+          <span class="text-gray-600 text-sm font-medium">今天我想交流的對象</span>
+          <span id="counter-badge-speaker" class="bg-gray-100 text-gray-700 font-black px-4 py-1 rounded-full text-sm">0 / 3</span>
+        </div>
+      </div>
+      <div class="p-4">
+        <div id="speaker-content">
+          <!-- Rendered by JS -->
+          <div class="text-center py-20 text-gray-400">
+            <div class="text-6xl mb-4">🎤</div>
+            <p class="text-xl font-semibold">等待發言者...</p>
+            <p class="text-sm mt-2">請稍候，管理員將設定目前的發言者</p>
+          </div>
         </div>
       </div>
     </div>
@@ -155,7 +176,7 @@
       <!-- Counter + Search bar (sticky) -->
       <div class="sticky top-[112px] z-10 bg-gray-50 px-4 pt-3 pb-2 space-y-2">
         <div class="bg-white rounded-2xl px-4 py-2.5 flex items-center justify-between shadow-sm border border-gray-100">
-          <span class="text-gray-600 text-sm font-medium">已選交流對象</span>
+          <span class="text-gray-600 text-sm font-medium">今天我想交流的對象</span>
           <span id="counter-badge" class="bg-gray-100 text-gray-700 font-black px-4 py-1 rounded-full text-sm">0 / 3</span>
         </div>
         <input
@@ -174,6 +195,50 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════ -->
+  <!-- SWAP MODAL                                        -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <div id="swap-modal" class="hidden fixed inset-0 z-40 flex items-end sm:items-center justify-center p-4 bg-black/50"
+    onclick="if(event.target===this) closeSwapModal()">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden">
+
+      <!-- Header -->
+      <div class="bg-red-600 px-5 py-4">
+        <h2 class="text-white font-black text-lg">已選滿三位</h2>
+        <p class="text-red-200 text-sm mt-0.5">選擇一位替換，或關閉保持原選擇</p>
+      </div>
+
+      <div class="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+
+        <!-- New person -->
+        <div>
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">你想加入的對象</p>
+          <div id="swap-modal-new"></div>
+        </div>
+
+        <!-- Divider -->
+        <div class="flex items-center gap-2">
+          <div class="flex-1 h-px bg-gray-100"></div>
+          <span class="text-xs text-gray-400">目前已選的三位</span>
+          <div class="flex-1 h-px bg-gray-100"></div>
+        </div>
+
+        <!-- Selected people -->
+        <div id="swap-modal-selected" class="space-y-2"></div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="px-4 pb-4">
+        <button onclick="closeSwapModal()"
+          class="w-full border-2 border-gray-200 text-gray-500 font-bold py-3 rounded-2xl text-sm active:bg-gray-50">
+          保持原選擇
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ -->
   <!-- TOAST NOTIFICATION                               -->
   <!-- ═══════════════════════════════════════════════ -->
   <div
@@ -185,5 +250,6 @@
   </div>
 
   <script src="app.js"></script>
+  <footer class="text-center text-gray-300 text-xs py-4">義鑫數據技術支持</footer>
 </body>
 </html>

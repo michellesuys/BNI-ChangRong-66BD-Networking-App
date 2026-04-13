@@ -220,7 +220,7 @@
     .watermark {
       position: absolute;
       bottom: 1.5rem;
-      right: 2rem;
+      left: 2rem;
       font-size: clamp(0.65rem, 1vw, 0.9rem);
       color: #333;
       font-weight: 600;
@@ -231,12 +231,11 @@
     #fullscreen-hint {
       position: fixed;
       bottom: 1.5rem;
-      left: 50%;
-      transform: translateX(-50%);
+      right: 1.5rem;
       background: rgba(255,255,255,0.08);
       color: #555;
-      font-size: 0.85rem;
-      padding: 0.5rem 1.2rem;
+      font-size: 0.75rem;
+      padding: 0.4rem 0.9rem;
       border-radius: 999px;
       cursor: pointer;
       transition: opacity 0.3s;
@@ -279,7 +278,7 @@
         <span class="table-label">桌</span>
       </div>
       <div class="speaker-needs" id="disp-needs" style="display:none">
-        <span class="needs-label">需求</span>
+        <span class="needs-label">我在商務上需要的協助</span>
         <span id="disp-needs-text"></span>
       </div>
     </div>
@@ -380,5 +379,6 @@
     fetchSpeaker();
     setInterval(fetchSpeaker, 3000); // poll every 3s for faster response on stage
   </script>
+  <footer style="position:fixed;bottom:4px;width:100%;text-align:center;font-size:11px;color:rgba(255,255,255,0.2);z-index:0;pointer-events:none;">義鑫數據技術支持</footer>
 </body>
 </html>

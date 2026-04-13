@@ -89,6 +89,7 @@ async function loadUserConnections() {
       if (!state.connections[c.participant_id]) state.connections[c.participant_id] = {};
       state.connections[c.participant_id][c.type] = c.source;
     }
+    updateCounterBadge();
   } catch (e) {
     console.error('loadUserConnections:', e);
   }
@@ -104,10 +105,10 @@ function startSpeakerPolling() {
 // CONNECTION LOGIC
 // ════════════════════════════════════════════════
 
-/** Count unique participants that have at least one BROWSE-sourced connection */
-function getBrowseCount() {
+/** Count unique participants that have at least one connection (any source) */
+function getSelectedCount() {
   return Object.values(state.connections).filter(
-    types => Object.values(types).includes('browse')
+    types => Object.keys(types).length > 0
   ).length;
 }
 
@@ -120,12 +121,12 @@ async function toggleConnection(participantId, type, source) {
   const existing = state.connections[pid]?.[type];
   const isOn = !!existing;
 
-  // ── Browse limit check (3 unique people) ──
-  if (source === 'browse' && !isOn) {
-    const alreadyInBrowse = state.connections[pid] &&
-      Object.values(state.connections[pid]).includes('browse');
-    if (!alreadyInBrowse && getBrowseCount() >= 3) {
-      showToast('請專注於最想交流的三位夥伴。', 'warning');
+  // ── Connection limit check (3 unique people, any source) ──
+  if (!isOn) {
+    const alreadySelected = state.connections[pid] &&
+      Object.keys(state.connections[pid]).length > 0;
+    if (!alreadySelected && getSelectedCount() >= 3) {
+      showSwapModal(pid, type, source);
       return;
     }
   }
@@ -226,7 +227,7 @@ function renderSpeaker() {
       : 'border-red-500 text-red-600 bg-white active:bg-red-50'
     }"
         >
-          ${wantMeet ? '✓ 已標記' : '🤝 我想認識他'}
+          ${wantMeet ? '✓ 我想認識他' : '🤝 我想認識他'}
         </button>
         <button
           onclick="toggleConnection(${s.id}, 'can_provide', 'speaker')"
@@ -235,7 +236,7 @@ function renderSpeaker() {
       : 'border-red-500 text-red-600 bg-white active:bg-red-50'
     }"
         >
-          ${canProvide ? '✓ 已標記' : '💼 我可以幫助他'}
+          ${canProvide ? '✓ 我可以幫助他' : '💼 我可以幫助他'}
         </button>
       </div>
     </div>
@@ -292,8 +293,15 @@ function renderParticipantsList() {
             </span>
           </div>
 
+          ${p.needs ? `
+            <div class="mt-3 bg-red-50 border border-red-100 rounded-2xl p-3">
+              <p class="text-red-600 text-xs font-bold uppercase tracking-wide mb-1">我在商務上需要的協助</p>
+              <p class="text-gray-700 text-sm leading-relaxed">${esc(p.needs)}</p>
+            </div>
+          ` : ''}
+
           <!-- Buttons -->
-          <div class="grid grid-cols-2 gap-2">
+          <div class="grid grid-cols-2 gap-2 mt-3">
             <button
               onclick="toggleConnection(${p.id}, 'want_to_meet', 'browse')"
               class="py-3.5 rounded-xl font-bold text-sm border-2 transition-all ${wantMeet
@@ -301,7 +309,7 @@ function renderParticipantsList() {
         : 'border-gray-300 text-gray-600 bg-white active:bg-gray-50'
       }"
             >
-              ${wantMeet ? '✓ 想交流' : '想交流'}
+              ${wantMeet ? '✓ 我想認識他' : '🤝 我想認識他'}
             </button>
             <button
               onclick="toggleConnection(${p.id}, 'can_provide', 'browse')"
@@ -310,7 +318,7 @@ function renderParticipantsList() {
         : 'border-gray-300 text-gray-600 bg-white active:bg-gray-50'
       }"
             >
-              ${canProvide ? '✓ 可提供資源' : '可提供資源'}
+              ${canProvide ? '✓ 我可以幫助他' : '💼 我可以幫助他'}
             </button>
           </div>
         </div>
@@ -326,13 +334,16 @@ function filterParticipants() {
 }
 
 function updateCounterBadge() {
-  const count = getBrowseCount();
-  const badge = document.getElementById('counter-badge');
-  if (!badge) return;
-  badge.textContent = `${count} / 3`;
-  badge.className = count >= 3
+  const count = getSelectedCount();
+  const cls = count >= 3
     ? 'bg-red-600 text-white font-black px-4 py-1 rounded-full text-sm'
     : 'bg-gray-100 text-gray-700 font-black px-4 py-1 rounded-full text-sm';
+  ['counter-badge', 'counter-badge-speaker'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = `${count} / 3`;
+    el.className = cls;
+  });
 }
 
 // ════════════════════════════════════════════════
@@ -372,11 +383,17 @@ function updateHeaderUser() {
 // ════════════════════════════════════════════════
 async function handleLogin() {
   const name = document.getElementById('input-name').value.trim();
+  const tableNumber = document.getElementById('input-table').value.trim();
   const roleEl = document.querySelector('input[name="role"]:checked');
 
   if (!name) {
     showToast('請輸入你的名字', 'error');
     document.getElementById('input-name').focus();
+    return;
+  }
+  if (!tableNumber) {
+    showToast('請輸入你的桌號', 'error');
+    document.getElementById('input-table').focus();
     return;
   }
   if (!roleEl) {
@@ -389,8 +406,8 @@ async function handleLogin() {
   btn.textContent = '登入中...';
 
   try {
-    const data = await api('POST', '/api/login', { name, role: roleEl.value });
-    state.user = { userId: data.userId, name: data.name, role: data.role };
+    const data = await api('POST', '/api/login', { name, role: roleEl.value, tableNumber });
+    state.user = { userId: data.userId, name: data.name, role: data.role, tableNumber: data.tableNumber };
     localStorage.setItem('bni_session', JSON.stringify(state.user));
     await startApp();
   } catch (e) {
@@ -476,6 +493,99 @@ function esc(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+// ════════════════════════════════════════════════
+// SWAP MODAL
+// ════════════════════════════════════════════════
+let _pendingSwap = null; // { pid, type, source }
+
+function showSwapModal(pid, type, source) {
+  _pendingSwap = { pid, type, source };
+
+  const newPerson = state.participants.find(p => p.id === pid);
+  if (!newPerson) return;
+
+  const typeLabel = type === 'want_to_meet' ? '🤝 我想認識他' : '💼 我可以幫助他';
+
+  document.getElementById('swap-modal-new').innerHTML = `
+    <div class="bg-red-50 border border-red-200 rounded-2xl p-3">
+      <div class="font-black text-gray-800">${esc(newPerson.name)}</div>
+      <div class="text-gray-500 text-sm">${esc(newPerson.industry || '')} · 第 ${esc(newPerson.table_number || '?')} 桌</div>
+      <div class="text-red-600 text-xs font-semibold mt-1">${typeLabel}</div>
+    </div>
+  `;
+
+  const selectedPeople = Object.keys(state.connections)
+    .map(Number)
+    .filter(id => Object.keys(state.connections[id]).length > 0)
+    .map(id => ({
+      participant: state.participants.find(p => p.id === id),
+      types: state.connections[id],
+    }))
+    .filter(x => x.participant);
+
+  document.getElementById('swap-modal-selected').innerHTML = selectedPeople.map(({ participant, types }) => {
+    const labels = Object.keys(types)
+      .map(t => t === 'want_to_meet' ? '🤝 想認識' : '💼 可幫助')
+      .join('・');
+    return `
+      <div class="border border-gray-200 rounded-2xl p-3 flex items-center gap-3">
+        <div class="flex-1 min-w-0">
+          <div class="font-bold text-gray-800 truncate">${esc(participant.name)}</div>
+          <div class="text-gray-400 text-xs">${esc(participant.industry || '')} · 第 ${esc(participant.table_number || '?')} 桌</div>
+          <div class="text-gray-500 text-xs mt-0.5">${labels}</div>
+        </div>
+        <button
+          onclick="confirmSwap(${participant.id})"
+          class="shrink-0 bg-red-600 text-white font-bold text-xs px-3 py-2 rounded-xl active:bg-red-700"
+        >
+          換成他
+        </button>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('swap-modal').classList.remove('hidden');
+}
+
+async function confirmSwap(removeId) {
+  if (!_pendingSwap) return;
+  const { pid, type, source } = _pendingSwap;
+  const originalTypes = { ...state.connections[removeId] };
+
+  // Optimistic update
+  delete state.connections[removeId];
+  if (!state.connections[pid]) state.connections[pid] = {};
+  state.connections[pid][type] = source;
+
+  closeSwapModal();
+  updateCounterBadge();
+  renderSpeaker();
+  renderParticipantsList();
+
+  // Persist
+  try {
+    for (const t of Object.keys(originalTypes)) {
+      await api('DELETE', '/api/connect', { userId: state.user.userId, participantId: removeId, type: t });
+    }
+    await api('POST', '/api/connect', { userId: state.user.userId, participantId: pid, type, source });
+  } catch {
+    // Revert
+    state.connections[removeId] = originalTypes;
+    delete state.connections[pid]?.[type];
+    if (state.connections[pid] && Object.keys(state.connections[pid]).length === 0)
+      delete state.connections[pid];
+    updateCounterBadge();
+    renderSpeaker();
+    renderParticipantsList();
+    showToast('操作失敗，請重試', 'error');
+  }
+}
+
+function closeSwapModal() {
+  document.getElementById('swap-modal').classList.add('hidden');
+  _pendingSwap = null;
 }
 
 // ════════════════════════════════════════════════

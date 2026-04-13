@@ -69,10 +69,11 @@ function initDB() {
     );
 
     CREATE TABLE IF NOT EXISTS users (
-      id         INTEGER PRIMARY KEY AUTOINCREMENT,
-      name       TEXT NOT NULL,
-      role       TEXT NOT NULL,
-      created_at TEXT DEFAULT (datetime('now','localtime'))
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      name         TEXT NOT NULL,
+      role         TEXT NOT NULL,
+      table_number TEXT NOT NULL DEFAULT '',
+      created_at   TEXT DEFAULT (datetime('now','localtime'))
     );
 
     CREATE TABLE IF NOT EXISTS connections (
@@ -89,6 +90,13 @@ function initDB() {
     CREATE INDEX IF NOT EXISTS idx_conn_part    ON connections(participant_id);
     CREATE INDEX IF NOT EXISTS idx_part_speaker ON participants(is_current_speaker);
   `);
+
+  // Migration: add table_number to users if upgrading from older schema
+  const userCols = db.prepare('PRAGMA table_info(users)').all();
+  if (!userCols.find(c => c.name === 'table_number')) {
+    db.exec("ALTER TABLE users ADD COLUMN table_number TEXT NOT NULL DEFAULT ''");
+    console.log('✅ 資料庫遷移：users.table_number 欄位已新增');
+  }
 
   console.log('✅ 資料庫初始化完成');
 }
@@ -116,13 +124,26 @@ const adminAuth = (req, res, next) => {
 
 // POST /api/login
 app.post('/api/login', (req, res) => {
-  const { name, role } = req.body;
+  const { name, role, tableNumber } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: '請輸入名字' });
+  if (!tableNumber?.toString().trim()) return res.status(400).json({ error: '請輸入桌號' });
   const VALID = ['長榮會員', '來賓', '親友'];
   if (!VALID.includes(role)) return res.status(400).json({ error: '請選擇身份' });
 
-  const r = dbRun('INSERT INTO users (name, role) VALUES (?, ?)', [name.trim(), role]);
-  res.json({ userId: r.lastInsertRowid, name: name.trim(), role });
+  const nm = name.trim();
+  const tn = tableNumber.toString().trim();
+
+  // Session recovery: return existing user if name + table_number match
+  const existing = dbGet(
+    'SELECT id, name, role, table_number FROM users WHERE name = ? AND table_number = ?',
+    [nm, tn]
+  );
+  if (existing) {
+    return res.json({ userId: existing.id, name: existing.name, role: existing.role, tableNumber: existing.table_number });
+  }
+
+  const r = dbRun('INSERT INTO users (name, role, table_number) VALUES (?, ?, ?)', [nm, role, tn]);
+  res.json({ userId: r.lastInsertRowid, name: nm, role, tableNumber: tn });
 });
 
 // GET /api/participants
@@ -266,6 +287,13 @@ app.delete('/api/admin/participants', adminAuth, (_req, res) => {
   res.json({ success: true });
 });
 
+// DELETE /api/admin/users — clear all users and their connections
+app.delete('/api/admin/users', adminAuth, (_req, res) => {
+  dbRun('DELETE FROM connections');
+  dbRun('DELETE FROM users');
+  res.json({ success: true });
+});
+
 // GET /api/admin/export
 app.get('/api/admin/export', adminAuth, (_req, res) => {
   const rows = dbAll(`
@@ -276,8 +304,8 @@ app.get('/api/admin/export', adminAuth, (_req, res) => {
       p.industry         AS target_industry,
       p.table_number     AS target_table,
       CASE c.type
-        WHEN 'want_to_meet' THEN '想認識'
-        WHEN 'can_provide'  THEN '可提供資源'
+        WHEN 'want_to_meet' THEN '我想認識他'
+        WHEN 'can_provide'  THEN '我可以幫助他'
         ELSE c.type
       END                AS connection_type,
       c.source,
