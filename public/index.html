@@ -190,6 +190,77 @@
       </div>
     </div>
 
+    <!-- ── 商機小錦囊 Tab（活動結束時顯示） ── -->
+    <div id="tab-ended" class="hidden flex-1 overflow-y-auto pb-10">
+
+      <!-- Email 驗證表單 -->
+      <div id="ended-email-form" class="px-4 pt-6">
+        <div class="text-center mb-6">
+          <div class="text-5xl mb-3">🎁</div>
+          <h2 class="text-xl font-black text-gray-800">商機小錦囊</h2>
+          <p class="text-gray-500 text-sm mt-1">請輸入 Email 以查看你的個人商機報表</p>
+        </div>
+        <div class="bg-white rounded-3xl shadow-lg p-5 space-y-4">
+          <div>
+            <label class="block text-gray-700 font-bold mb-1.5 text-sm">Email <span class="text-red-500">*</span></label>
+            <input id="ended-email-input" type="email" placeholder="請輸入當初填寫的 Email" autocomplete="email"
+              class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 text-base font-medium focus:border-red-500 focus:outline-none transition-colors">
+          </div>
+          <p id="ended-email-error" class="hidden text-red-500 text-sm font-semibold text-center"></p>
+          <button id="ended-email-btn" onclick="submitEmailForReport()"
+            class="w-full bg-red-600 text-white text-base font-black py-4 rounded-2xl shadow-lg active:bg-red-700 transition-all">
+            查看我的商機小錦囊
+          </button>
+          <p class="text-gray-400 text-xs text-center">如未填寫 Email，請聯繫現場工作人員</p>
+        </div>
+      </div>
+
+      <!-- 報表內容 -->
+      <div id="ended-report" class="hidden px-4 pt-5 space-y-4">
+
+        <!-- 個人資訊 -->
+        <div class="bg-red-600 rounded-3xl px-5 py-4 text-white">
+          <p class="text-red-200 text-xs font-bold uppercase tracking-wide">你的商機小錦囊</p>
+          <h2 class="text-2xl font-black mt-0.5" id="report-name">—</h2>
+          <p class="text-red-200 text-sm mt-0.5" id="report-identity">—</p>
+        </div>
+
+        <!-- 想認識你的人 -->
+        <div class="bg-white rounded-3xl shadow-sm overflow-hidden">
+          <div class="bg-rose-50 px-5 py-3 border-b border-rose-100">
+            <h3 class="font-black text-rose-700 text-base">🤝 想認識你的人</h3>
+            <p class="text-rose-500 text-xs mt-0.5">以下夥伴在活動中表達想與你深入交流</p>
+          </div>
+          <div id="report-meeters" class="p-4 space-y-3">
+            <p class="text-gray-400 text-sm text-center py-4">無記錄</p>
+          </div>
+        </div>
+
+        <!-- 可以幫助你的人 -->
+        <div class="bg-white rounded-3xl shadow-sm overflow-hidden">
+          <div class="bg-green-50 px-5 py-3 border-b border-green-100">
+            <h3 class="font-black text-green-700 text-base">💡 可以幫助你的人</h3>
+            <p class="text-green-500 text-xs mt-0.5">以下夥伴表示能提供你所需的協助</p>
+          </div>
+          <div id="report-helpers" class="p-4 space-y-3">
+            <p class="text-gray-400 text-sm text-center py-4">無記錄</p>
+          </div>
+        </div>
+
+        <!-- 你想認識的人 -->
+        <div class="bg-white rounded-3xl shadow-sm overflow-hidden">
+          <div class="bg-blue-50 px-5 py-3 border-b border-blue-100">
+            <h3 class="font-black text-blue-700 text-base">🌟 你想認識的人</h3>
+            <p class="text-blue-500 text-xs mt-0.5">你在活動中選擇想深入交流的夥伴</p>
+          </div>
+          <div id="report-mywants" class="p-4 space-y-3">
+            <p class="text-gray-400 text-sm text-center py-4">無記錄</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <!-- ── 所有來賓 Tab ── -->
     <div id="tab-browse" class="hidden flex-1 flex flex-col">
       <div class="sticky top-[112px] z-10 bg-gray-50 px-4 pt-3 pb-2">

@@ -58,6 +58,11 @@ async function startApp() {
     loadCurrentSpeaker(),
   ]);
   startSpeakerPolling();
+  try {
+    const eventState = await api('GET', '/api/event-state');
+    applyPhase(eventState.phase);
+  } catch (_) {}
+  connectSSE();
 }
 
 // ════════════════════════════════════════════════
@@ -122,6 +127,159 @@ async function loadUserConnections() {
 function startSpeakerPolling() {
   clearInterval(state.speakerPollTimer);
   state.speakerPollTimer = setInterval(loadCurrentSpeaker, 5000);
+}
+
+// ════════════════════════════════════════════════
+// SSE — 即時同步活動 Phase
+// ════════════════════════════════════════════════
+function connectSSE() {
+  const es = new EventSource('/api/event-stream');
+  es.addEventListener('event-state', e => {
+    try {
+      const data = JSON.parse(e.data);
+      applyPhase(data.phase);
+    } catch (_) {}
+  });
+  es.onerror = () => {
+    es.close();
+    setTimeout(connectSSE, 5000); // 斷線後 5 秒重連
+  };
+}
+
+function applyPhase(phase) {
+  const tabNav      = document.querySelector('nav');
+  const tabSpeaker  = document.getElementById('tab-speaker');
+  const tabBrowse   = document.getElementById('tab-browse');
+  const tabEnded    = document.getElementById('tab-ended');
+  if (!tabEnded) return;
+
+  if (phase === 'ended') {
+    if (tabNav)     tabNav.classList.add('hidden');
+    if (tabSpeaker) tabSpeaker.classList.add('hidden');
+    if (tabBrowse)  tabBrowse.classList.add('hidden');
+    tabEnded.classList.remove('hidden');
+    showEndedScreen();
+  } else {
+    if (tabNav)     tabNav.classList.remove('hidden');
+    tabEnded.classList.add('hidden');
+    // 恢復目前 active tab
+    if (state.activeTab === 'browse') {
+      if (tabSpeaker) tabSpeaker.classList.add('hidden');
+      if (tabBrowse)  tabBrowse.classList.remove('hidden');
+    } else {
+      if (tabSpeaker) tabSpeaker.classList.remove('hidden');
+      if (tabBrowse)  tabBrowse.classList.add('hidden');
+    }
+  }
+}
+
+// ════════════════════════════════════════════════
+// 商機小錦囊
+// ════════════════════════════════════════════════
+function showEndedScreen() {
+  const emailForm   = document.getElementById('ended-email-form');
+  const reportArea  = document.getElementById('ended-report');
+  if (!emailForm || !reportArea) return;
+
+  if (state.user?.email) {
+    // 有 email，直接載入報表
+    emailForm.classList.add('hidden');
+    loadMyReport(state.user.name, state.user.email);
+  } else {
+    // 無 email，顯示驗證表單
+    emailForm.classList.remove('hidden');
+    reportArea.classList.add('hidden');
+  }
+}
+
+async function submitEmailForReport() {
+  const input = document.getElementById('ended-email-input');
+  const errEl = document.getElementById('ended-email-error');
+  const btn   = document.getElementById('ended-email-btn');
+  const email = input?.value.trim();
+
+  if (!email) {
+    errEl.textContent = '請輸入 Email';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  errEl.classList.add('hidden');
+  btn.disabled = true;
+  btn.textContent = '查詢中...';
+
+  try {
+    await loadMyReport(state.user.name, email);
+    document.getElementById('ended-email-form').classList.add('hidden');
+  } catch (e) {
+    errEl.textContent = e.message || '查詢失敗，請確認 Email 是否正確';
+    errEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '查看我的商機小錦囊';
+  }
+}
+
+async function loadMyReport(name, email) {
+  const reportArea = document.getElementById('ended-report');
+  const res = await fetch('/api/my-report', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, email }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || '查詢失敗');
+  renderReport(data);
+  reportArea.classList.remove('hidden');
+}
+
+function renderReport(data) {
+  document.getElementById('report-name').textContent     = data.name || '—';
+  document.getElementById('report-identity').textContent = data.identity || '—';
+
+  const renderList = (containerId, items, renderFn, emptyMsg) => {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    if (!items?.length) {
+      el.innerHTML = `<p class="text-gray-400 text-sm text-center py-4">${emptyMsg}</p>`;
+      return;
+    }
+    el.innerHTML = items.map(renderFn).join('');
+  };
+
+  renderList('report-meeters', data.meeters,
+    p => `<div class="border border-rose-100 rounded-2xl p-3.5">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="font-black text-gray-800 text-base">${esc(p.name)}</span>
+        <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">${esc(p.identity || '')}</span>
+      </div>
+      ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">"${esc(p.reason)}"</p>` : ''}
+    </div>`,
+    '這次沒有人表達想認識你，繼續加油！'
+  );
+
+  renderList('report-helpers', data.helpers,
+    p => `<div class="border border-green-100 rounded-2xl p-3.5">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="font-black text-gray-800 text-base">${esc(p.name)}</span>
+        <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">${esc(p.identity || '')}</span>
+      </div>
+      ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">"${esc(p.reason)}"</p>` : ''}
+    </div>`,
+    '這次沒有人提供幫助'
+  );
+
+  renderList('report-mywants', data.myWants,
+    p => `<div class="border border-blue-100 rounded-2xl p-3.5">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="font-black text-gray-800 text-base">${esc(p.name)}</span>
+        <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">${esc(p.identity || '')}</span>
+        <span class="text-xs text-blue-600 font-bold ml-auto">第 ${esc(p.table_number || '?')} 桌</span>
+      </div>
+      ${p.needs ? `<p class="text-gray-500 text-xs mb-1">需求：${esc(p.needs)}</p>` : ''}
+      ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">你的原因：「${esc(p.reason)}」</p>` : ''}
+    </div>`,
+    '這次沒有想認識的人'
+  );
 }
 
 // ════════════════════════════════════════════════

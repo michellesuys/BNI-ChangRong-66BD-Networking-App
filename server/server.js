@@ -580,6 +580,46 @@ app.get('/api/admin/report', adminAuth, (_req, res) => {
   res.json(report);
 });
 
+// POST /api/my-report — 使用者個人商機小錦囊（以姓名+Email 驗證）
+app.post('/api/my-report', (req, res) => {
+  const { name, email } = req.body;
+  if (!name?.trim() || !email?.trim())
+    return res.status(400).json({ error: '請輸入姓名與 Email' });
+
+  const member = dbGet(
+    "SELECT id, name, identity FROM participants WHERE name = ? AND LOWER(email) = LOWER(?)",
+    [name.trim(), email.trim()]
+  );
+  if (!member)
+    return res.status(404).json({ error: '找不到符合的帳號，請確認姓名與 Email 是否正確' });
+
+  // 誰想認識我
+  const meeters = dbAll(`
+    SELECT p.name, p.identity, c.reason
+    FROM connections c JOIN participants p ON c.user_id = p.id
+    WHERE c.participant_id = ? AND c.type = 'want_to_meet'
+    ORDER BY c.timestamp
+  `, [member.id]);
+
+  // 誰可以幫助我
+  const helpers = dbAll(`
+    SELECT p.name, p.identity, c.reason
+    FROM connections c JOIN participants p ON c.user_id = p.id
+    WHERE c.participant_id = ? AND c.type = 'can_provide'
+    ORDER BY c.timestamp
+  `, [member.id]);
+
+  // 我想認識的人（含桌號作為聯絡線索）
+  const myWants = dbAll(`
+    SELECT p.name, p.identity, p.table_number, p.needs, c.reason
+    FROM connections c JOIN participants p ON c.participant_id = p.id
+    WHERE c.user_id = ? AND c.type = 'want_to_meet'
+    ORDER BY c.timestamp
+  `, [member.id]);
+
+  res.json({ name: member.name, identity: member.identity, meeters, helpers, myWants });
+});
+
 // ─────────────────────────────────────────────
 // 頁面路由
 // ─────────────────────────────────────────────
