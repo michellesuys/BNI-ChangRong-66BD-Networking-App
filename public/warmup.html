@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#DC2626">
+  <title>BNI 長榮 20 周年慶 – 預熱中</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* ── 基礎 ── */
+    * { box-sizing: border-box; }
+    body { overflow: hidden; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; }
+
+    /* ── 飄動球背景 ── */
+    #bubble-canvas {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    }
+
+    /* ── 主內容 ── */
+    #warmup-view, #drawing-view {
+      position: relative; z-index: 1;
+    }
+
+    /* ── 數字跳動 ── */
+    @keyframes count-pop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.25); color: #FDE047; }
+      100% { transform: scale(1); }
+    }
+    .count-pop { animation: count-pop 0.5s ease-out; }
+
+    /* ── 倒數計時 ── */
+    .countdown-unit {
+      display: flex; flex-direction: column; align-items: center;
+      background: rgba(255,255,255,0.1); border-radius: 16px;
+      padding: 16px 20px; min-width: 80px;
+    }
+    .countdown-value {
+      font-size: 3rem; font-weight: 900; line-height: 1;
+      color: #FFFFFF; text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+    .countdown-label {
+      font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-top: 4px;
+    }
+
+    /* ── QR Code ── */
+    #qr-wrapper img { border: 4px solid white; border-radius: 12px; }
+
+    /* ── 轉盤（名字滾動） ── */
+    #draw-reel-container {
+      position: relative;
+      height: 220px;
+      overflow: hidden;
+      border-radius: 24px;
+      border: 3px solid rgba(255,215,80,0.5);
+      background: rgba(0,0,0,0.45);
+      box-shadow: 0 0 40px rgba(255,200,50,0.2), inset 0 0 30px rgba(0,0,0,0.3);
+    }
+    #draw-reel-container::before,
+    #draw-reel-container::after {
+      content: '';
+      position: absolute; left: 0; right: 0; z-index: 2;
+      height: 72px;
+      pointer-events: none;
+    }
+    #draw-reel-container::before {
+      top: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.85), transparent);
+    }
+    #draw-reel-container::after {
+      bottom: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+    }
+    /* 中間高亮條 */
+    #reel-highlight {
+      position: absolute; left: 0; right: 0; top: 50%; z-index: 1;
+      transform: translateY(-50%);
+      height: 76px;
+      background: rgba(255,215,80,0.1);
+      border-top: 2px solid rgba(255,215,80,0.6);
+      border-bottom: 2px solid rgba(255,215,80,0.6);
+      pointer-events: none;
+    }
+    #draw-reel {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-start;
+      transition: none;
+      will-change: transform;
+    }
+    .reel-item {
+      height: 76px; display: flex; align-items: center; justify-content: center;
+      font-size: 2.2rem; font-weight: 900; color: white;
+      letter-spacing: 0.08em;
+      flex-shrink: 0; width: 100%;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.8);
+    }
+
+    /* 抽中結果動畫 */
+    @keyframes winner-appear {
+      0%   { transform: scale(0.6) translateY(20px); opacity: 0; }
+      70%  { transform: scale(1.05) translateY(-4px); opacity: 1; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    #winner-reveal {
+      animation: winner-appear 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    /* 金色光環 */
+    @keyframes halo-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(253,224,71,0.6); }
+      50%       { box-shadow: 0 0 0 24px rgba(253,224,71,0); }
+    }
+    .halo-pulse { animation: halo-pulse 1.5s ease-in-out infinite; }
+
+    /* 粒子閃爍 */
+    @keyframes confetti-fly {
+      0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(-120px) rotate(360deg); opacity: 0; }
+    }
+    .confetti-dot {
+      position: absolute;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      animation: confetti-fly 1.2s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-red-900 via-red-800 to-red-900 min-h-screen">
+
+  <!-- 飄動球畫布 -->
+  <canvas id="bubble-canvas"></canvas>
+
+  <!-- ══════════════════ 預熱畫面 ══════════════════ -->
+  <div id="warmup-view" class="min-h-screen flex flex-col items-center justify-center px-8 py-8">
+
+    <!-- 標題區 -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center gap-3 mb-4">
+        <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg">
+          <span class="text-red-600 text-2xl font-black">BNI</span>
+        </div>
+        <div class="text-left">
+          <p class="text-red-200 text-sm font-semibold tracking-widest uppercase">長榮分會 · 20 周年慶</p>
+          <h1 class="text-white text-3xl font-black leading-tight">商機變變變・產業閃電秀</h1>
+        </div>
+      </div>
+      <p class="text-yellow-300 text-lg font-bold mt-2">
+        20 年磨一劍，長榮分會為你點亮全台的商機燈號。
+      </p>
+      <p class="text-red-200 text-sm mt-1">
+        拒絕無效社交，用數據與視覺證明你的產業影響力。
+      </p>
+    </div>
+
+    <!-- 主要內容：人數 + QR + 倒數 -->
+    <div class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+
+      <!-- 左：即時人數 -->
+      <div class="flex flex-col items-center text-center">
+        <div class="bg-white/10 backdrop-blur rounded-3xl p-8 border border-white/20 w-full">
+          <p class="text-red-200 text-sm font-semibold mb-2 tracking-wide">目前已登記人數</p>
+          <div id="count-display" class="text-white font-black" style="font-size: 6rem; line-height: 1; text-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+            0
+          </div>
+          <p class="text-red-200 text-sm mt-2">位夥伴已加入</p>
+          <div class="mt-4 flex items-center justify-center gap-2">
+            <div id="live-dot" class="w-2.5 h-2.5 rounded-full bg-green-400"></div>
+            <span class="text-green-300 text-xs font-semibold">即時更新中</span>
+          </div>
+        </div>
+
+        <!-- 活動階段徽章 -->
+        <div id="phase-badge" class="mt-4 px-5 py-2 rounded-full bg-yellow-400 text-yellow-900 font-black text-sm">
+          活動預熱中
+        </div>
+      </div>
+
+      <!-- 中：QR Code -->
+      <div class="flex flex-col items-center text-center">
+        <div id="qr-wrapper" class="bg-white rounded-3xl p-5 shadow-2xl">
+          <!-- QR Code 由 JS 動態產生 -->
+          <div id="qr-code" class="w-48 h-48 flex items-center justify-center bg-gray-100 rounded-xl">
+            <span class="text-gray-400 text-xs">載入中...</span>
+          </div>
+        </div>
+        <p class="text-white font-bold text-lg mt-4">掃碼加入活動</p>
+        <p class="text-red-200 text-sm mt-1" id="qr-url-display">請用手機掃描</p>
+      </div>
+
+      <!-- 右：倒數計時 -->
+      <div class="flex flex-col items-center text-center">
+        <div class="bg-white/10 backdrop-blur rounded-3xl p-6 border border-white/20 w-full">
+          <p class="text-red-200 text-sm font-semibold mb-4 tracking-wide">活動開始倒數</p>
+          <div id="countdown-container" class="flex items-center justify-center gap-3">
+            <div class="countdown-unit">
+              <span class="countdown-value" id="cd-hours">--</span>
+              <span class="countdown-label">時</span>
+            </div>
+            <span class="text-white text-3xl font-black mb-4">:</span>
+            <div class="countdown-unit">
+              <span class="countdown-value" id="cd-minutes">--</span>
+              <span class="countdown-label">分</span>
+            </div>
+            <span class="text-white text-3xl font-black mb-4">:</span>
+            <div class="countdown-unit">
+              <span class="countdown-value" id="cd-seconds">--</span>
+              <span class="countdown-label">秒</span>
+            </div>
+          </div>
+          <p id="countdown-started" class="hidden text-yellow-300 font-bold text-lg mt-4">活動已開始！</p>
+        </div>
+
+        <div class="mt-5 text-center">
+          <p class="text-red-200 text-xs">今日現場暗語</p>
+          <p class="text-yellow-200 text-2xl font-black mt-1">「商機無限，連結未來」</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部裝飾 -->
+    <div class="mt-8 text-center">
+      <p class="text-red-300 text-xs">BNI 長榮 20 周年慶 · 商機變變變 · 產業閃電秀</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════ 抽選畫面 ══════════════════ -->
+  <div id="drawing-view" class="hidden min-h-screen flex flex-col items-center justify-center px-8 py-8">
+
+    <div class="text-center mb-8">
+      <p class="text-red-200 text-sm font-semibold tracking-widest mb-2">BNI 長榮 20 周年慶</p>
+      <h2 class="text-white text-4xl font-black">🎰 抽選發言者</h2>
+      <p class="text-yellow-300 text-lg mt-2">命運之輪，即將揭曉！</p>
+    </div>
+
+    <div class="w-full max-w-lg">
+      <!-- 轉盤 -->
+      <div id="draw-reel-container">
+        <div id="reel-highlight"></div>
+        <div id="draw-reel"></div>
+      </div>
+
+      <!-- 抽中結果（抽選完後顯示） -->
+      <div id="winner-result" class="hidden mt-8 text-center">
+        <div id="winner-reveal" class="inline-block bg-white rounded-3xl px-10 py-8 shadow-2xl halo-pulse">
+          <p class="text-gray-500 text-sm font-semibold mb-2">恭喜！本輪發言者</p>
+          <p id="winner-name" class="text-red-600 text-5xl font-black my-2"></p>
+          <p id="winner-table" class="text-gray-400 text-base mt-1"></p>
+          <p id="winner-needs" class="text-gray-600 text-sm mt-3 max-w-xs mx-auto"></p>
+        </div>
+
+        <!-- 彩色粒子容器 -->
+        <div id="confetti-container" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
+
+        <p class="text-red-200 text-sm mt-6">管理員請按「設為發言者」確認</p>
+      </div>
+
+      <!-- 抽選中提示 -->
+      <div id="drawing-tip" class="text-center mt-6">
+        <p class="text-yellow-300 text-lg font-bold">命運轉動中...</p>
+        <p class="text-red-200 text-sm mt-1">請稍候，即將揭曉！</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  'use strict';
+
+  // ─────────────────────────────────────────────
+  // 狀態
+  // ─────────────────────────────────────────────
+  let currentPhase = 'warmup';
+  let currentCount = 0;
+  let countdownTarget = null;
+  let countdownInterval = null;
+  let allParticipants = [];
+  let reelAnimating = false;
+
+  // ─────────────────────────────────────────────
+  // 飄動球背景
+  // ─────────────────────────────────────────────
+  (function initBubbles() {
+    const canvas = document.getElementById('bubble-canvas');
+    const ctx = canvas.getContext('2d');
+    let balls = [];
+
+    function resize() {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const COLORS = [
+      'rgba(255,100,100,0.15)',
+      'rgba(255,200,100,0.12)',
+      'rgba(255,255,255,0.08)',
+      'rgba(200,50,50,0.1)',
+    ];
+
+    for (let i = 0; i < 18; i++) {
+      balls.push({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        r: 30 + Math.random() * 80,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      });
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      balls.forEach(b => {
+        b.x += b.vx;
+        b.y += b.vy;
+        if (b.x < -b.r) b.x = canvas.width + b.r;
+        if (b.x > canvas.width + b.r) b.x = -b.r;
+        if (b.y < -b.r) b.y = canvas.height + b.r;
+        if (b.y > canvas.height + b.r) b.y = -b.r;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        ctx.fillStyle = b.color;
+        ctx.fill();
+      });
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+
+  // ─────────────────────────────────────────────
+  // QR Code 生成
+  // ─────────────────────────────────────────────
+  function initQRCode() {
+    const url = 'https://bni-changrong66-yiseadata.zeabur.app/';
+    document.getElementById('qr-url-display').textContent = 'bni-changrong66-yiseadata.zeabur.app';
+
+    const container = document.getElementById('qr-code');
+    const encoded   = encodeURIComponent(url);
+    container.innerHTML = `<img
+      src="https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=${encoded}&margin=8&color=1F2937&bgcolor=FFFFFF"
+      width="192" height="192"
+      alt="QR Code"
+      style="border-radius:8px;"
+      onerror="this.outerHTML='<p class=\\'text-gray-500 text-xs p-4\\'>QR 碼載入失敗</p>'"
+    >`;
+  }
+
+  // ─────────────────────────────────────────────
+  // 倒數計時器
+  // ─────────────────────────────────────────────
+  function startCountdown(target) {
+    if (countdownInterval) clearInterval(countdownInterval);
+    countdownTarget = target ? new Date(target) : null;
+
+    function tick() {
+      if (!countdownTarget) {
+        ['cd-hours','cd-minutes','cd-seconds'].forEach(id => {
+          document.getElementById(id).textContent = '--';
+        });
+        return;
+      }
+      const diff = countdownTarget - Date.now();
+      if (diff <= 0) {
+        document.getElementById('cd-hours').textContent   = '00';
+        document.getElementById('cd-minutes').textContent = '00';
+        document.getElementById('cd-seconds').textContent = '00';
+        document.getElementById('countdown-started').classList.remove('hidden');
+        clearInterval(countdownInterval);
+        return;
+      }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      document.getElementById('cd-hours').textContent   = String(h).padStart(2, '0');
+      document.getElementById('cd-minutes').textContent = String(m).padStart(2, '0');
+      document.getElementById('cd-seconds').textContent = String(s).padStart(2, '0');
+      document.getElementById('countdown-started').classList.add('hidden');
+    }
+    tick();
+    countdownInterval = setInterval(tick, 1000);
+  }
+
+  // ─────────────────────────────────────────────
+  // 更新人數顯示
+  // ─────────────────────────────────────────────
+  function updateCount(n) {
+    const el = document.getElementById('count-display');
+    if (n !== currentCount) {
+      currentCount = n;
+      el.textContent = n;
+      el.classList.remove('count-pop');
+      void el.offsetWidth; // reflow
+      el.classList.add('count-pop');
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // 活動階段徽章
+  // ─────────────────────────────────────────────
+  const PHASE_LABELS = {
+    warmup:   '活動預熱中',
+    drawing:  '抽選進行中',
+    speaking: '發言者進行中',
+    ended:    '活動已結束',
+  };
+  const PHASE_COLORS = {
+    warmup:   'bg-yellow-400 text-yellow-900',
+    drawing:  'bg-red-400 text-white',
+    speaking: 'bg-green-400 text-green-900',
+    ended:    'bg-gray-400 text-gray-800',
+  };
+  function updatePhaseBadge(phase) {
+    const el = document.getElementById('phase-badge');
+    el.textContent = PHASE_LABELS[phase] || phase;
+    el.className = 'mt-4 px-5 py-2 rounded-full font-black text-sm ' + (PHASE_COLORS[phase] || 'bg-white text-gray-700');
+  }
+
+  // ─────────────────────────────────────────────
+  // 切換畫面
+  // ─────────────────────────────────────────────
+  function showWarmup() {
+    document.getElementById('warmup-view').classList.remove('hidden');
+    document.getElementById('drawing-view').classList.add('hidden');
+  }
+
+  function showDrawing() {
+    document.getElementById('warmup-view').classList.add('hidden');
+    document.getElementById('drawing-view').classList.remove('hidden');
+  }
+
+  // ─────────────────────────────────────────────
+  // 轉盤動畫
+  // ─────────────────────────────────────────────
+  function runReelAnimation(participants, winnerIdx) {
+    if (reelAnimating) return;
+    reelAnimating = true;
+
+    const reel   = document.getElementById('draw-reel');
+    const tip    = document.getElementById('drawing-tip');
+    const result = document.getElementById('winner-result');
+    result.classList.add('hidden');
+    tip.classList.remove('hidden');
+
+    const ITEM_H   = 76;
+    const WRAP_H   = 220;
+    const CENTER_Y = (WRAP_H - ITEM_H) / 2;  // 72px — 選中項置中
+    const winner   = participants[winnerIdx];
+
+    // 建立：8 圈隨機打亂的名字 + 贏家壓軸
+    const LOOPS = 8;
+    const items = [];
+    for (let i = 0; i < LOOPS; i++) {
+      [...participants].sort(() => Math.random() - 0.5).forEach(p => items.push(p.name));
+    }
+    items.push(winner.name);  // 最後一格 = 贏家
+
+    // 填入 DOM
+    reel.innerHTML = '';
+    reel.style.transition = 'none';
+    reel.style.transform  = `translateY(${CENTER_Y}px)`;
+    items.forEach(name => {
+      const d = document.createElement('div');
+      d.className   = 'reel-item';
+      d.textContent = name;
+      reel.appendChild(d);
+    });
+    void reel.offsetHeight;  // force reflow 再開始動畫
+
+    const finalY   = CENTER_Y - ((items.length - 1) * ITEM_H);
+    const travel   = Math.abs(finalY - CENTER_Y);
+    const DURATION = 7000;  // 7 秒：前段快速名字輪轉，後段明顯減速
+    let   startTime = null;
+
+    // easeOutQuart：開頭極快（名字快速輪過），後 30% 明顯減速可看清楚名字
+    function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
+
+    function frame(ts) {
+      if (!startTime) startTime = ts;
+      const t = Math.min((ts - startTime) / DURATION, 1);
+      reel.style.transform = `translateY(${CENTER_Y - travel * easeOutQuart(t)}px)`;
+      if (t < 1) {
+        requestAnimationFrame(frame);
+      } else {
+        setTimeout(showWinner, 700);
+      }
+    }
+
+    function showWinner() {
+      document.getElementById('winner-name').textContent  = winner.name;
+      document.getElementById('winner-table').textContent = `第 ${winner.table_number} 桌`;
+      document.getElementById('winner-needs').textContent = winner.needs || '';
+      tip.classList.add('hidden');
+      result.classList.remove('hidden');
+      spawnConfetti();
+      reelAnimating = false;
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  // ─────────────────────────────────────────────
+  // 彩色粒子
+  // ─────────────────────────────────────────────
+  function spawnConfetti() {
+    const container = document.getElementById('confetti-container');
+    container.innerHTML = '';
+    const colors = ['#FF6B6B','#FFE66D','#6BCB77','#4D96FF','#FF9FF3'];
+    for (let i = 0; i < 30; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'confetti-dot';
+      dot.style.left   = (Math.random() * 100) + '%';
+      dot.style.top    = (60 + Math.random() * 30) + '%';
+      dot.style.background = colors[Math.floor(Math.random() * colors.length)];
+      dot.style.animationDelay = (Math.random() * 0.5) + 's';
+      dot.style.animationDuration = (0.8 + Math.random() * 0.8) + 's';
+      container.appendChild(dot);
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // 套用活動狀態
+  // ─────────────────────────────────────────────
+  function applyState(state) {
+    const phase = state.phase || 'warmup';
+
+    // 人數
+    if (state.memberCount != null) updateCount(state.memberCount);
+
+    // 倒數
+    if (state.countdownTarget !== undefined) startCountdown(state.countdownTarget);
+
+    // 徽章
+    updatePhaseBadge(phase);
+
+    if (phase !== currentPhase) {
+      currentPhase = phase;
+
+      if (phase === 'warmup') {
+        showWarmup();
+      } else if (phase === 'drawing') {
+        showDrawing();
+        // 取得參與者並跑動畫
+        fetchParticipantsAndDraw(state.drawResult);
+      } else if (phase === 'speaking') {
+        // 切換到大螢幕展示頁
+        window.location.href = '/display';
+      } else if (phase === 'ended') {
+        showWarmup();
+      }
+    } else if (phase === 'drawing' && state.drawResult && !reelAnimating) {
+      // 同 phase 但有新 drawResult → 也觸發動畫
+      fetchParticipantsAndDraw(state.drawResult);
+    }
+  }
+
+  async function fetchParticipantsAndDraw(drawResult) {
+    try {
+      const res = await fetch('/api/participants');
+      if (!res.ok) return;
+      const data = await res.json();
+      allParticipants = Array.isArray(data) ? data : (data.participants || []);
+
+      if (!allParticipants.length) return;
+
+      let winnerIdx = 0;
+      if (drawResult && drawResult.id) {
+        const idx = allParticipants.findIndex(p => p.id === drawResult.id);
+        if (idx >= 0) winnerIdx = idx;
+      }
+
+      showDrawing();
+      runReelAnimation(allParticipants, winnerIdx);
+    } catch (e) {
+      console.error('fetchParticipantsAndDraw error', e);
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // SSE 連線
+  // ─────────────────────────────────────────────
+  let sseSource = null;
+  let sseRetryTimer = null;
+
+  function connectSSE() {
+    if (sseSource) { sseSource.close(); sseSource = null; }
+    if (sseRetryTimer) { clearTimeout(sseRetryTimer); sseRetryTimer = null; }
+
+    sseSource = new EventSource('/api/event-stream');
+
+    sseSource.addEventListener('event-state', e => {
+      try {
+        const state = JSON.parse(e.data);
+        applyState(state);
+      } catch (_) {}
+    });
+
+    sseSource.onerror = () => {
+      sseSource.close();
+      sseSource = null;
+      sseRetryTimer = setTimeout(connectSSE, 5000);
+    };
+  }
+
+  // ─────────────────────────────────────────────
+  // Polling：warmup-stats + event-state (fallback)
+  // ─────────────────────────────────────────────
+  async function pollWarmupStats() {
+    try {
+      const res = await fetch('/api/warmup-stats');
+      if (!res.ok) return;
+      const data = await res.json();
+      applyState(data);
+    } catch (_) {}
+  }
+
+  // 活動指示燈（SSE 健康度）
+  let sseOk = false;
+  function flashLiveDot() {
+    const dot = document.getElementById('live-dot');
+    dot.style.opacity = '0.3';
+    setTimeout(() => { dot.style.opacity = '1'; }, 300);
+  }
+
+  // ─────────────────────────────────────────────
+  // 初始化
+  // ─────────────────────────────────────────────
+  async function init() {
+    initQRCode();
+    connectSSE();
+
+    // 立即抓一次狀態
+    await pollWarmupStats();
+
+    // 每 5 秒輪詢（SSE 的 fallback）
+    setInterval(async () => {
+      await pollWarmupStats();
+      flashLiveDot();
+    }, 5000);
+  }
+
+  init();
+  </script>
+</body>
+</html>

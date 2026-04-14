@@ -3,382 +3,883 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BNI 大螢幕顯示</title>
+  <title>BNI 長榮 20 周年慶 · 商機變變變</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background: #111;
+      background:
+        radial-gradient(ellipse at 0% 0%,   rgba(170,8,8,0.38)  0%, transparent 38%),
+        radial-gradient(ellipse at 100% 0%,  rgba(170,8,8,0.38)  0%, transparent 38%),
+        radial-gradient(ellipse at 50%  45%, rgba(255,195,70,0.06) 0%, transparent 55%),
+        linear-gradient(180deg, #0e0608 0%, #060307 60%, #010101 100%);
       color: #fff;
       font-family: -apple-system, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
       overflow: hidden;
       user-select: none;
     }
 
-    /* ── Idle state ── */
+    /* ── Red velvet curtains ── */
+    .curtain {
+      position: fixed;
+      top: 0; bottom: 0;
+      width: 9vw;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .curtain-left {
+      left: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        #3d0606 0px, #7a1010 18px, #601010 36px,
+        #460808 54px, #3d0606 72px
+      );
+      mask-image: linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.55) 65%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.55) 65%, transparent 100%);
+    }
+    .curtain-right {
+      right: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        #3d0606 0px, #7a1010 18px, #601010 36px,
+        #460808 54px, #3d0606 72px
+      );
+      mask-image: linear-gradient(to left, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.55) 65%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.55) 65%, transparent 100%);
+    }
+
+    /* ── Top spotlight ── */
+    .spotlight {
+      position: fixed;
+      top: -8vh; left: 50%;
+      transform: translateX(-50%);
+      width: 55vw; height: 55vh;
+      background: radial-gradient(ellipse at top, rgba(255,220,120,0.13) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ──────────────────────────
+       Idle screen
+    ────────────────────────── */
     #screen-idle {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      min-height: 100vh;
       text-align: center;
       gap: 2rem;
+      position: relative;
+      z-index: 5;
     }
-
-    #screen-idle .logo {
-      width: 160px;
-      height: 160px;
-      background: #DC2626;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 4rem;
-      font-weight: 900;
-      color: #fff;
-      box-shadow: 0 0 60px rgba(220, 38, 38, 0.4);
+    .idle-logo {
+      width: 120px; height: 120px;
+      background: #DC2626; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem; font-weight: 900; color: #fff;
+      box-shadow: 0 0 60px rgba(220,38,38,0.4);
     }
-
     #screen-idle h1 {
-      font-size: clamp(2rem, 4vw, 3.5rem);
+      font-size: clamp(1.8rem, 3.5vw, 3rem);
       font-weight: 900;
-      color: #fff;
-      letter-spacing: 0.05em;
     }
+    #screen-idle p { color: #666; font-size: 1.2rem; }
 
-    #screen-idle p {
-      font-size: clamp(1rem, 2vw, 1.6rem);
-      color: #666;
-    }
-
-    /* ── Speaker state ── */
+    /* ──────────────────────────
+       Speaker screen
+    ────────────────────────── */
+    /* 限制在上方 80vh — 下方實體遮擋區不放內容 */
     #screen-speaker {
       display: none;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
       width: 100%;
-      height: 100vh;
-      padding: 6vw;
-      text-align: center;
+      height: 80vh;
+      max-height: 80vh;
+      overflow: hidden;
       position: relative;
+      z-index: 5;
     }
 
-    /* Top red bar */
-    .top-bar {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      background: #DC2626;
-      padding: 1.2rem 3rem;
+    /* ── Oscar header ── */
+    .oscar-header {
+      text-align: center;
+      padding: 0.75rem 10vw 0.5rem;
+    }
+    .oscar-title-row {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
+      gap: 0.7rem;
     }
-
-    .top-bar .brand {
-      font-size: clamp(1rem, 1.8vw, 1.4rem);
-      font-weight: 900;
-      color: #fff;
-      letter-spacing: 0.08em;
+    .oscar-star {
+      font-size: clamp(1.4rem, 2.5vw, 2.2rem);
+      color: #f0c040;
+      text-shadow: 0 0 18px rgba(240,192,64,0.9), 0 0 36px rgba(240,192,64,0.4);
+      animation: star-twinkle 2.2s ease-in-out infinite;
     }
-
-    .live-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: #fff;
-      color: #DC2626;
-      font-size: clamp(0.8rem, 1.2vw, 1rem);
+    @keyframes star-twinkle {
+      0%,100% { transform: scale(1);    text-shadow: 0 0 18px rgba(240,192,64,0.9), 0 0 36px rgba(240,192,64,0.4); }
+      50%      { transform: scale(1.1); text-shadow: 0 0 28px rgba(240,192,64,1),   0 0 56px rgba(240,192,64,0.6); }
+    }
+    .oscar-brand {
+      font-size: clamp(1.3rem, 2.6vw, 2.3rem);
       font-weight: 900;
-      padding: 0.4rem 1rem;
+      background: linear-gradient(135deg, #f8d660, #e8a820, #f5d880, #d49010);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.06em;
+    }
+    .oscar-subtitle {
+      font-style: italic;
+      color: rgba(240,192,64,0.72);
+      font-size: clamp(0.75rem, 1.3vw, 1.1rem);
+      letter-spacing: 0.06em;
+      margin-top: 0.25rem;
+    }
+    .givers-gain {
+      display: inline-block;
+      border: 1.5px solid rgba(240,192,64,0.55);
+      color: rgba(240,192,64,0.88);
+      font-size: clamp(0.6rem, 0.95vw, 0.85rem);
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      padding: 0.2rem 1rem;
       border-radius: 999px;
-      letter-spacing: 0.1em;
-      animation: pulse-badge 2s infinite;
+      margin-top: 0.2rem;
     }
 
-    .live-dot {
-      width: 10px;
-      height: 10px;
-      background: #DC2626;
-      border-radius: 50%;
-      animation: blink 1.2s infinite;
+    /* ── Gold divider ── */
+    .gold-divider {
+      height: 1.5px;
+      background: linear-gradient(90deg,
+        transparent, rgba(240,192,64,0.35), rgba(240,192,64,0.7),
+        rgba(240,192,64,0.35), transparent);
+      margin: 0.3rem 10vw 0;
     }
 
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.2; }
+    /* ──────────────────────────
+       Main layout
+    ────────────────────────── */
+    .main-layout {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(1.5rem, 3.5vw, 5rem);
+      flex: 1;
+      padding: 0.6rem 10vw 0.6rem;
+      min-height: 0; /* allow flex children to shrink */
     }
 
-    @keyframes pulse-badge {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.4); }
-      50%       { box-shadow: 0 0 0 10px rgba(220,38,38,0); }
-    }
+    /* ──────────────────────────
+       Lamp tower
+    ────────────────────────── */
+    .tower-wrap { position: relative; flex-shrink: 0; }
 
-    /* Main content */
-    .speaker-content {
+    .tower-shell {
+      position: relative;
+      padding: 1.4rem 1.8rem;
+      border-radius: 1.6rem;
+      background: linear-gradient(180deg,
+        #1a0c04 0%, #7c4c12 5%, #cc8e2c 10%,
+        #f0bc4e 15%, #e4a832 21%, #9a6016 26%,
+        #4c2c08 100%);
+      box-shadow:
+        inset 0 0 0 3px rgba(255,238,190,0.38),
+        inset 0 0 0 7px rgba(125,80,14,0.26),
+        0 22px 55px rgba(0,0,0,0.65),
+        0 0 38px rgba(255,185,60,0.14);
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: clamp(1rem, 3vh, 2.5rem);
-      margin-top: 5rem; /* clear top bar */
+      gap: 0.35rem;
+      transition: box-shadow 0.4s ease;
+    }
+    .tower-shell.jackpot {
+      animation: jackpot-glow 1.4s ease-in-out infinite;
+    }
+    @keyframes jackpot-glow {
+      0%,100% { box-shadow: inset 0 0 0 3px rgba(255,238,190,0.38), inset 0 0 0 7px rgba(125,80,14,0.26), 0 22px 55px rgba(0,0,0,0.65), 0 0 65px rgba(255,185,60,0.42); }
+      50%      { box-shadow: inset 0 0 0 3px rgba(255,238,190,0.58), inset 0 0 0 7px rgba(125,80,14,0.36), 0 22px 55px rgba(0,0,0,0.55), 0 0 110px rgba(255,185,60,0.7); }
     }
 
-    .label-now-speaking {
-      font-size: clamp(1rem, 2vw, 1.6rem);
-      color: #DC2626;
+    /* Lamp slots */
+    .lamp-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.18rem;
+      align-items: center;
+    }
+    .lamp {
+      width: clamp(100px, 12vw, 148px);
+      height: clamp(22px, 2.7vh, 34px);
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(0.72rem, 1.1vw, 0.95rem);
       font-weight: 700;
-      letter-spacing: 0.15em;
+      background: #1c1c1c;
+      color: #3a3a3a;
+      box-shadow: inset 0 0 6px rgba(0,0,0,0.9);
+      transition: background 0.25s ease, box-shadow 0.25s ease, color 0.2s ease;
+    }
+    .lamp.lit-white {
+      background: linear-gradient(180deg, #ffffff 0%, #e6e6e6 50%, #cccccc 100%);
+      color: #222;
+      box-shadow: 0 0 14px rgba(255,255,255,0.85), 0 0 28px rgba(255,255,255,0.38), inset 0 1px 3px rgba(255,255,255,0.9);
+    }
+    .lamp.lit-red {
+      background: linear-gradient(180deg, #ff2222 0%, #cc0000 50%, #8a0000 100%);
+      color: #fff;
+      box-shadow: 0 0 18px rgba(255,20,20,0.92), 0 0 38px rgba(255,20,20,0.48), inset 0 1px 3px rgba(255,140,140,0.5);
+    }
+
+    /* Surrounding marquee bulb frame — absolutely positioned inside tower-shell's padding area */
+    .bulb-frame {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .bulb {
+      width: 11px; height: 11px;
+      border-radius: 50%;
+      background: #3a2400;
+      border: 1.5px solid #5a3800;
+      position: absolute;
+    }
+    .bulb.on {
+      background: radial-gradient(circle at 35% 30%, #ffe87a, #f0c030);
+      border-color: #f5d060;
+      box-shadow: 0 0 10px rgba(255,220,80,0.95), 0 0 22px rgba(255,200,50,0.6);
+    }
+
+    /* ──────────────────────────
+       Speaker info panel
+    ────────────────────────── */
+    .speaker-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(0.5rem, 1.3vh, 1.1rem);
+      min-width: 0;
+    }
+
+    .now-label {
+      font-size: clamp(0.75rem, 1.3vw, 1.1rem);
+      font-weight: 700;
+      color: #DC2626;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
+    }
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #DC2626;
+      color: #fff;
+      font-size: clamp(0.65rem, 0.95vw, 0.82rem);
+      font-weight: 900;
+      padding: 0.28rem 0.85rem;
+      border-radius: 999px;
+      margin-left: 0.6rem;
+      vertical-align: middle;
+      letter-spacing: 0.08em;
+      animation: badge-pulse 2s infinite;
+    }
+    @keyframes badge-pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.5); }
+      50%      { box-shadow: 0 0 0 8px rgba(220,38,38,0); }
+    }
+    .live-dot {
+      width: 7px; height: 7px;
+      background: #fff;
+      border-radius: 50%;
+      animation: blink 1.2s infinite;
+    }
+    @keyframes blink {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.15; }
     }
 
     .speaker-name {
-      font-size: clamp(4rem, 14vw, 14rem);
+      font-size: clamp(3.5rem, 10vw, 9rem);
       font-weight: 900;
       color: #fff;
       line-height: 1;
-      letter-spacing: 0.02em;
-      text-shadow: 0 4px 40px rgba(220,38,38,0.3);
-      /* Animate in */
-      animation: fadeUp 0.5s ease;
+      text-shadow: 0 4px 30px rgba(220,38,38,0.22);
     }
 
-    .speaker-industry {
-      font-size: clamp(1.5rem, 4vw, 4rem);
-      color: #aaa;
-      font-weight: 500;
-      animation: fadeUp 0.5s ease 0.1s both;
-    }
-
-    .speaker-table {
+    .table-badge {
       display: inline-flex;
       align-items: baseline;
-      gap: 0.4em;
+      gap: 0.3em;
       background: #DC2626;
-      padding: 0.6em 1.6em;
+      padding: 0.45em 1.3em;
       border-radius: 999px;
-      animation: fadeUp 0.5s ease 0.2s both;
+      width: fit-content;
     }
+    .table-label { font-size: clamp(0.85rem, 1.5vw, 1.4rem); font-weight: 700; color: rgba(255,255,255,0.85); }
+    .table-num   { font-size: clamp(1.7rem, 3.8vw, 3.4rem); font-weight: 900; color: #fff; line-height: 1; }
 
-    .speaker-table .table-label {
-      font-size: clamp(1rem, 2vw, 1.8rem);
-      font-weight: 700;
-      color: rgba(255,255,255,0.85);
+    .needs-box {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-left: 4px solid #DC2626;
+      border-radius: 0.9rem;
+      padding: 0.9rem 1.3rem;
     }
-
-    .speaker-table .table-number {
-      font-size: clamp(2rem, 5vw, 4.5rem);
-      font-weight: 900;
-      color: #fff;
-      line-height: 1;
-    }
-
-    .speaker-needs {
-      max-width: 80%;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 1.5rem;
-      padding: 1.2rem 2.5rem;
-      font-size: clamp(1rem, 2.2vw, 2rem);
-      color: #ccc;
-      line-height: 1.6;
-      animation: fadeUp 0.5s ease 0.3s both;
-    }
-
-    .speaker-needs .needs-label {
+    .needs-lbl {
+      font-size: clamp(0.6rem, 0.95vw, 0.82rem);
       color: #DC2626;
       font-weight: 700;
-      font-size: 0.75em;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.13em;
       text-transform: uppercase;
-      display: block;
-      margin-bottom: 0.4em;
+      margin-bottom: 0.35rem;
+    }
+    .needs-txt {
+      font-size: clamp(0.95rem, 1.9vw, 1.7rem);
+      color: #ccc;
+      line-height: 1.55;
+    }
+
+    /* QR code */
+    .qr-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .qr-frame {
+      background: #fff;
+      border-radius: 0.7rem;
+      padding: 7px;
+      flex-shrink: 0;
+    }
+    .qr-hint {
+      font-size: clamp(0.7rem, 1.15vw, 1rem);
+      color: #888;
+      line-height: 1.55;
+    }
+    .qr-hint strong { color: #aaa; display: block; margin-bottom: 0.2rem; font-size: 1.05em; }
+
+    /* Sparkles */
+    #sparkle-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+    @keyframes sparkle-float {
+      0%   { transform: translateY(0)   rotate(0deg)  scale(1);    opacity: 0; }
+      15%  { opacity: 1; }
+      85%  { opacity: 0.8; }
+      100% { transform: translateY(-80px) rotate(30deg) scale(1.2); opacity: 0; }
+    }
+
+    /* Fullscreen hint */
+    #fullscreen-hint {
+      position: fixed;
+      bottom: 1rem; right: 1rem;
+      background: rgba(255,255,255,0.07);
+      color: #555;
+      font-size: 0.75rem;
+      padding: 0.35rem 0.8rem;
+      border-radius: 999px;
+      cursor: pointer;
+      z-index: 20;
+    }
+    #fullscreen-hint.hidden { opacity: 0; pointer-events: none; }
+
+    .watermark {
+      position: fixed;
+      bottom: 5px; width: 100%;
+      text-align: center;
+      font-size: 11px;
+      color: rgba(255,255,255,0.13);
+      z-index: 1;
+      pointer-events: none;
     }
 
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
+      from { opacity: 0; transform: translateY(16px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-
-    /* ── Divider line ── */
-    .divider {
-      width: 8rem;
-      height: 4px;
-      background: #DC2626;
-      border-radius: 2px;
-      margin: 0 auto;
-      animation: fadeUp 0.5s ease 0.15s both;
-    }
-
-    /* ── Bottom watermark ── */
-    .watermark {
-      position: absolute;
-      bottom: 1.5rem;
-      left: 2rem;
-      font-size: clamp(0.65rem, 1vw, 0.9rem);
-      color: #333;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-    }
-
-    /* ── Fullscreen hint ── */
-    #fullscreen-hint {
-      position: fixed;
-      bottom: 1.5rem;
-      right: 1.5rem;
-      background: rgba(255,255,255,0.08);
-      color: #555;
-      font-size: 0.75rem;
-      padding: 0.4rem 0.9rem;
-      border-radius: 999px;
-      cursor: pointer;
-      transition: opacity 0.3s;
-      white-space: nowrap;
-    }
-    #fullscreen-hint:hover { background: rgba(255,255,255,0.14); color: #888; }
-    #fullscreen-hint.hidden { opacity: 0; pointer-events: none; }
   </style>
 </head>
 <body>
 
-  <!-- ── Idle / Waiting screen ── -->
-  <div id="screen-idle">
-    <div class="logo">BNI</div>
-    <h1>BNI 長榮20週年<br>商務交流活動</h1>
-    <p>等待發言者上台…</p>
+<div class="curtain curtain-left"  aria-hidden="true"></div>
+<div class="curtain curtain-right" aria-hidden="true"></div>
+<div class="spotlight"             aria-hidden="true"></div>
+<div id="sparkle-layer"            aria-hidden="true"></div>
+
+<!-- ── Idle ── -->
+<div id="screen-idle">
+  <div class="idle-logo">BNI</div>
+  <h1>BNI 長榮 20 周年慶<br>商機變變變・產業閃電秀</h1>
+  <p>等待發言者上台…</p>
+</div>
+
+<!-- ── Speaker ── -->
+<div id="screen-speaker">
+
+  <div class="oscar-header">
+    <div class="oscar-title-row">
+      <span class="oscar-star">★</span>
+      <span class="oscar-brand">BNI 長榮 20 周年慶・商機變變變</span>
+      <span class="oscar-star">★</span>
+    </div>
+    <div class="givers-gain">★ GIVERS GAIN ★</div>
   </div>
 
-  <!-- ── Speaker display screen ── -->
-  <div id="screen-speaker">
+  <div class="gold-divider"></div>
 
-    <!-- Top bar -->
-    <div class="top-bar">
-      <span class="brand">BNI 長榮20週年 · 商務交流活動</span>
-      <span class="live-badge">
-        <span class="live-dot"></span>
-        目前發言者
-      </span>
+  <div class="main-layout">
+
+    <!-- Lamp tower -->
+    <div class="tower-wrap">
+      <div class="tower-shell" id="tower-shell">
+        <div class="bulb-frame" id="bulb-frame"></div>
+        <div class="lamp-list" id="lamp-list"></div>
+      </div>
     </div>
 
-    <!-- Main content -->
-    <div class="speaker-content">
-      <div class="label-now-speaking">現在發言</div>
+    <!-- Speaker info -->
+    <div class="speaker-info">
+
+      <div>
+        <span class="now-label">現在發言</span>
+        <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+      </div>
+
       <div class="speaker-name" id="disp-name">—</div>
-      <div class="divider"></div>
-      <div class="speaker-industry" id="disp-industry"></div>
-      <div class="speaker-table">
+
+      <div class="table-badge">
         <span class="table-label">第</span>
-        <span class="table-number" id="disp-table">?</span>
+        <span class="table-num" id="disp-table">?</span>
         <span class="table-label">桌</span>
       </div>
-      <div class="speaker-needs" id="disp-needs" style="display:none">
-        <span class="needs-label">我在商務上需要的協助</span>
-        <span id="disp-needs-text"></span>
+
+      <div class="needs-box" id="disp-needs-box" style="display:none">
+        <div class="needs-lbl">商務上需要的協助</div>
+        <div class="needs-txt" id="disp-needs-txt"></div>
       </div>
+
+      <div class="qr-row">
+        <div class="qr-frame"><div id="qr-canvas"></div></div>
+        <div class="qr-hint">
+          <strong>掃描加入互動</strong>
+          掃描 QR Code 進入 App<br>
+          點選「我可以幫助他」<br>
+          即可讓燈號亮起
+        </div>
+      </div>
+
     </div>
-
-    <div class="watermark">BNI 商務交流媒合系統</div>
   </div>
+</div>
 
-  <!-- Fullscreen hint -->
-  <div id="fullscreen-hint" onclick="toggleFullscreen()">
-    ⛶ 點擊進入全螢幕（或按 F11）
-  </div>
+<div id="fullscreen-hint" onclick="toggleFullscreen()">⛶ 全螢幕（F）</div>
+<div class="watermark">義鑫數據技術支持</div>
 
-  <script>
-    'use strict';
+<script>
+'use strict';
 
-    let currentSpeakerId = null;
+/* ── Constants ── */
+const TOTAL_LAMPS      = 20;
+const REWARD_THRESHOLD = 15;
+const BULB_COUNT       = 20; // marquee bulbs per side
+const CHASE_SIZE       = 10; // consecutive lit bulbs in marquee
+const CHASE_INTERVAL   = 50; // ms per step
+const CHASE_STEP       = 4;  // positions to advance per tick
 
-    function esc(str) {
-      return String(str || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+/* ── State ── */
+const S = {
+  speakerId:      null,
+  displayed:      0,   // lamps currently lit on screen
+  target:         0,   // lamps we need to reach
+  animating:      false,
+  audioCtx:       null,
+  audioUnlocked:  false,
+  qrReady:        false,
+  bulbBuilt:      false,
+  chaseInterval:  null,
+  chasePos:       0,
+};
+
+/* ──────────────────────────────────────
+   Build DOM
+────────────────────────────────────── */
+function buildLampBoard() {
+  const list = document.getElementById('lamp-list');
+  list.innerHTML = '';
+  for (let n = TOTAL_LAMPS; n >= 1; n--) {
+    const d = document.createElement('div');
+    d.className = 'lamp';
+    d.id = `lamp-${n}`;
+    d.textContent = n;
+    list.appendChild(d);
+  }
+}
+
+function buildBulbFrame() {
+  const shell    = document.getElementById('tower-shell');
+  const lampList = document.getElementById('lamp-list');
+  const frame    = document.getElementById('bulb-frame');
+  frame.innerHTML = '';
+
+  const STEP = 18;  // spacing between bulb centres (px)
+  const R    = 5.5; // bulb radius (11px diameter)
+
+  const sW = shell.offsetWidth;
+  const sH = shell.offsetHeight;
+
+  // lamp-list position relative to tower-shell (which is offsetParent via position:relative)
+  const lT = lampList.offsetTop;
+  const lL = lampList.offsetLeft;
+  const lW = lampList.offsetWidth;
+  const lH = lampList.offsetHeight;
+
+  // Bulb track centres — midpoint of each padding side
+  const topY   = lT / 2;
+  const botY   = lT + lH + (sH - lT - lH) / 2;
+  const leftX  = lL / 2;
+  const rightX = lL + lW + (sW - lL - lW) / 2;
+
+  const points = [];
+  // Top row: left → right
+  for (let x = leftX; x <= rightX; x += STEP) points.push([x, topY]);
+  // Right column: top → bottom
+  for (let y = topY + STEP; y <= botY; y += STEP) points.push([rightX, y]);
+  // Bottom row: right → left
+  for (let x = rightX - STEP; x >= leftX; x -= STEP) points.push([x, botY]);
+  // Left column: bottom → top
+  for (let y = botY - STEP; y > topY; y -= STEP) points.push([leftX, y]);
+
+  points.forEach((p, idx) => {
+    const b = document.createElement('div');
+    b.className   = 'bulb';
+    b.dataset.idx = idx;
+    b.style.left  = (p[0] - R) + 'px';
+    b.style.top   = (p[1] - R) + 'px';
+    frame.appendChild(b);
+  });
+}
+
+function buildSparkles() {
+  const layer = document.getElementById('sparkle-layer');
+  const chars = ['★','✦','✧','✶','✸'];
+  for (let i = 0; i < 20; i++) {
+    const el = document.createElement('div');
+    const x = 14 + Math.random() * 72;
+    const y = 5  + Math.random() * 88;
+    const sz = 0.65 + Math.random() * 0.9;
+    const dur = 4  + Math.random() * 5;
+    const del = Math.random() * 6;
+    el.textContent = chars[i % chars.length];
+    el.style.cssText = `
+      position:absolute;
+      left:${x}%;top:${y}%;
+      font-size:${sz}rem;
+      color:rgba(240,192,64,${0.25 + Math.random() * 0.35});
+      animation:sparkle-float ${dur}s ${del}s ease-in-out infinite;
+      pointer-events:none;
+    `;
+    layer.appendChild(el);
+  }
+}
+
+/* ──────────────────────────────────────
+   Light animation
+────────────────────────────────────── */
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function syncLights(newTarget) {
+  newTarget = Math.min(newTarget, TOTAL_LAMPS);
+  S.target = newTarget;
+  if (S.animating) return; // will pick up target when current run ends
+
+  S.animating = true;
+  while (S.displayed !== S.target) {
+    if (S.displayed < S.target) {
+      S.displayed++;
+      setLamp(S.displayed, true);
+      playLightSound(S.displayed);
+      await sleep(270);
+    } else {
+      // count dropped (new speaker reset) — already handled externally
+      break;
     }
+  }
+  S.animating = false;
 
-    async function fetchSpeaker() {
-      try {
-        const res = await fetch('/api/current-speaker');
-        if (!res.ok) return;
-        const speaker = await res.json();
-        render(speaker);
-      } catch (e) {
-        console.error('fetchSpeaker:', e);
-      }
-    }
+  refreshUI();
+}
 
-    function render(speaker) {
-      const idle    = document.getElementById('screen-idle');
-      const stage   = document.getElementById('screen-speaker');
+function setLamp(n, on) {
+  const el = document.getElementById(`lamp-${n}`);
+  if (!el) return;
+  if (!on) { el.className = 'lamp'; return; }
+  el.className = 'lamp ' + (n >= REWARD_THRESHOLD ? 'lit-red' : 'lit-white');
+}
 
-      if (!speaker) {
-        // No speaker — show idle screen
-        idle.style.display  = 'flex';
-        stage.style.display = 'none';
-        currentSpeakerId = null;
-        return;
-      }
+function resetLamps() {
+  for (let i = 1; i <= TOTAL_LAMPS; i++) setLamp(i, false);
+  S.displayed = 0;
+  S.target    = 0;
+  S.animating = false;
+  stopChase();
+}
 
-      // Same speaker — no re-render needed
-      if (speaker.id === currentSpeakerId) return;
-      currentSpeakerId = speaker.id;
+/* ──────────────────────────────────────
+   Marquee chase (5 bulbs, shift 1 / 0.3s)
+────────────────────────────────────── */
+function tickChase() {
+  const bulbs = Array.from(document.querySelectorAll('#bulb-frame .bulb'));
+  const total = bulbs.length;
+  if (total === 0) return;
+  bulbs.forEach((b, i) => {
+    // Is index i within the window [chasePos … chasePos+CHASE_SIZE) mod total?
+    const offset = (i - S.chasePos + total) % total;
+    b.classList.toggle('on', offset < CHASE_SIZE);
+  });
+  S.chasePos = (S.chasePos + CHASE_STEP) % total;
+}
 
-      // Update content (set before showing to avoid flash)
-      document.getElementById('disp-name').textContent     = speaker.name || '—';
-      document.getElementById('disp-industry').textContent = speaker.industry || '';
-      document.getElementById('disp-table').textContent    = speaker.table_number || '?';
+function startChase() {
+  if (S.chaseInterval) return;
+  S.chasePos = 0;
+  tickChase();
+  S.chaseInterval = setInterval(tickChase, CHASE_INTERVAL);
+}
 
-      const needsEl   = document.getElementById('disp-needs');
-      const needsText = document.getElementById('disp-needs-text');
-      if (speaker.needs && speaker.needs.trim()) {
-        needsText.textContent = speaker.needs;
-        needsEl.style.display = 'block';
-      } else {
-        needsEl.style.display = 'none';
-      }
+function stopChase() {
+  if (S.chaseInterval) { clearInterval(S.chaseInterval); S.chaseInterval = null; }
+  document.querySelectorAll('#bulb-frame .bulb').forEach(b => b.classList.remove('on'));
+}
 
-      // Re-trigger animations by cloning (swap display)
-      stage.style.display = 'none';
-      idle.style.display  = 'none';
-      // Force reflow
-      void stage.offsetWidth;
-      stage.style.display = 'flex';
-    }
+function refreshUI() {
+  const shell = document.getElementById('tower-shell');
+  const isJackpot = S.displayed >= TOTAL_LAMPS;
+  shell.classList.toggle('jackpot', isJackpot);
+  if (isJackpot) { startChase(); } else { stopChase(); }
+}
 
-    // Fullscreen
-    function toggleFullscreen() {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
-      } else {
-        document.exitFullscreen().catch(() => {});
-      }
-    }
+/* ──────────────────────────────────────
+   Web Audio — bell / pentatonic scale
+────────────────────────────────────── */
+function unlockAudio() {
+  if (S.audioUnlocked) return;
+  S.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  S.audioUnlocked = true;
+}
 
-    document.addEventListener('fullscreenchange', () => {
-      const hint = document.getElementById('fullscreen-hint');
-      hint.classList.toggle('hidden', !!document.fullscreenElement);
+const NOTE_FREQS = [
+  261.63, 293.66, 329.63, 392.00, 440.00,
+  523.25, 587.33, 659.26, 783.99, 880.00,
+  1046.50,1174.66,1318.51,1567.98,1760.00,
+  2093.00,2349.32,2637.02,3135.96,3520.00,
+];
+
+function playLightSound(level) {
+  if (!S.audioUnlocked || !S.audioCtx) return;
+  const ctx = S.audioCtx;
+  if (ctx.state === 'suspended') ctx.resume();
+  const now  = ctx.currentTime;
+  const freq = NOTE_FREQS[Math.min(level - 1, NOTE_FREQS.length - 1)];
+  const isRed = level >= REWARD_THRESHOLD;
+  const vol   = isRed ? 0.24 : 0.15;
+
+  // Master envelope
+  const master = ctx.createGain();
+  master.gain.setValueAtTime(vol, now);
+  master.gain.exponentialRampToValueAtTime(0.001, now + 1.7);
+  master.connect(ctx.destination);
+
+  // Sine body
+  const o1 = ctx.createOscillator();
+  o1.type = 'sine';
+  o1.frequency.setValueAtTime(freq, now);
+  o1.connect(master);
+  o1.start(now); o1.stop(now + 1.7);
+
+  // Inharmonic partial (bell character)
+  const g2 = ctx.createGain();
+  g2.gain.setValueAtTime(vol * 0.5, now);
+  g2.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
+  g2.connect(ctx.destination);
+  const o2 = ctx.createOscillator();
+  o2.type = 'sine';
+  o2.frequency.setValueAtTime(freq * 2.756, now);
+  o2.connect(g2);
+  o2.start(now); o2.stop(now + 0.75);
+
+  // Attack click
+  const g3 = ctx.createGain();
+  g3.gain.setValueAtTime(vol * 0.35, now);
+  g3.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+  g3.connect(ctx.destination);
+  const o3 = ctx.createOscillator();
+  o3.type = 'triangle';
+  o3.frequency.setValueAtTime(freq * 4.2, now);
+  o3.connect(g3);
+  o3.start(now); o3.stop(now + 0.07);
+}
+
+/* ──────────────────────────────────────
+   QR Code
+────────────────────────────────────── */
+function tryGenerateQR() {
+  if (S.qrReady) return;
+  S.qrReady = true;
+  const url       = 'https://bni-changrong66-yiseadata.zeabur.app/';
+  const encoded   = encodeURIComponent(url);
+  const container = document.getElementById('qr-canvas');
+  container.innerHTML = `<img
+    src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encoded}&margin=4&color=000000&bgcolor=FFFFFF"
+    width="110" height="110"
+    alt="QR Code"
+    style="border-radius:4px;display:block;"
+  />`;
+}
+
+/* ──────────────────────────────────────
+   Render speaker
+────────────────────────────────────── */
+function renderSpeaker(speaker, lightCount) {
+  const isNew = speaker.id !== S.speakerId;
+
+  document.getElementById('disp-name').textContent  = speaker.name || '—';
+  document.getElementById('disp-table').textContent = speaker.table_number || '?';
+
+  const needsBox = document.getElementById('disp-needs-box');
+  const needsTxt = document.getElementById('disp-needs-txt');
+  if (speaker.needs && speaker.needs.trim()) {
+    needsTxt.textContent     = speaker.needs;
+    needsBox.style.display   = 'block';
+  } else {
+    needsBox.style.display   = 'none';
+  }
+
+  if (isNew) {
+    S.speakerId = speaker.id;
+    resetLamps();
+    refreshUI();
+
+    // Animate text in
+    ['disp-name','disp-table','disp-needs-box'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.style.animation = 'fadeUp 0.5s ease';
     });
+  }
 
-    // Keyboard shortcut: F / F11
-    document.addEventListener('keydown', e => {
-      if (e.key === 'f' || e.key === 'F') toggleFullscreen();
-    });
+  syncLights(lightCount);
+}
 
-    // Click anywhere on idle screen to fullscreen
-    document.getElementById('screen-idle').addEventListener('click', toggleFullscreen);
+/* ──────────────────────────────────────
+   Show / hide screens
+────────────────────────────────────── */
+function showSpeaker() {
+  document.getElementById('screen-idle').style.display    = 'none';
+  document.getElementById('screen-speaker').style.display = 'flex';
+  setTimeout(tryGenerateQR, 500); // wait for QRCode.js to load
+  if (!S.bulbBuilt) {
+    S.bulbBuilt = true;
+    // Wait one frame after display:flex so offsetWidth/Height are available
+    setTimeout(buildBulbFrame, 100);
+  }
+}
 
-    // Boot
-    fetchSpeaker();
-    setInterval(fetchSpeaker, 3000); // poll every 3s for faster response on stage
-  </script>
-  <footer style="position:fixed;bottom:4px;width:100%;text-align:center;font-size:11px;color:rgba(255,255,255,0.2);z-index:0;pointer-events:none;">義鑫數據技術支持</footer>
+function showIdle() {
+  document.getElementById('screen-idle').style.display    = 'flex';
+  document.getElementById('screen-speaker').style.display = 'none';
+  S.speakerId = null;
+  resetLamps();
+  refreshUI();
+}
+
+/* ──────────────────────────────────────
+   Handle server state
+────────────────────────────────────── */
+let _currentPhase = null;
+
+function handleState(data) {
+  if (!data) return;
+  const phase = data.phase || 'speaking';
+
+  // 若 admin 切換到預熱或抽選階段，跳轉到 warmup 頁面
+  if (phase === 'warmup' || phase === 'drawing') {
+    if (_currentPhase !== phase) {
+      _currentPhase = phase;
+      window.location.href = '/warmup';
+    }
+    return;
+  }
+
+  _currentPhase = phase;
+
+  if (data.speaker) {
+    showSpeaker();
+    renderSpeaker(data.speaker, data.lightCount || 0);
+  } else {
+    showIdle();
+  }
+}
+
+/* ──────────────────────────────────────
+   SSE + polling
+────────────────────────────────────── */
+function connectSSE() {
+  const es = new EventSource('/api/event-stream');
+  es.addEventListener('event-state', e => {
+    try { handleState(JSON.parse(e.data)); } catch (_) {}
+  });
+  es.onerror = () => { es.close(); setTimeout(connectSSE, 5000); };
+}
+
+async function pollState() {
+  try {
+    const r = await fetch('/api/event-state');
+    if (r.ok) handleState(await r.json());
+  } catch (_) {}
+}
+
+/* ──────────────────────────────────────
+   Fullscreen
+────────────────────────────────────── */
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen().catch(() => {});
+  }
+}
+document.addEventListener('fullscreenchange', () => {
+  document.getElementById('fullscreen-hint').classList.toggle('hidden', !!document.fullscreenElement);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+});
+document.getElementById('screen-idle').addEventListener('click', () => {
+  unlockAudio(); toggleFullscreen();
+});
+document.addEventListener('click', unlockAudio, { once: true });
+
+/* ──────────────────────────────────────
+   Init
+────────────────────────────────────── */
+buildLampBoard();
+buildSparkles();
+refreshUI();
+connectSSE();
+setInterval(pollState, 8000);
+</script>
 </body>
 </html>

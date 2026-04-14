@@ -6,161 +6,181 @@
   <meta name="theme-color" content="#DC2626">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>BNI 商務交流媒合系統</title>
+  <title>BNI 長榮 20 周年慶・商機變變變・產業閃電秀</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Disable double-tap zoom for fast tapping */
     * { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-
-    /* Tab active indicator */
     .tab-active { color: #DC2626; border-bottom: 3px solid #DC2626; font-weight: 700; }
-
-    /* Smooth toast */
     #toast { transition: transform 0.3s ease, opacity 0.3s ease; }
-
-    /* Button press feedback */
     button:active { transform: scale(0.97); }
-
-    /* Custom scrollbar */
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: #f1f1f1; }
     ::-webkit-scrollbar-thumb { background: #DC2626; border-radius: 2px; }
-
-    /* Pulse animation for current speaker badge */
     @keyframes pulse-red {
       0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.4); }
       50%       { box-shadow: 0 0 0 8px rgba(220,38,38,0); }
     }
     .pulse-red { animation: pulse-red 2s infinite; }
+    @keyframes reward-glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(234,179,8,0.3); }
+      50%       { box-shadow: 0 0 0 10px rgba(234,179,8,0); }
+    }
+    .reward-glow { animation: reward-glow 2s infinite; }
+    .modal-backdrop { background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen select-none">
 
-  <!-- ═══════════════════════════════════════════════ -->
-  <!-- LOGIN SCREEN                                     -->
-  <!-- ═══════════════════════════════════════════════ -->
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 登入畫面（第一次：完整表單） -->
+  <!-- ══════════════════════════════════════════ -->
   <div id="screen-login" class="min-h-screen flex flex-col items-center justify-center p-5 bg-gradient-to-b from-red-50 to-white">
     <div class="w-full max-w-sm">
 
       <!-- Logo -->
-      <div class="text-center mb-8">
-        <div class="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-          <span class="text-white text-4xl font-black">BNI</span>
+      <div class="text-center mb-6">
+        <div class="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+          <span class="text-white text-3xl font-black">BNI</span>
         </div>
-        <h1 class="text-2xl font-black text-gray-800 leading-tight">BNI 商務交流媒合系統</h1>
-        <p class="text-red-500 text-sm font-medium mt-1">長榮20週年 · 商務交流活動</p>
+        <h1 class="text-xl font-black text-gray-800 leading-tight">BNI 長榮 20 周年慶</h1>
+        <p class="text-red-600 font-bold text-base mt-0.5">商機變變變・產業閃電秀</p>
+        <p class="text-gray-400 text-xs mt-1">拒絕無效社交，用數據與視覺證明你的產業影響力</p>
       </div>
 
-      <!-- Form Card -->
-      <div class="bg-white rounded-3xl shadow-xl p-6 space-y-6">
+      <!-- 第一次使用：完整表單 -->
+      <div id="form-fullreg" class="hidden bg-white rounded-3xl shadow-xl p-6 space-y-4">
+        <p class="text-gray-500 text-sm text-center">✨ 第一次參加，請填寫基本資料</p>
 
-        <!-- Name -->
+        <!-- 姓名 -->
         <div>
-          <label class="block text-gray-700 font-bold mb-2 text-base">你的名字</label>
-          <input
-            id="input-name"
-            type="text"
-            placeholder="請輸入你的名字"
-            maxlength="20"
-            autocomplete="name"
-            class="w-full border-2 border-gray-200 rounded-2xl px-4 py-4 text-xl font-medium focus:border-red-500 focus:outline-none transition-colors"
-          >
+          <label class="block text-gray-700 font-bold mb-1.5 text-sm">你的名字 <span class="text-red-500">*</span></label>
+          <input id="input-name" type="text" placeholder="請輸入姓名" maxlength="20" autocomplete="name"
+            class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 text-lg font-medium focus:border-red-500 focus:outline-none transition-colors">
         </div>
 
-        <!-- Table Number -->
+        <!-- 桌號 -->
         <div>
-          <label class="block text-gray-700 font-bold mb-2 text-base">你的桌號</label>
-          <input
-            id="input-table"
-            type="number"
-            placeholder="請輸入桌號"
-            min="1"
-            max="99"
-            class="w-full border-2 border-gray-200 rounded-2xl px-4 py-4 text-xl font-medium focus:border-red-500 focus:outline-none transition-colors"
-          >
+          <label class="block text-gray-700 font-bold mb-1.5 text-sm">桌號 <span class="text-red-500">*</span></label>
+          <input id="input-table" type="number" placeholder="請輸入桌號" min="1" max="99"
+            class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 text-lg font-medium focus:border-red-500 focus:outline-none transition-colors">
         </div>
 
-        <!-- Role -->
+        <!-- 商務需求 -->
         <div>
-          <label class="block text-gray-700 font-bold mb-3 text-base">你的身份</label>
-          <div class="space-y-2" id="role-options">
-            <label id="role-label-member" class="flex items-center gap-3 p-4 rounded-2xl border-2 border-gray-200 cursor-pointer transition-all active:scale-98">
-              <input type="radio" name="role" value="長榮會員" class="w-5 h-5 accent-red-600" onchange="updateRoleStyle()">
-              <span class="text-gray-700 text-xl font-medium">長榮會員</span>
+          <label class="block text-gray-700 font-bold mb-1.5 text-sm">我在商務上需要的協助 <span class="text-red-500">*</span></label>
+          <textarea id="input-needs" placeholder="例如：希望認識建設業或室內設計的夥伴" maxlength="200" rows="2"
+            class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 text-base font-medium focus:border-red-500 focus:outline-none transition-colors resize-none"></textarea>
+        </div>
+
+        <!-- 身份 -->
+        <div>
+          <label class="block text-gray-700 font-bold mb-2 text-sm">身份 <span class="text-red-500">*</span></label>
+          <div class="flex gap-2">
+            <label id="role-label-member" class="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-gray-200 cursor-pointer transition-all">
+              <input type="radio" name="identity" value="長榮會員" class="w-4 h-4 accent-red-600" onchange="updateRoleStyle()">
+              <span class="text-gray-700 text-sm font-semibold text-center leading-tight">長榮<br>會員</span>
             </label>
-            <label id="role-label-guest" class="flex items-center gap-3 p-4 rounded-2xl border-2 border-gray-200 cursor-pointer transition-all">
-              <input type="radio" name="role" value="來賓" class="w-5 h-5 accent-red-600" onchange="updateRoleStyle()">
-              <span class="text-gray-700 text-xl font-medium">來賓</span>
+            <label id="role-label-guest" class="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-gray-200 cursor-pointer transition-all">
+              <input type="radio" name="identity" value="來賓" class="w-4 h-4 accent-red-600" onchange="updateRoleStyle()">
+              <span class="text-gray-700 text-sm font-semibold">來賓</span>
             </label>
-            <label id="role-label-friend" class="flex items-center gap-3 p-4 rounded-2xl border-2 border-gray-200 cursor-pointer transition-all">
-              <input type="radio" name="role" value="親友" class="w-5 h-5 accent-red-600" onchange="updateRoleStyle()">
-              <span class="text-gray-700 text-xl font-medium">親友</span>
+            <label id="role-label-friend" class="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-gray-200 cursor-pointer transition-all">
+              <input type="radio" name="identity" value="親友" class="w-4 h-4 accent-red-600" onchange="updateRoleStyle()">
+              <span class="text-gray-700 text-sm font-semibold">親友</span>
             </label>
           </div>
         </div>
 
-        <!-- Submit -->
-        <button
-          id="btn-login"
-          onclick="handleLogin()"
-          class="w-full bg-red-600 text-white text-xl font-black py-5 rounded-2xl shadow-lg active:bg-red-700 transition-all"
-        >
-          進入交流系統
+        <!-- Email（選填） -->
+        <div>
+          <label class="block text-gray-700 font-bold mb-1.5 text-sm">Email（選填）</label>
+          <input id="input-email" type="email" placeholder="填寫可收到活動後商機報表" autocomplete="email"
+            class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 text-base font-medium focus:border-red-500 focus:outline-none transition-colors">
+          <p class="text-gray-400 text-xs mt-1">不填寫將以匿名方式參加，填寫後活動結束可收到交流報表</p>
+        </div>
+
+        <!-- 送出 -->
+        <button id="btn-login" onclick="handleLogin()"
+          class="w-full bg-red-600 text-white text-lg font-black py-4 rounded-2xl shadow-lg active:bg-red-700 transition-all">
+          加入神秘互助活動！
+        </button>
+
+        <button onclick="showReturnLogin()"
+          class="w-full text-gray-400 text-sm py-2 underline">
+          ← 返回
         </button>
       </div>
 
-      <p class="text-center text-gray-400 text-xs mt-6">換裝置或重新整理？輸入相同姓名和桌號，即可恢復原本的使用紀錄</p>
+      <!-- 預設入口：姓名+桌號 -->
+      <div id="form-return" class="bg-white rounded-3xl shadow-xl p-6 space-y-4">
+        <p class="text-gray-500 text-sm text-center">✨ 輸入姓名和桌號加入活動</p>
+
+        <div>
+          <label class="block text-gray-700 font-bold mb-1.5 text-sm">你的名字</label>
+          <input id="input-name-return" type="text" placeholder="請輸入姓名" maxlength="20" autocomplete="name"
+            class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 text-lg font-medium focus:border-red-500 focus:outline-none transition-colors">
+        </div>
+
+        <div>
+          <label class="block text-gray-700 font-bold mb-1.5 text-sm">桌號</label>
+          <input id="input-table-return" type="number" placeholder="請輸入桌號" min="1" max="99"
+            class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 text-lg font-medium focus:border-red-500 focus:outline-none transition-colors">
+        </div>
+
+        <button id="btn-return" onclick="handleReturnLogin()"
+          class="w-full bg-red-600 text-white text-lg font-black py-4 rounded-2xl shadow-lg active:bg-red-700 transition-all">
+          進入活動
+        </button>
+      </div>
+
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════ -->
-  <!-- MAIN SCREEN                                      -->
-  <!-- ═══════════════════════════════════════════════ -->
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 主畫面 -->
+  <!-- ══════════════════════════════════════════ -->
   <div id="screen-main" class="hidden min-h-screen flex flex-col">
 
-    <!-- Header (sticky) -->
+    <!-- Header -->
     <header class="bg-red-600 px-4 py-3 flex items-center justify-between shadow-lg sticky top-0 z-20">
       <div class="min-w-0">
-        <h1 class="text-white font-black text-lg leading-tight truncate">BNI 商務交流媒合系統</h1>
+        <h1 class="text-white font-black text-base leading-tight">長榮 20 周年慶<br>商機變變變・產業閃電秀</h1>
         <p class="text-red-200 text-xs mt-0.5 truncate" id="header-user">載入中...</p>
       </div>
-      <button
-        onclick="handleLogout()"
-        class="ml-3 shrink-0 text-red-200 text-xs border border-red-400 rounded-xl px-3 py-1.5 active:bg-red-700 transition-colors"
-      >
+      <button onclick="handleLogout()"
+        class="ml-3 shrink-0 text-red-200 text-xs border border-red-400 rounded-xl px-3 py-1.5 active:bg-red-700 transition-colors">
         登出
       </button>
     </header>
 
-    <!-- Tabs (sticky below header) -->
+    <!-- Tabs -->
     <nav class="bg-white shadow-sm sticky top-[60px] z-10 flex border-b border-gray-100">
-      <button
-        id="tab-btn-speaker"
-        onclick="switchTab('speaker')"
-        class="flex-1 py-3.5 text-center text-gray-500 font-semibold text-base tab-active transition-colors"
-      >
+      <button id="tab-btn-speaker" onclick="switchTab('speaker')"
+        class="flex-1 py-3.5 text-center text-gray-500 font-semibold text-base tab-active transition-colors">
         🎤 目前發言者
       </button>
-      <button
-        id="tab-btn-browse"
-        onclick="switchTab('browse')"
-        class="flex-1 py-3.5 text-center text-gray-500 font-semibold text-base transition-colors"
-      >
+      <button id="tab-btn-browse" onclick="switchTab('browse')"
+        class="flex-1 py-3.5 text-center text-gray-500 font-semibold text-base transition-colors">
         👥 所有來賓
       </button>
     </nav>
 
-    <!-- ── Tab: Current Speaker ── -->
+    <!-- ── 目前發言者 Tab ── -->
     <div id="tab-speaker" class="flex-1">
-      <div class="sticky top-[112px] z-10 bg-gray-50 px-4 pt-3 pb-2">
-        <div class="bg-white rounded-2xl px-4 py-2.5 flex items-center justify-between shadow-sm border border-gray-100">
-          <span class="text-gray-600 text-sm font-medium">今天我想交流的對象</span>
-          <span id="counter-badge-speaker" class="bg-gray-100 text-gray-700 font-black px-4 py-1 rounded-full text-sm">0 / 3</span>
+
+      <!-- 獎勵達標 Banner -->
+      <div id="reward-banner" class="hidden mx-4 mt-4">
+        <div class="bg-yellow-50 border-2 border-yellow-400 rounded-2xl p-4 flex items-center gap-3 reward-glow">
+          <span class="text-3xl">🎁</span>
+          <div>
+            <p class="font-black text-yellow-800 text-base">恭喜！你有兌換資格</p>
+            <p class="text-yellow-700 text-sm mt-0.5">請至服務台出示此畫面，即可兌換小禮品</p>
+          </div>
         </div>
       </div>
+
       <div class="p-4">
         <div id="speaker-content">
-          <!-- Rendered by JS -->
           <div class="text-center py-20 text-gray-400">
             <div class="text-6xl mb-4">🎤</div>
             <p class="text-xl font-semibold">等待發言者...</p>
@@ -170,86 +190,59 @@
       </div>
     </div>
 
-    <!-- ── Tab: Browse All Participants ── -->
+    <!-- ── 所有來賓 Tab ── -->
     <div id="tab-browse" class="hidden flex-1 flex flex-col">
-
-      <!-- Counter + Search bar (sticky) -->
-      <div class="sticky top-[112px] z-10 bg-gray-50 px-4 pt-3 pb-2 space-y-2">
-        <div class="bg-white rounded-2xl px-4 py-2.5 flex items-center justify-between shadow-sm border border-gray-100">
-          <span class="text-gray-600 text-sm font-medium">今天我想交流的對象</span>
-          <span id="counter-badge" class="bg-gray-100 text-gray-700 font-black px-4 py-1 rounded-full text-sm">0 / 3</span>
-        </div>
-        <input
-          id="search-input"
-          type="search"
-          placeholder="🔍 搜尋姓名或專業..."
-          oninput="filterParticipants()"
-          class="w-full bg-white border-2 border-gray-200 rounded-2xl px-4 py-3 text-base focus:border-red-500 focus:outline-none transition-colors"
-        >
+      <div class="sticky top-[112px] z-10 bg-gray-50 px-4 pt-3 pb-2">
+        <input id="search-input" type="search" placeholder="🔍 搜尋姓名..." oninput="filterParticipants()"
+          class="w-full bg-white border-2 border-gray-200 rounded-2xl px-4 py-3 text-base focus:border-red-500 focus:outline-none transition-colors">
       </div>
-
       <div id="participants-list" class="flex-1 px-4 pb-6 pt-2 overflow-y-auto">
         <div class="text-center py-16 text-gray-400">載入中...</div>
       </div>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════ -->
-  <!-- SWAP MODAL                                        -->
-  <!-- ═══════════════════════════════════════════════ -->
-  <div id="swap-modal" class="hidden fixed inset-0 z-40 flex items-end sm:items-center justify-center p-4 bg-black/50"
-    onclick="if(event.target===this) closeSwapModal()">
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Reason Modal（填寫互動原因） -->
+  <!-- ══════════════════════════════════════════ -->
+  <div id="reason-modal" class="hidden fixed inset-0 z-40 flex items-end sm:items-center justify-center p-4 modal-backdrop"
+    onclick="if(event.target===this) closeReasonModal()">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden">
 
-      <!-- Header -->
-      <div class="bg-red-600 px-5 py-4">
-        <h2 class="text-white font-black text-lg">已選滿三位</h2>
-        <p class="text-red-200 text-sm mt-0.5">選擇一位替換，或關閉保持原選擇</p>
+      <div id="reason-modal-header" class="bg-red-600 px-5 py-4">
+        <h2 class="text-white font-black text-lg" id="reason-modal-title">填寫原因</h2>
+        <p class="text-red-200 text-sm mt-0.5" id="reason-modal-subtitle">請描述你的想法</p>
       </div>
 
-      <div class="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
-
-        <!-- New person -->
+      <div class="p-5 space-y-4">
         <div>
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">你想加入的對象</p>
-          <div id="swap-modal-new"></div>
+          <label class="block text-gray-700 font-bold mb-2 text-sm" id="reason-label">說明 <span class="text-red-500">*</span></label>
+          <textarea id="reason-input" placeholder="" rows="4" maxlength="300"
+            class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 text-base font-medium focus:border-red-500 focus:outline-none transition-colors resize-none"></textarea>
+          <p class="text-gray-400 text-xs mt-1">送出後不可修改</p>
         </div>
 
-        <!-- Divider -->
-        <div class="flex items-center gap-2">
-          <div class="flex-1 h-px bg-gray-100"></div>
-          <span class="text-xs text-gray-400">目前已選的三位</span>
-          <div class="flex-1 h-px bg-gray-100"></div>
-        </div>
-
-        <!-- Selected people -->
-        <div id="swap-modal-selected" class="space-y-2"></div>
-
-      </div>
-
-      <!-- Footer -->
-      <div class="px-4 pb-4">
-        <button onclick="closeSwapModal()"
+        <button id="reason-submit-btn" onclick="submitReason()"
+          class="w-full bg-red-600 text-white text-base font-black py-4 rounded-2xl shadow-lg active:bg-red-700 transition-all">
+          確認送出
+        </button>
+        <button onclick="closeReasonModal()"
           class="w-full border-2 border-gray-200 text-gray-500 font-bold py-3 rounded-2xl text-sm active:bg-gray-50">
-          保持原選擇
+          取消
         </button>
       </div>
 
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════ -->
-  <!-- TOAST NOTIFICATION                               -->
-  <!-- ═══════════════════════════════════════════════ -->
-  <div
-    id="toast"
-    style="transform: translateY(120px); opacity: 0;"
-    class="fixed bottom-6 left-4 right-4 max-w-sm mx-auto bg-gray-800 text-white text-center py-3.5 px-5 rounded-2xl shadow-2xl z-50 text-base font-semibold"
-  >
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Toast -->
+  <!-- ══════════════════════════════════════════ -->
+  <div id="toast" style="transform: translateY(120px); opacity: 0;"
+    class="fixed bottom-6 left-4 right-4 max-w-sm mx-auto bg-gray-800 text-white text-center py-3.5 px-5 rounded-2xl shadow-2xl z-50 text-base font-semibold">
     訊息
   </div>
 
   <script src="app.js"></script>
-  <footer class="text-center text-gray-300 text-xs py-4">義鑫數據技術支持</footer>
 </body>
 </html>
