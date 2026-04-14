@@ -103,6 +103,22 @@ function initDB() {
     db.exec("ALTER TABLE participants ADD COLUMN email TEXT DEFAULT NULL");
     console.log('✅ 遷移：participants.email 已新增');
   }
+  if (!partCols.includes('specialty')) {
+    db.exec("ALTER TABLE participants ADD COLUMN specialty TEXT NOT NULL DEFAULT ''");
+    console.log('✅ 遷移：participants.specialty 已新增');
+  }
+  if (!partCols.includes('phone')) {
+    db.exec("ALTER TABLE participants ADD COLUMN phone TEXT DEFAULT NULL");
+    console.log('✅ 遷移：participants.phone 已新增');
+  }
+  if (!partCols.includes('line_id')) {
+    db.exec("ALTER TABLE participants ADD COLUMN line_id TEXT DEFAULT NULL");
+    console.log('✅ 遷移：participants.line_id 已新增');
+  }
+  if (!partCols.includes('spoke_at')) {
+    db.exec("ALTER TABLE participants ADD COLUMN spoke_at TEXT DEFAULT NULL");
+    console.log('✅ 遷移：participants.spoke_at 已新增');
+  }
 
   // ── 遷移：舊 connections 缺少 reason 欄位 ──
   const connCols = db.prepare('PRAGMA table_info(connections)').all().map(c => c.name);
@@ -140,24 +156,30 @@ function getEventState() {
   const drawResult = dbScalar("SELECT value FROM event_state WHERE key = 'draw_result'") || '';
 
   const speaker = dbGet(
-    'SELECT id, name, industry, identity, table_number, needs FROM participants WHERE is_current_speaker = 1 LIMIT 1'
+    'SELECT id, name, industry, identity, table_number, needs, specialty FROM participants WHERE is_current_speaker = 1 LIMIT 1'
   );
 
+  // 燈號：認識或幫助任一互動都算，但同一人只算一票
   const lightCount = speaker
     ? Math.min(Number(dbScalar(
-        "SELECT COUNT(*) FROM connections WHERE participant_id = ? AND type = 'can_provide'",
+        'SELECT COUNT(DISTINCT user_id) FROM connections WHERE participant_id = ?',
         [speaker.id]
       )) || 0, DISPLAY_MAX_LIGHTS)
     : 0;
 
   const totalCanProvide = speaker
     ? Number(dbScalar(
-        "SELECT COUNT(*) FROM connections WHERE participant_id = ? AND type = 'can_provide'",
+        'SELECT COUNT(DISTINCT user_id) FROM connections WHERE participant_id = ?',
         [speaker.id]
       )) || 0
     : 0;
 
   const memberCount = Number(dbScalar('SELECT COUNT(*) FROM participants')) || 0;
+
+  // 今日商務串接：每人對每位發言者的不重複互動數
+  const totalConnections = Number(dbScalar(
+    "SELECT COUNT(DISTINCT user_id || '-' || participant_id) FROM connections"
+  )) || 0;
 
   return {
     phase,
@@ -169,6 +191,7 @@ function getEventState() {
     isReward:  lightCount >= REWARD_THRESHOLD,
     isJackpot: lightCount >= DISPLAY_MAX_LIGHTS,
     memberCount,
+    totalConnections,
   };
 }
 
@@ -229,7 +252,7 @@ app.get('/api/event-stream', (req, res) => {
 
 // POST /api/login — 寫入 participants（第一次建立，之後以 name+table_number 恢復）
 app.post('/api/login', (req, res) => {
-  const { name, tableNumber, needs, identity, email, isFirstTime } = req.body;
+  const { name, tableNumber, needs, identity, email, isFirstTime, specialty, phone, lineId } = req.body;
   if (!name?.trim())        return res.status(400).json({ error: '請輸入名字' });
   if (!tableNumber?.toString().trim()) return res.status(400).json({ error: '請輸入桌號' });
 
@@ -238,7 +261,7 @@ app.post('/api/login', (req, res) => {
 
   // Session 恢復：name + table_number 已存在
   const existing = dbGet(
-    'SELECT id, name, identity, email, table_number, needs FROM participants WHERE name = ? AND table_number = ?',
+    'SELECT id, name, identity, email, specialty, phone, line_id, table_number, needs FROM participants WHERE name = ? AND table_number = ?',
     [nm, tn]
   );
   if (existing) {
@@ -247,6 +270,9 @@ app.post('/api/login', (req, res) => {
       name:        existing.name,
       identity:    existing.identity,
       email:       existing.email,
+      specialty:   existing.specialty,
+      phone:       existing.phone,
+      lineId:      existing.line_id,
       tableNumber: existing.table_number,
       needs:       existing.needs,
       isNew:       false,
@@ -254,19 +280,24 @@ app.post('/api/login', (req, res) => {
   }
 
   // 第一次：需要完整資料
-  const VALID_IDENTITY = ['長榮會員', '來賓', '親友'];
+  const VALID_IDENTITY = ['長榮會員', '金手環', '銀手環'];
   if (!VALID_IDENTITY.includes(identity)) return res.status(400).json({ error: '請選擇身份' });
+  if (!email?.trim()) return res.status(400).json({ error: '請填寫 Email' });
+  if (!specialty?.trim()) return res.status(400).json({ error: '請填寫專業別' });
 
   const r = dbRun(
-    'INSERT INTO participants (name, table_number, needs, identity, email) VALUES (?, ?, ?, ?, ?)',
-    [nm, tn, (needs || '').trim(), identity, email?.trim() || null]
+    'INSERT INTO participants (name, table_number, needs, identity, email, specialty, phone, line_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    [nm, tn, (needs || '').trim(), identity, email.trim(), specialty.trim(), phone?.trim() || null, lineId?.trim() || null]
   );
   broadcastEventState(); // 人數增加，通知預熱頁
   res.json({
     userId:      r.lastInsertRowid,
     name:        nm,
     identity,
-    email:       email?.trim() || null,
+    email:       email.trim(),
+    specialty:   specialty.trim(),
+    phone:       phone?.trim() || null,
+    lineId:      lineId?.trim() || null,
     tableNumber: tn,
     needs:       (needs || '').trim(),
     isNew:       true,
@@ -276,7 +307,7 @@ app.post('/api/login', (req, res) => {
 // GET /api/participants
 app.get('/api/participants', (_req, res) => {
   const rows = dbAll(
-    `SELECT id, name, industry, identity, table_number, needs, is_current_speaker
+    `SELECT id, name, industry, identity, table_number, needs, is_current_speaker, spoke_at, specialty, phone, line_id
      FROM participants
      ORDER BY CAST(table_number AS INTEGER), name`
   );
@@ -286,7 +317,7 @@ app.get('/api/participants', (_req, res) => {
 // GET /api/current-speaker
 app.get('/api/current-speaker', (_req, res) => {
   const row = dbGet(
-    `SELECT id, name, industry, identity, table_number, needs
+    `SELECT id, name, industry, identity, table_number, needs, specialty
      FROM participants WHERE is_current_speaker = 1 LIMIT 1`
   );
   res.json(row || null);
@@ -377,10 +408,11 @@ app.get('/api/admin/stats', adminAuth, (_req, res) => {
   res.json({
     participants: dbScalar('SELECT COUNT(*) FROM participants'),
     users:        dbScalar('SELECT COUNT(*) FROM users'),
-    connections:  dbScalar('SELECT COUNT(*) FROM connections'),
+    connections:  dbScalar("SELECT COUNT(DISTINCT user_id || '-' || participant_id) FROM connections"),
     wantToMeet:   dbScalar("SELECT COUNT(*) FROM connections WHERE type='want_to_meet'"),
     canProvide:   dbScalar("SELECT COUNT(*) FROM connections WHERE type='can_provide'"),
-    phase:        dbScalar("SELECT value FROM event_state WHERE key='phase'") || 'warmup',
+    phase:           dbScalar("SELECT value FROM event_state WHERE key='phase'") || 'warmup',
+    countdownTarget: dbScalar("SELECT value FROM event_state WHERE key='countdown_target'") || '',
   });
 });
 
@@ -406,13 +438,13 @@ app.post('/api/admin/upload', adminAuth, upload.single('csv'), (req, res) => {
     dbTransaction(() => {
       for (let i = 1; i < lines.length; i++) {
         const cols = parseCSVLine(lines[i]);
-        const [name = '', industry = '', table_number = '', needs = '', identity = '', email = ''] = cols;
+        const [name = '', industry = '', table_number = '', needs = '', identity = '', email = '', specialty = '', phone = '', line_id = ''] = cols;
         if (!name.trim()) { errors.push(`第 ${i + 1} 行：名字為空，跳過`); continue; }
         dbRun(
-          `INSERT OR REPLACE INTO participants (name, industry, table_number, needs, identity, email)
-           VALUES (?, ?, ?, ?, ?, ?)`,
+          `INSERT OR REPLACE INTO participants (name, industry, table_number, needs, identity, email, specialty, phone, line_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [name.trim(), industry.trim(), table_number.trim(), needs.trim(),
-           identity.trim(), email.trim() || null]
+           identity.trim(), email.trim() || null, specialty.trim(), phone.trim() || null, line_id.trim() || null]
         );
         imported++;
       }
@@ -429,7 +461,10 @@ app.post('/api/admin/set-speaker', adminAuth, (req, res) => {
   const { participantId } = req.body;
   dbRun('UPDATE participants SET is_current_speaker = 0');
   if (participantId) {
-    dbRun('UPDATE participants SET is_current_speaker = 1 WHERE id = ?', [Number(participantId)]);
+    dbRun(
+      "UPDATE participants SET is_current_speaker = 1, spoke_at = datetime('now','localtime') WHERE id = ?",
+      [Number(participantId)]
+    );
   }
   // 切換發言者時自動進入 speaking 狀態
   if (participantId) {
@@ -449,30 +484,48 @@ app.post('/api/admin/set-phase', adminAuth, (req, res) => {
   if (countdownTarget !== undefined) {
     dbRun("INSERT OR REPLACE INTO event_state (key, value) VALUES ('countdown_target', ?)", [countdownTarget]);
   }
+  // 切回 drawing 階段時清除舊的抽選結果，進入待機狀態
+  if (phase === 'drawing') {
+    dbRun("INSERT OR REPLACE INTO event_state (key, value) VALUES ('draw_result', '')");
+  }
   broadcastEventState();
   res.json({ success: true });
 });
 
-// POST /api/admin/draw — 從 participants 隨機抽一人
-app.post('/api/admin/draw', adminAuth, (req, res) => {
-  const { excludeSpeakers } = req.body;
+// GET /api/admin/candidates — 取得金手環候選人清單（含發言記錄）
+app.get('/api/admin/candidates', adminAuth, (req, res) => {
+  const rows = dbAll(
+    `SELECT id, name, table_number, spoke_at
+     FROM participants
+     WHERE identity = '金手環'
+     ORDER BY CAST(table_number AS INTEGER), name`
+  );
+  res.json(rows);
+});
 
-  let sql = 'SELECT id, name, identity, table_number, needs FROM participants';
-  if (excludeSpeakers) {
-    // 排除曾被設為發言者（目前只排除 is_current_speaker=1，可擴充）
-    sql += ' WHERE is_current_speaker = 0';
+// POST /api/admin/draw — 從金手環成員隨機抽一人（不自動切換 phase）
+app.post('/api/admin/draw', adminAuth, (req, res) => {
+  const { excludeIds = [] } = req.body;
+
+  let sql = "SELECT id, name, identity, table_number, needs FROM participants WHERE identity = '金手環'";
+  const params = [];
+
+  if (excludeIds.length > 0) {
+    const placeholders = excludeIds.map(() => '?').join(', ');
+    sql += ` AND id NOT IN (${placeholders})`;
+    params.push(...excludeIds.map(Number));
   }
 
-  const pool = dbAll(sql);
-  if (pool.length === 0) return res.status(404).json({ error: '沒有可抽選的成員' });
+  const pool = dbAll(sql, params);
+  if (pool.length === 0) return res.status(404).json({ error: '沒有可抽選的金手環成員' });
 
   const winner = pool[Math.floor(Math.random() * pool.length)];
+  const poolForReel = pool.map(p => ({ id: p.id, name: p.name }));
 
-  // 儲存抽選結果並切換到 drawing 階段
-  dbRun("INSERT OR REPLACE INTO event_state (key, value) VALUES ('phase', 'drawing')");
+  // 儲存抽選結果：winner + pool（供大螢幕轉盤只顯示候選名單）
   dbRun(
     "INSERT OR REPLACE INTO event_state (key, value) VALUES ('draw_result', ?)",
-    [JSON.stringify(winner)]
+    [JSON.stringify({ winner, pool: poolForReel })]
   );
   broadcastEventState();
   res.json({ success: true, winner });
@@ -595,7 +648,7 @@ app.post('/api/my-report', (req, res) => {
 
   // 誰想認識我
   const meeters = dbAll(`
-    SELECT p.name, p.identity, p.email, c.reason
+    SELECT p.name, p.identity, p.email, p.phone, p.line_id, c.reason
     FROM connections c JOIN participants p ON c.user_id = p.id
     WHERE c.participant_id = ? AND c.type = 'want_to_meet'
     ORDER BY c.timestamp
@@ -603,21 +656,29 @@ app.post('/api/my-report', (req, res) => {
 
   // 誰可以幫助我
   const helpers = dbAll(`
-    SELECT p.name, p.identity, p.email, c.reason
+    SELECT p.name, p.identity, p.email, p.phone, p.line_id, c.reason
     FROM connections c JOIN participants p ON c.user_id = p.id
     WHERE c.participant_id = ? AND c.type = 'can_provide'
     ORDER BY c.timestamp
   `, [member.id]);
 
-  // 我想認識的人（含桌號與 email 作為聯絡線索）
+  // 我想認識的人（含桌號與聯絡方式）
   const myWants = dbAll(`
-    SELECT p.name, p.identity, p.email, p.table_number, p.needs, c.reason
+    SELECT p.name, p.identity, p.email, p.phone, p.line_id, p.table_number, p.needs, c.reason
     FROM connections c JOIN participants p ON c.participant_id = p.id
     WHERE c.user_id = ? AND c.type = 'want_to_meet'
     ORDER BY c.timestamp
   `, [member.id]);
 
-  res.json({ name: member.name, identity: member.identity, meeters, helpers, myWants });
+  // 我可以幫助的人
+  const myHelps = dbAll(`
+    SELECT p.name, p.identity, p.email, p.phone, p.line_id, p.table_number, p.needs, c.reason
+    FROM connections c JOIN participants p ON c.participant_id = p.id
+    WHERE c.user_id = ? AND c.type = 'can_provide'
+    ORDER BY c.timestamp
+  `, [member.id]);
+
+  res.json({ name: member.name, identity: member.identity, meeters, helpers, myWants, myHelps });
 });
 
 // ─────────────────────────────────────────────

@@ -88,6 +88,62 @@
     #screen-idle p { color: #666; font-size: 1.2rem; }
 
     /* ──────────────────────────
+       Ended screen
+    ────────────────────────── */
+    #screen-ended {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      gap: 2.5rem;
+      position: relative;
+      z-index: 5;
+      padding: 3rem 2rem;
+    }
+    #screen-ended .ended-title {
+      font-size: clamp(2rem, 4vw, 4rem);
+      font-weight: 900;
+      color: #fff;
+    }
+    #screen-ended .ended-subtitle {
+      color: #DC2626;
+      font-size: clamp(1rem, 2vw, 1.5rem);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    #screen-ended .ended-count-label {
+      color: #999;
+      font-size: clamp(1.2rem, 2.5vw, 2rem);
+      font-weight: 700;
+    }
+    #screen-ended .ended-count-number {
+      font-size: clamp(5rem, 14vw, 12rem);
+      font-weight: 900;
+      color: #DC2626;
+      line-height: 1;
+      text-shadow: 0 0 60px rgba(220,38,38,0.5);
+    }
+    #screen-ended .ended-qr-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+    #screen-ended .ended-qr-wrap img {
+      border: 6px solid #DC2626;
+      border-radius: 16px;
+      width: clamp(160px, 18vw, 240px);
+    }
+    #screen-ended .ended-qr-label {
+      color: #ccc;
+      font-size: clamp(1rem, 1.8vw, 1.5rem);
+      font-weight: 600;
+    }
+
+    /* ──────────────────────────
        Speaker screen
     ────────────────────────── */
     /* 限制在上方 80vh — 下方實體遮擋區不放內容 */
@@ -181,6 +237,7 @@
     .tower-shell {
       position: relative;
       padding: 1.4rem 1.8rem;
+      min-width: 184px;
       border-radius: 1.6rem;
       background: linear-gradient(180deg,
         #1a0c04 0%, #7c4c12 5%, #cc8e2c 10%,
@@ -322,8 +379,10 @@
       border-radius: 999px;
       width: fit-content;
     }
-    .table-label { font-size: clamp(0.85rem, 1.5vw, 1.4rem); font-weight: 700; color: rgba(255,255,255,0.85); }
-    .table-num   { font-size: clamp(1.7rem, 3.8vw, 3.4rem); font-weight: 900; color: #fff; line-height: 1; }
+    .table-label    { font-size: clamp(0.85rem, 1.5vw, 1.4rem); font-weight: 700; color: rgba(255,255,255,0.85); }
+    .table-num      { font-size: clamp(1.7rem, 3.8vw, 3.4rem); font-weight: 900; color: #fff; line-height: 1; }
+    .table-row      { display: flex; align-items: center; gap: 1em; }
+    .disp-specialty { font-size: clamp(1.2rem, 2.4vw, 2.1rem); font-weight: 700; color: rgba(255,255,255,0.85); }
 
     .needs-box {
       background: rgba(255,255,255,0.05);
@@ -424,6 +483,21 @@
   <p>等待發言者上台…</p>
 </div>
 
+<!-- ── Ended ── -->
+<div id="screen-ended">
+  <p class="ended-subtitle">★ BNI 長榮 20 周年慶・商機變變變 ★</p>
+  <p class="ended-title">感謝所有夥伴的參與！</p>
+  <div>
+    <p class="ended-count-label">今日商務串接</p>
+    <p class="ended-count-number" id="ended-count">0</p>
+    <p class="ended-count-label">人次</p>
+  </div>
+  <div class="ended-qr-wrap">
+    <img id="ended-qr-img" src="" alt="QR Code">
+    <p class="ended-qr-label">掃描 QR Code，領取你的商機小錦囊</p>
+  </div>
+</div>
+
 <!-- ── Speaker ── -->
 <div id="screen-speaker">
 
@@ -458,10 +532,13 @@
 
       <div class="speaker-name" id="disp-name">—</div>
 
-      <div class="table-badge">
-        <span class="table-label">第</span>
-        <span class="table-num" id="disp-table">?</span>
-        <span class="table-label">桌</span>
+      <div class="table-row">
+        <div class="table-badge">
+          <span class="table-label">第</span>
+          <span class="table-num" id="disp-table">?</span>
+          <span class="table-label">桌</span>
+        </div>
+        <span class="disp-specialty" id="disp-specialty"></span>
       </div>
 
       <div class="needs-box" id="disp-needs-box" style="display:none">
@@ -474,8 +551,8 @@
         <div class="qr-hint">
           <strong>掃描加入互動</strong>
           掃描 QR Code 進入 App<br>
-          點選「我可以幫助他」<br>
-          即可讓燈號亮起
+          點選「我想認識他」或「我想幫助他」<br>
+          即可讓燈號亮起來
         </div>
       </div>
 
@@ -753,8 +830,9 @@ function tryGenerateQR() {
 function renderSpeaker(speaker, lightCount) {
   const isNew = speaker.id !== S.speakerId;
 
-  document.getElementById('disp-name').textContent  = speaker.name || '—';
-  document.getElementById('disp-table').textContent = speaker.table_number || '?';
+  document.getElementById('disp-name').textContent      = speaker.name || '—';
+  document.getElementById('disp-table').textContent     = speaker.table_number || '?';
+  document.getElementById('disp-specialty').textContent = speaker.specialty ? `🏷️ ${speaker.specialty}` : '';
 
   const needsBox = document.getElementById('disp-needs-box');
   const needsTxt = document.getElementById('disp-needs-txt');
@@ -788,6 +866,7 @@ function renderSpeaker(speaker, lightCount) {
 ────────────────────────────────────── */
 function showSpeaker() {
   document.getElementById('screen-idle').style.display    = 'none';
+  document.getElementById('screen-ended').style.display   = 'none';
   document.getElementById('screen-speaker').style.display = 'flex';
   setTimeout(tryGenerateQR, 500); // wait for QRCode.js to load
   if (!S.bulbBuilt) {
@@ -800,9 +879,25 @@ function showSpeaker() {
 function showIdle() {
   document.getElementById('screen-idle').style.display    = 'flex';
   document.getElementById('screen-speaker').style.display = 'none';
+  document.getElementById('screen-ended').style.display   = 'none';
   S.speakerId = null;
   resetLamps();
   refreshUI();
+}
+
+function showEnded(totalConnections) {
+  document.getElementById('screen-idle').style.display    = 'none';
+  document.getElementById('screen-speaker').style.display = 'none';
+  document.getElementById('screen-ended').style.display   = 'flex';
+  document.getElementById('ended-count').textContent = totalConnections || 0;
+  // 生成 QR Code（與加入活動相同網址）
+  const qrImg = document.getElementById('ended-qr-img');
+  if (qrImg && !qrImg._qrLoaded) {
+    qrImg._qrLoaded = true;
+    const url = 'https://bni-changrong66-yiseadata.zeabur.app/';
+    const encoded = encodeURIComponent(url);
+    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encoded}&margin=4&color=000000&bgcolor=FFFFFF`;
+  }
 }
 
 /* ──────────────────────────────────────
@@ -824,6 +919,12 @@ function handleState(data) {
   }
 
   _currentPhase = phase;
+
+  // 活動結束畫面
+  if (phase === 'ended') {
+    showEnded(data.totalConnections || 0);
+    return;
+  }
 
   if (data.speaker) {
     showSpeaker();
@@ -861,8 +962,19 @@ function toggleFullscreen() {
     document.exitFullscreen().catch(() => {});
   }
 }
+/* Rebuild bulb frame whenever shell dimensions change */
+let _rebuildTimer = null;
+function scheduleBulbRebuild() {
+  if (!S.bulbBuilt) return;
+  clearTimeout(_rebuildTimer);
+  _rebuildTimer = setTimeout(buildBulbFrame, 200);
+}
+window.addEventListener('resize', scheduleBulbRebuild);
+
 document.addEventListener('fullscreenchange', () => {
   document.getElementById('fullscreen-hint').classList.toggle('hidden', !!document.fullscreenElement);
+  // Fullscreen changes the viewport, so shell dimensions shift — rebuild after transition
+  scheduleBulbRebuild();
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'f' || e.key === 'F') toggleFullscreen();

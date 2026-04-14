@@ -21,11 +21,17 @@ const state = {
 // INIT
 // ════════════════════════════════════════════════
 async function init() {
+  // 先取得目前活動 phase，再決定顯示哪個畫面
+  let currentPhase = 'warmup';
+  try {
+    const ev = await fetch('/api/event-state').then(r => r.json());
+    currentPhase = ev.phase || 'warmup';
+  } catch (_) {}
+
   const saved = localStorage.getItem('bni_session');
   if (saved) {
     try {
       const session = JSON.parse(saved);
-      // Verify session by attempting login with name+tableNumber
       const data = await api('POST', '/api/login', {
         name: session.name,
         tableNumber: session.tableNumber,
@@ -45,11 +51,24 @@ async function init() {
       localStorage.removeItem('bni_session');
     }
   }
-  showScreen('login');
-  showReturnLogin();
+
+  // 未登入：根據 phase 決定畫面
+  if (currentPhase === 'ended') {
+    showScreen('main');
+    updateHeaderUser(); // 確保 header 無使用者資訊與登出按鈕
+    document.getElementById('ended-name-row')?.classList.remove('hidden');
+    applyPhase('ended');
+  } else {
+    showScreen('login');
+    showReturnLogin();
+  }
+
+  // 未登入時持續 poll phase（login ↔ ended 雙向切換）
+  startLoginPhasePolling(currentPhase);
 }
 
 async function startApp() {
+  clearInterval(_loginPhasePollTimer); // 登入成功，停止未登入的 phase polling
   showScreen('main');
   updateHeaderUser();
   await Promise.all([
@@ -124,9 +143,44 @@ async function loadUserConnections() {
   }
 }
 
+// 未登入時的 phase polling（login ↔ ended 雙向自動切換）
+let _loginPhasePollTimer = null;
+let _loginCurrentPhase = 'warmup'; // 追蹤未登入時的目前 phase
+
+function startLoginPhasePolling(initialPhase = 'warmup') {
+  _loginCurrentPhase = initialPhase;
+  clearInterval(_loginPhasePollTimer);
+  _loginPhasePollTimer = setInterval(async () => {
+    try {
+      const ev = await fetch('/api/event-state').then(r => r.json());
+      const phase = ev.phase || 'warmup';
+      if (phase === _loginCurrentPhase) return; // 無變化
+      _loginCurrentPhase = phase;
+
+      if (phase === 'ended') {
+        showScreen('main');
+        updateHeaderUser(); // 確保 header 無使用者資訊
+        document.getElementById('ended-name-row')?.classList.remove('hidden');
+        applyPhase('ended');
+      } else {
+        // phase 從 ended 切回其他狀態 → 回到 login 畫面
+        showScreen('login');
+        showReturnLogin();
+      }
+    } catch (_) {}
+  }, 5000);
+}
+
 function startSpeakerPolling() {
   clearInterval(state.speakerPollTimer);
-  state.speakerPollTimer = setInterval(loadCurrentSpeaker, 5000);
+  state.speakerPollTimer = setInterval(async () => {
+    await loadCurrentSpeaker();
+    // 同步活動 phase（作為 SSE 的 fallback，確保斷線也能更新）
+    try {
+      const es = await api('GET', '/api/event-state');
+      applyPhase(es.phase);
+    } catch (_) {}
+  }, 5000);
 }
 
 // ════════════════════════════════════════════════
@@ -182,11 +236,13 @@ function showEndedScreen() {
   if (!emailForm || !reportArea) return;
 
   if (state.user?.email) {
-    // 有 email，直接載入報表
+    // 已登入且有 email，直接載入報表
+    document.getElementById('ended-name-row')?.classList.add('hidden');
     emailForm.classList.add('hidden');
     loadMyReport(state.user.name, state.user.email);
   } else {
-    // 無 email，顯示驗證表單
+    // 未登入或無 email，顯示驗證表單（含姓名欄位）
+    document.getElementById('ended-name-row')?.classList.remove('hidden');
     emailForm.classList.remove('hidden');
     reportArea.classList.add('hidden');
   }
@@ -204,11 +260,19 @@ async function submitEmailForReport() {
     return;
   }
   errEl.classList.add('hidden');
+  // 未登入時從輸入欄位取得姓名
+  const name = state.user?.name || document.getElementById('ended-name-input')?.value.trim() || '';
+  if (!name) {
+    errEl.textContent = '請輸入姓名';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
   btn.disabled = true;
   btn.textContent = '查詢中...';
 
   try {
-    await loadMyReport(state.user.name, email);
+    await loadMyReport(name, email);
     document.getElementById('ended-email-form').classList.add('hidden');
   } catch (e) {
     errEl.textContent = e.message || '查詢失敗，請確認 Email 是否正確';
@@ -246,13 +310,23 @@ function renderReport(data) {
     el.innerHTML = items.map(renderFn).join('');
   };
 
+  const contactLine = (p, colorClass) => {
+    const parts = [];
+    if (p.phone)   parts.push(`📞 ${esc(p.phone)}`);
+    if (p.line_id) parts.push(`💬 LINE：${esc(p.line_id)}`);
+    if (p.email)   parts.push(`✉️ ${esc(p.email)}`);
+    return parts.length
+      ? `<p class="text-xs font-medium mb-1 ${colorClass}">${parts.join('　')}</p>`
+      : `<p class="text-gray-300 text-xs mb-1">（未填寫聯絡方式）</p>`;
+  };
+
   renderList('report-meeters', data.meeters,
     p => `<div class="border border-rose-100 rounded-2xl p-3.5">
       <div class="flex items-center gap-2 mb-1">
         <span class="font-black text-gray-800 text-base">${esc(p.name)}</span>
         <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">${esc(p.identity || '')}</span>
       </div>
-      ${p.email ? `<p class="text-rose-500 text-xs font-medium mb-1">✉️ ${esc(p.email)}</p>` : '<p class="text-gray-300 text-xs mb-1">✉️ 未填寫 Email</p>'}
+      ${contactLine(p, 'text-rose-500')}
       ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">"${esc(p.reason)}"</p>` : ''}
     </div>`,
     '這次沒有人表達想認識你，繼續加油！'
@@ -264,7 +338,7 @@ function renderReport(data) {
         <span class="font-black text-gray-800 text-base">${esc(p.name)}</span>
         <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">${esc(p.identity || '')}</span>
       </div>
-      ${p.email ? `<p class="text-green-600 text-xs font-medium mb-1">✉️ ${esc(p.email)}</p>` : '<p class="text-gray-300 text-xs mb-1">✉️ 未填寫 Email</p>'}
+      ${contactLine(p, 'text-green-600')}
       ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">"${esc(p.reason)}"</p>` : ''}
     </div>`,
     '這次沒有人提供幫助'
@@ -277,11 +351,25 @@ function renderReport(data) {
         <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">${esc(p.identity || '')}</span>
         <span class="text-xs text-blue-600 font-bold ml-auto">第 ${esc(p.table_number || '?')} 桌</span>
       </div>
-      ${p.email ? `<p class="text-blue-500 text-xs font-medium mb-1">✉️ ${esc(p.email)}</p>` : '<p class="text-gray-300 text-xs mb-1">✉️ 未填寫 Email</p>'}
+      ${contactLine(p, 'text-blue-500')}
       ${p.needs ? `<p class="text-gray-500 text-xs mb-1">需求：${esc(p.needs)}</p>` : ''}
       ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">你的原因：「${esc(p.reason)}」</p>` : ''}
     </div>`,
     '這次沒有想認識的人'
+  );
+
+  renderList('report-myhelps', data.myHelps,
+    p => `<div class="border border-orange-100 rounded-2xl p-3.5">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="font-black text-gray-800 text-base">${esc(p.name)}</span>
+        <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">${esc(p.identity || '')}</span>
+        <span class="text-xs text-orange-600 font-bold ml-auto">第 ${esc(p.table_number || '?')} 桌</span>
+      </div>
+      ${contactLine(p, 'text-orange-500')}
+      ${p.needs ? `<p class="text-gray-500 text-xs mb-1">需求：${esc(p.needs)}</p>` : ''}
+      ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">你的承諾：「${esc(p.reason)}」</p>` : ''}
+    </div>`,
+    '這次沒有表示可以幫助的人'
   );
 }
 
@@ -408,6 +496,7 @@ function renderSpeaker() {
   const conns       = state.connections[s.id] || {};
   const wantMeet    = !!conns['want_to_meet'];
   const canProvide  = !!conns['can_provide'];
+  const isSelf      = state.user?.userId === s.id;
 
   el.innerHTML = `
     <div class="bg-white rounded-3xl shadow-lg overflow-hidden mb-4">
@@ -419,6 +508,7 @@ function renderSpeaker() {
       <div class="px-5 pt-5 pb-4">
         <h2 class="text-4xl font-black text-gray-800 mb-1">${esc(s.name)}</h2>
         <p class="text-gray-500 text-base">${esc(s.identity || s.industry || '')}</p>
+        ${s.specialty ? `<p class="text-gray-400 text-sm mt-0.5">🏷️ ${esc(s.specialty)}</p>` : ''}
         <p class="text-red-600 font-bold text-base mt-1">
           📍 第 <span class="text-2xl">${esc(s.table_number || '?')}</span> 桌
         </p>
@@ -431,30 +521,36 @@ function renderSpeaker() {
         ` : ''}
       </div>
 
-      <div class="px-5 pb-5 grid grid-cols-2 gap-3">
-        <button
-          onclick="openReasonModal(${s.id}, 'want_to_meet', 'speaker')"
-          ${wantMeet ? 'disabled' : ''}
-          class="py-5 rounded-2xl font-bold text-base border-2 transition-all ${wantMeet
-            ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-            : 'border-red-500 text-red-600 bg-white active:bg-red-50'
-          }"
-        >
-          ${wantMeet ? '✓ 已送出認識' : '🤝 我想認識他'}
-        </button>
-        <button
-          onclick="openReasonModal(${s.id}, 'can_provide', 'speaker')"
-          ${canProvide ? 'disabled' : ''}
-          class="py-5 rounded-2xl font-bold text-base border-2 transition-all ${canProvide
-            ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-            : 'border-red-500 text-red-600 bg-white active:bg-red-50'
-          }"
-        >
-          ${canProvide ? '✓ 已送出幫助' : '💼 我想幫助他'}
-        </button>
-      </div>
+      ${isSelf ? `
+        <div class="px-5 pb-5">
+          <p class="text-center text-gray-400 text-sm py-3 bg-gray-50 rounded-2xl">這是你自己的發言</p>
+        </div>
+      ` : `
+        <div class="px-5 pb-5 grid grid-cols-2 gap-3">
+          <button
+            onclick="openReasonModal(${s.id}, 'want_to_meet', 'speaker')"
+            ${wantMeet ? 'disabled' : ''}
+            class="py-5 rounded-2xl font-bold text-base border-2 transition-all ${wantMeet
+              ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+              : 'border-red-500 text-red-600 bg-white active:bg-red-50'
+            }"
+          >
+            ${wantMeet ? '✓ 已送出認識' : '🤝 我想認識他'}
+          </button>
+          <button
+            onclick="openReasonModal(${s.id}, 'can_provide', 'speaker')"
+            ${canProvide ? 'disabled' : ''}
+            class="py-5 rounded-2xl font-bold text-base border-2 transition-all ${canProvide
+              ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+              : 'border-red-500 text-red-600 bg-white active:bg-red-50'
+            }"
+          >
+            ${canProvide ? '✓ 已送出幫助' : '💼 我想幫助他'}
+          </button>
+        </div>
+      `}
     </div>
-    <p class="text-center text-gray-400 text-xs">送出後不可修改 · 每 5 秒自動同步發言者</p>
+    <p class="text-center text-gray-400 text-xs">每 5 秒自動同步發言者</p>
   `;
 
   updateRewardBanner();
@@ -471,6 +567,8 @@ function renderParticipantsList() {
     ? state.participants.filter(p =>
         p.name.toLowerCase().includes(search) ||
         (p.identity || p.industry || '').toLowerCase().includes(search) ||
+        (p.specialty || '').toLowerCase().includes(search) ||
+        (p.needs || '').toLowerCase().includes(search) ||
         (p.table_number || '').includes(search)
       )
     : state.participants;
@@ -489,6 +587,7 @@ function renderParticipantsList() {
     const canProvide = !!conns['can_provide'];
     const hasAny     = wantMeet || canProvide;
     const isSpeaker  = state.currentSpeaker?.id === p.id;
+    const isSelf     = state.user?.userId === p.id;
 
     return `
       <div class="bg-white rounded-2xl shadow-sm mb-3 overflow-hidden ${hasAny ? 'ring-2 ring-red-400' : 'border border-gray-100'}">
@@ -498,9 +597,11 @@ function renderParticipantsList() {
               <div class="flex items-center gap-2 flex-wrap">
                 <h3 class="text-xl font-black text-gray-800">${esc(p.name)}</h3>
                 ${isSpeaker ? '<span class="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">發言中</span>' : ''}
+                ${isSelf ? '<span class="bg-gray-200 text-gray-500 text-xs px-2 py-0.5 rounded-full font-semibold">我</span>' : ''}
                 ${hasAny ? '<span class="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-semibold">已互動</span>' : ''}
               </div>
               <p class="text-gray-500 text-sm mt-0.5">${esc(p.identity || p.industry || '')}</p>
+              ${p.specialty ? `<p class="text-gray-400 text-xs mt-0.5">🏷️ ${esc(p.specialty)}</p>` : ''}
             </div>
             <span class="text-red-600 font-bold text-sm whitespace-nowrap ml-2">
               第 ${esc(p.table_number || '?')} 桌
@@ -509,33 +610,35 @@ function renderParticipantsList() {
 
           ${p.needs ? `
             <div class="mt-1 mb-3 bg-red-50 border border-red-100 rounded-xl p-3">
-              <p class="text-red-600 text-xs font-bold uppercase tracking-wide mb-0.5">商務需求</p>
+              <p class="text-red-600 text-xs font-bold uppercase tracking-wide mb-0.5">在商務上需要的協助</p>
               <p class="text-gray-700 text-sm leading-relaxed">${esc(p.needs)}</p>
             </div>
           ` : ''}
 
-          <div class="grid grid-cols-2 gap-2 mt-2">
-            <button
-              onclick="openReasonModal(${p.id}, 'want_to_meet', 'browse')"
-              ${wantMeet ? 'disabled' : ''}
-              class="py-3.5 rounded-xl font-bold text-sm border-2 transition-all ${wantMeet
-                ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                : 'border-gray-300 text-gray-600 bg-white active:bg-gray-50'
-              }"
-            >
-              ${wantMeet ? '✓ 已送出認識' : '🤝 我想認識他'}
-            </button>
-            <button
-              onclick="openReasonModal(${p.id}, 'can_provide', 'browse')"
-              ${canProvide ? 'disabled' : ''}
-              class="py-3.5 rounded-xl font-bold text-sm border-2 transition-all ${canProvide
-                ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                : 'border-gray-300 text-gray-600 bg-white active:bg-gray-50'
-              }"
-            >
-              ${canProvide ? '✓ 已送出幫助' : '💼 我想幫助他'}
-            </button>
-          </div>
+          ${isSelf ? '' : `
+            <div class="grid grid-cols-2 gap-2 mt-2">
+              <button
+                onclick="openReasonModal(${p.id}, 'want_to_meet', 'browse')"
+                ${wantMeet ? 'disabled' : ''}
+                class="py-3.5 rounded-xl font-bold text-sm border-2 transition-all ${wantMeet
+                  ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                  : 'border-gray-300 text-gray-600 bg-white active:bg-gray-50'
+                }"
+              >
+                ${wantMeet ? '✓ 已送出認識' : '🤝 我想認識他'}
+              </button>
+              <button
+                onclick="openReasonModal(${p.id}, 'can_provide', 'browse')"
+                ${canProvide ? 'disabled' : ''}
+                class="py-3.5 rounded-xl font-bold text-sm border-2 transition-all ${canProvide
+                  ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                  : 'border-gray-300 text-gray-600 bg-white active:bg-gray-50'
+                }"
+              >
+                ${canProvide ? '✓ 已送出幫助' : '💼 我想幫助他'}
+              </button>
+            </div>
+          `}
         </div>
       </div>
     `;
@@ -568,9 +671,14 @@ function showScreen(name) {
 }
 
 function updateHeaderUser() {
-  const el = document.getElementById('header-user');
-  if (el && state.user) {
-    el.textContent = `${state.user.name} · ${state.user.identity || ''}`;
+  const el      = document.getElementById('header-user');
+  const logoutBtn = document.getElementById('header-logout-btn');
+  if (state.user) {
+    if (el) el.textContent = `${state.user.name} · ${state.user.identity || ''}`;
+    logoutBtn?.classList.remove('hidden');
+  } else {
+    if (el) el.textContent = '';
+    logoutBtn?.classList.add('hidden');
   }
 }
 
@@ -593,14 +701,20 @@ function showReturnLogin() {
 async function handleLogin() {
   const name      = document.getElementById('input-name').value.trim();
   const tableNum  = document.getElementById('input-table').value.trim();
+  const specialty = document.getElementById('input-specialty').value.trim();
   const needs     = document.getElementById('input-needs').value.trim();
   const email     = document.getElementById('input-email').value.trim();
+  const phone     = document.getElementById('input-phone').value.trim();
+  const lineId    = document.getElementById('input-line').value.trim();
   const identityEl = document.querySelector('input[name="identity"]:checked');
 
   if (!name) { showToast('請輸入你的名字', 'error'); document.getElementById('input-name').focus(); return; }
   if (!tableNum) { showToast('請輸入你的桌號', 'error'); document.getElementById('input-table').focus(); return; }
+  if (!specialty) { showToast('請填寫你的專業別', 'error'); document.getElementById('input-specialty').focus(); return; }
   if (!needs) { showToast('請填寫你的商務需求', 'error'); document.getElementById('input-needs').focus(); return; }
-  if (!identityEl) { showToast('請選擇你的身份', 'error'); return; }
+  if (!identityEl) { showToast('請選擇手環顏色', 'error'); return; }
+  if (!email) { showToast('請填寫 Email，活動結束後將寄送名片', 'error'); document.getElementById('input-email').focus(); return; }
+  if (!phone && !lineId) { showToast('請填寫電話或 LINE ID（擇一）', 'error'); document.getElementById('input-phone').focus(); return; }
 
   const btn = document.getElementById('btn-login');
   btn.disabled = true;
@@ -609,7 +723,8 @@ async function handleLogin() {
   try {
     const data = await api('POST', '/api/login', {
       name, tableNumber: tableNum, needs, identity: identityEl.value,
-      email: email || null, isFirstTime: true,
+      email, specialty, phone: phone || null, lineId: lineId || null,
+      isFirstTime: true,
     });
     state.user = {
       userId: data.userId, name: data.name, identity: data.identity,
@@ -677,7 +792,7 @@ function handleLogout() {
   showReturnLogin();
 
   // Reset form
-  ['input-name', 'input-table', 'input-needs', 'input-email'].forEach(id => {
+  ['input-name', 'input-table', 'input-specialty', 'input-needs', 'input-email', 'input-phone', 'input-line'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -691,8 +806,8 @@ function handleLogout() {
 function updateRoleStyle() {
   const map = {
     '長榮會員': 'role-label-member',
-    '來賓': 'role-label-guest',
-    '親友': 'role-label-friend',
+    '金手環': 'role-label-guest',
+    '銀手環': 'role-label-friend',
   };
   document.querySelectorAll('input[name="identity"]').forEach(el => {
     const label = document.getElementById(map[el.value]);

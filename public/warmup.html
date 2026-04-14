@@ -539,40 +539,30 @@
         showWarmup();
       } else if (phase === 'drawing') {
         showDrawing();
-        // 取得參與者並跑動畫
-        fetchParticipantsAndDraw(state.drawResult);
-      } else if (phase === 'speaking') {
-        // 切換到大螢幕展示頁
+        // 只有已有抽選結果才啟動轉盤，否則停在待抽選畫面
+        if (state.drawResult && state.drawResult.winner?.id) {
+          startReelFromState(state.drawResult);
+        }
+      } else if (phase === 'speaking' || phase === 'ended') {
+        // 切換到大螢幕展示頁（含活動結束畫面）
         window.location.href = '/display';
-      } else if (phase === 'ended') {
-        showWarmup();
       }
-    } else if (phase === 'drawing' && state.drawResult && !reelAnimating) {
-      // 同 phase 但有新 drawResult → 也觸發動畫
-      fetchParticipantsAndDraw(state.drawResult);
+    } else if (phase === 'drawing' && state.drawResult && state.drawResult.winner?.id && !reelAnimating) {
+      // 同 phase 但出現新 drawResult → 啟動動畫
+      startReelFromState(state.drawResult);
     }
   }
 
-  async function fetchParticipantsAndDraw(drawResult) {
-    try {
-      const res = await fetch('/api/participants');
-      if (!res.ok) return;
-      const data = await res.json();
-      allParticipants = Array.isArray(data) ? data : (data.participants || []);
+  function startReelFromState(drawResult) {
+    const pool   = drawResult.pool || [];
+    const winner = drawResult.winner;
+    if (!pool.length || !winner?.id) return;
 
-      if (!allParticipants.length) return;
+    const winnerIdx = pool.findIndex(p => p.id === winner.id);
+    if (winnerIdx < 0) return;
 
-      let winnerIdx = 0;
-      if (drawResult && drawResult.id) {
-        const idx = allParticipants.findIndex(p => p.id === drawResult.id);
-        if (idx >= 0) winnerIdx = idx;
-      }
-
-      showDrawing();
-      runReelAnimation(allParticipants, winnerIdx);
-    } catch (e) {
-      console.error('fetchParticipantsAndDraw error', e);
-    }
+    showDrawing();
+    runReelAnimation(pool, winnerIdx);
   }
 
   // ─────────────────────────────────────────────

@@ -9,7 +9,7 @@
     * { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
     #admin-toast { transition: transform 0.3s ease, opacity 0.3s ease; }
     button:active { transform: scale(0.97); }
-    .phase-btn.active { ring: 2; }
+    .phase-btn.active { box-shadow: 0 0 0 2px #DC2626; }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -66,7 +66,7 @@
         </div>
         <div class="bg-white rounded-2xl p-3 text-center shadow-sm">
           <div id="stat-connections" class="text-2xl font-black text-red-600">-</div>
-          <div class="text-gray-500 text-xs mt-0.5">總互動</div>
+          <div class="text-gray-500 text-xs mt-0.5">商務串接</div>
         </div>
         <div class="bg-white rounded-2xl p-3 text-center shadow-sm">
           <div id="stat-want" class="text-2xl font-black text-red-600">-</div>
@@ -82,7 +82,10 @@
         </div>
       </section>
       <div class="flex justify-end">
-        <button onclick="loadStats()" class="text-xs text-gray-400 underline">重新整理數據</button>
+        <button onclick="Promise.all([loadStats(), loadParticipants(), loadCandidates()])"
+          class="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 font-semibold text-sm px-4 py-2 rounded-xl transition-colors">
+          🔄 重新整理數據
+        </button>
       </div>
 
       <!-- ── 活動階段控制 ── -->
@@ -111,7 +114,7 @@
 
         <!-- 倒數目標時間 -->
         <div class="bg-gray-50 rounded-2xl p-4 space-y-2">
-          <label class="block text-gray-700 font-bold text-sm">預熱倒數目標時間（選填）</label>
+          <label class="block text-gray-700 font-bold text-sm">預熱倒數目標時間（選填）<span class="font-normal text-gray-400 ml-1">台灣時間 UTC+8</span></label>
           <div class="flex gap-2">
             <input id="countdown-input" type="datetime-local"
               class="flex-1 border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-red-500 focus:outline-none">
@@ -120,17 +123,27 @@
               設定
             </button>
           </div>
+          <p id="countdown-current" class="hidden text-xs text-green-700 bg-green-50 rounded-lg px-3 py-1.5"></p>
         </div>
       </section>
 
       <!-- ── 抽選功能 ── -->
       <section class="bg-white rounded-3xl shadow-sm p-5">
-        <h2 class="text-lg font-black text-gray-800 mb-1">🎯 隨機抽選發言者</h2>
-        <p class="text-gray-500 text-xs mb-4">從所有成員中隨機抽出一位，並自動切換到「抽選中」階段，在大螢幕展示轉盤動畫。</p>
+        <h2 class="text-lg font-black text-gray-800 mb-1">🎯 抽選發言者（金手環）</h2>
+        <p class="text-gray-500 text-xs mb-4">僅從金手環成員中抽選。請先切換到「抽選中」階段，確認名單後再按開始抽選。</p>
 
-        <div class="flex items-center gap-2 mb-4">
-          <input type="checkbox" id="exclude-current" class="w-4 h-4 accent-red-600">
-          <label for="exclude-current" class="text-sm text-gray-600">排除目前發言者</label>
+        <!-- 候選名單 -->
+        <div class="bg-gray-50 rounded-2xl p-3 mb-4 max-h-52 overflow-y-auto">
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-xs font-bold text-gray-600">候選名單（✕ = 排除）</p>
+            <button onclick="loadCandidates()"
+              class="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-600 font-semibold text-xs px-3 py-1.5 rounded-lg transition-colors">
+              🔄 重新整理
+            </button>
+          </div>
+          <div id="candidate-list">
+            <p class="text-gray-400 text-xs text-center py-3">載入中...</p>
+          </div>
         </div>
 
         <button onclick="drawSpeaker()"
@@ -162,39 +175,6 @@
         </button>
       </section>
 
-      <!-- ── CSV 匯入 ── -->
-      <section class="bg-white rounded-3xl shadow-sm p-5">
-        <h2 class="text-lg font-black text-gray-800 mb-1">📤 匯入成員名單（CSV）</h2>
-        <p class="text-gray-500 text-xs mb-4">
-          CSV 格式（第一列為標題）：<br>
-          <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono">name,industry,table,needs,identity,email</code>
-        </p>
-
-        <div class="space-y-3">
-          <label class="block">
-            <div id="csv-drop-area"
-              class="border-2 border-dashed border-gray-300 rounded-2xl p-5 text-center cursor-pointer hover:border-red-400 transition-colors">
-              <div class="text-3xl mb-2">📁</div>
-              <p class="text-gray-500 text-sm">點擊選擇 CSV 檔案</p>
-              <input id="csv-file" type="file" accept=".csv,text/csv" class="hidden">
-            </div>
-          </label>
-          <div id="file-name" class="text-center text-gray-400 text-xs hidden"></div>
-          <button onclick="uploadCSV()"
-            class="w-full bg-red-600 text-white font-black py-4 rounded-2xl shadow active:bg-red-700 transition-colors">
-            上傳並匯入
-          </button>
-          <div id="upload-result" class="text-sm text-center hidden"></div>
-        </div>
-
-        <div class="mt-4 pt-4 border-t border-gray-100 space-y-2">
-          <button onclick="clearAllParticipants()"
-            class="w-full border-2 border-red-200 text-red-500 font-bold py-3 rounded-2xl text-sm active:bg-red-50 transition-colors">
-            🗑️ 清除所有成員資料（含媒合記錄）
-          </button>
-        </div>
-      </section>
-
       <!-- ── 成員清單 ── -->
       <section class="bg-white rounded-3xl shadow-sm p-5">
         <div class="flex items-center justify-between mb-4">
@@ -214,6 +194,32 @@
         </div>
       </section>
 
+      <!-- ── CSV 匯入 ── -->
+      <section class="bg-white rounded-3xl shadow-sm p-5">
+        <h2 class="text-lg font-black text-gray-800 mb-1">📤 匯入成員名單（CSV）</h2>
+        <p class="text-gray-500 text-xs mb-4">
+          CSV 格式（第一列為標題）：<br>
+          <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono">name,industry,table,needs,identity,email,specialty,phone,line_id</code>
+        </p>
+
+        <div class="space-y-3">
+          <label class="block">
+            <div id="csv-drop-area"
+              class="border-2 border-dashed border-gray-300 rounded-2xl p-5 text-center cursor-pointer hover:border-red-400 transition-colors">
+              <div class="text-3xl mb-2">📁</div>
+              <p class="text-gray-500 text-sm">點擊選擇 CSV 檔案</p>
+              <input id="csv-file" type="file" accept=".csv,text/csv" class="hidden">
+            </div>
+          </label>
+          <div id="file-name" class="text-center text-gray-400 text-xs hidden"></div>
+          <button onclick="uploadCSV()"
+            class="w-full bg-red-600 text-white font-black py-4 rounded-2xl shadow active:bg-red-700 transition-colors">
+            上傳並匯入
+          </button>
+          <div id="upload-result" class="text-sm text-center hidden"></div>
+        </div>
+      </section>
+
       <!-- ── 匯出 ── -->
       <section class="bg-white rounded-3xl shadow-sm p-5">
         <h2 class="text-lg font-black text-gray-800 mb-1">📊 匯出 / 報表</h2>
@@ -228,6 +234,12 @@
           <button onclick="exportReport()"
             class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow active:bg-blue-700 transition-colors">
             📋 下載活動後聯絡包（JSON）
+          </button>
+        </div>
+        <div class="mt-6 pt-4 border-t border-gray-100">
+          <button onclick="clearAllParticipants()"
+            class="w-full border border-gray-200 text-gray-400 font-medium py-2.5 rounded-2xl text-sm active:bg-gray-50 transition-colors">
+            🗑️ 清除所有成員資料（含媒合記錄）
           </button>
         </div>
       </section>
@@ -248,8 +260,10 @@
 
     let _adminPassword   = '';
     let _allParticipants = [];
+    let _candidates      = [];
     let _drawWinner      = null;
     let _currentPhase    = 'warmup';
+    let _excludedIds     = new Set();
 
     // ── API helper ──────────────────────────────
     async function adminApi(method, url, body) {
@@ -277,6 +291,7 @@
         document.getElementById('admin-main').classList.remove('hidden');
         document.getElementById('login-error').classList.add('hidden');
         loadParticipants();
+        loadCandidates();
         startAdminSSE();
       } catch {
         document.getElementById('login-error').classList.remove('hidden');
@@ -303,6 +318,21 @@
       _currentPhase = s.phase || 'warmup';
       document.getElementById('stat-phase').textContent        = phaseLabel(_currentPhase);
       updatePhaseBtns(_currentPhase);
+
+      // 若已設定倒數目標時間，填入欄位並顯示目前設定
+      const cdDisplay = document.getElementById('countdown-current');
+      if (s.countdownTarget) {
+        const d = new Date(s.countdownTarget);
+        const pad = n => String(n).padStart(2, '0');
+        // 填入 datetime-local（以瀏覽器本地時間顯示，即 UTC+8）
+        const localVal = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        document.getElementById('countdown-input').value = localVal;
+        // 顯示目前設定的可讀時間
+        cdDisplay.textContent = `目前設定：${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}（台灣時間）`;
+        cdDisplay.classList.remove('hidden');
+      } else {
+        cdDisplay.classList.add('hidden');
+      }
     }
 
     function phaseLabel(p) {
@@ -350,11 +380,82 @@
       }
     }
 
+    // ── 候選名單 ─────────────────────────────────
+    async function loadCandidates() {
+      try {
+        _candidates = await adminApi('GET', '/api/admin/candidates');
+        renderCandidateList(_candidates);
+      } catch (e) {
+        showAdminToast('載入候選名單失敗：' + e.message, 'error');
+      }
+    }
+
+    function renderCandidateList(list) {
+      const el = document.getElementById('candidate-list');
+      if (!el) return;
+      if (!list.length) {
+        el.innerHTML = '<p class="text-gray-400 text-xs text-center py-3">尚無金手環成員</p>';
+        return;
+      }
+      // 已發言者預設排除
+      _excludedIds = new Set(list.filter(p => p.spoke_at).map(p => p.id));
+
+      el.innerHTML = list.map(p => {
+        const hasSpoken  = !!p.spoke_at;
+        const spokenTime = hasSpoken ? p.spoke_at.substring(11, 16) : '';
+        const excluded   = _excludedIds.has(p.id);
+        return `
+          <div class="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0" id="candidate-row-${p.id}">
+            <button type="button" onclick="toggleCandidate(${p.id}, ${hasSpoken})"
+              id="candidate-btn-${p.id}"
+              class="w-6 h-6 flex items-center justify-center rounded-full border-2 flex-shrink-0 transition-all text-xs font-black
+                ${excluded ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 text-transparent'}">
+              ✕
+            </button>
+            <span id="candidate-name-${p.id}"
+              class="flex-1 text-sm font-medium ${excluded && hasSpoken ? 'text-gray-400 line-through' : 'text-gray-700'}">
+              ${esc(p.name)}
+            </span>
+            <span class="text-xs text-gray-400">第${esc(p.table_number || '?')}桌</span>
+            ${hasSpoken
+              ? `<span class="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-semibold">已發言 ${spokenTime}</span>`
+              : '<span class="text-xs text-green-600 font-semibold">未發言</span>'}
+          </div>`;
+      }).join('');
+    }
+
+    function toggleCandidate(id, hasSpoken) {
+      const isExcluded = _excludedIds.has(id);
+      if (isExcluded && hasSpoken) {
+        if (!confirm('此成員已發言過，確定要將他重新加入候選名單？')) return;
+      }
+      isExcluded ? _excludedIds.delete(id) : _excludedIds.add(id);
+      const nowExcluded = _excludedIds.has(id);
+      const btn  = document.getElementById(`candidate-btn-${id}`);
+      const name = document.getElementById(`candidate-name-${id}`);
+      btn.className = `w-6 h-6 flex items-center justify-center rounded-full border-2 flex-shrink-0 transition-all text-xs font-black
+        ${nowExcluded ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 text-transparent'}`;
+      if (hasSpoken) {
+        name.className = `flex-1 text-sm font-medium ${nowExcluded ? 'text-gray-400 line-through' : 'text-gray-700'}`;
+      }
+    }
+
     // ── 抽選 ────────────────────────────────────
     async function drawSpeaker() {
-      const excludeCurrent = document.getElementById('exclude-current').checked;
+      // 先做 client-side 快速檢查，不需等 API 就能立即提示
+      const eligibleCount = _candidates.filter(c => !_excludedIds.has(c.id)).length;
+      if (eligibleCount === 0) {
+        showAdminToast('沒有可抽選的金手環成員', 'error');
+        return;
+      }
+
+      const excludeIds = Array.from(_excludedIds);
       try {
-        const data = await adminApi('POST', '/api/admin/draw', { excludeSpeakers: excludeCurrent });
+        // 切換到抽選中階段，大螢幕同步顯示
+        await adminApi('POST', '/api/admin/set-phase', { phase: 'drawing' });
+        await loadStats();
+
+        const data = await adminApi('POST', '/api/admin/draw', { excludeIds });
         _drawWinner = data.winner;
 
         document.getElementById('draw-result-name').textContent = _drawWinner.name;
@@ -362,8 +463,6 @@
           `${_drawWinner.identity || ''} · 第 ${_drawWinner.table_number || '?'} 桌`;
         document.getElementById('draw-result').classList.remove('hidden');
         showAdminToast(`抽選結果：${_drawWinner.name}`, 'success');
-        // 伺服器抽選後自動切 drawing，同步按鈕狀態
-        await loadStats();
       } catch (e) {
         showAdminToast('抽選失敗：' + e.message, 'error');
       }
@@ -373,7 +472,7 @@
       if (!_drawWinner) return;
       try {
         await adminApi('POST', '/api/admin/set-speaker', { participantId: _drawWinner.id });
-        await Promise.all([loadParticipants(), loadStats()]);
+        await Promise.all([loadParticipants(), loadStats(), loadCandidates()]);
         document.getElementById('draw-result').classList.add('hidden');
         _drawWinner = null;
         showAdminToast('已設定為發言者並切換到發言階段', 'success');
@@ -416,7 +515,9 @@
         return;
       }
 
-      el.innerHTML = list.map(p => `
+      el.innerHTML = list.map(p => {
+        const spokeTime = p.spoke_at ? p.spoke_at.substring(11, 16) : null;
+        return `
         <div class="border border-gray-100 rounded-2xl p-4 mb-3 ${p.is_current_speaker ? 'bg-red-50 border-red-200' : 'bg-white'}">
           <div class="flex items-start gap-3">
             <div class="flex-1 min-w-0">
@@ -425,7 +526,8 @@
                 <span class="text-gray-500 text-sm">${esc(p.identity || p.industry || '')}</span>
                 <span class="text-red-600 text-sm font-bold">第${esc(p.table_number || '?')}桌</span>
                 ${p.is_current_speaker ? '<span class="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">🎤 發言中</span>' : ''}
-                ${p.email ? '<span class="bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded-full font-semibold">有 Email</span>' : ''}
+                ${spokeTime ? `<span class="bg-orange-100 text-orange-600 text-xs px-2 py-0.5 rounded-full font-semibold">已發言 ${spokeTime}</span>` : ''}
+                ${p.email ? '<span class="bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded-full font-semibold">✉ Email</span>' : ''}
               </div>
               ${p.needs ? `<p class="text-gray-400 text-xs mt-1 truncate">需求：${esc(p.needs)}</p>` : ''}
             </div>
@@ -444,8 +546,8 @@
               </button>
             </div>
           </div>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
     }
 
     function updateCurrentSpeakerDisplay(list) {
@@ -489,18 +591,25 @@
       } catch (e) { showAdminToast('刪除失敗：' + e.message, 'error'); }
     }
 
-    // ── SSE 同步（只監聽 phase 變化，不做頁面跳轉） ──
-    let _sseSource = null;
+    // ── SSE 同步（監聽 phase 變化 + 人數變化） ──
+    let _sseSource     = null;
+    let _lastMemberCount = -1;
     function startAdminSSE() {
       if (_sseSource) return;
       _sseSource = new EventSource('/api/event-stream');
       _sseSource.addEventListener('event-state', e => {
         try {
           const state = JSON.parse(e.data);
+          // phase 變化 → 更新按鈕顯示
           if (state.phase && state.phase !== _currentPhase) {
             _currentPhase = state.phase;
             document.getElementById('stat-phase').textContent = phaseLabel(state.phase);
             updatePhaseBtns(state.phase);
+          }
+          // 人數變化 → 自動刷新成員列表與候選名單
+          if (state.memberCount !== undefined && state.memberCount !== _lastMemberCount) {
+            _lastMemberCount = state.memberCount;
+            Promise.all([loadStats(), loadParticipants(), loadCandidates()]);
           }
         } catch (_) {}
       });
