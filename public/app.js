@@ -252,6 +252,7 @@ function renderReport(data) {
         <span class="font-black text-gray-800 text-base">${esc(p.name)}</span>
         <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">${esc(p.identity || '')}</span>
       </div>
+      ${p.email ? `<p class="text-rose-500 text-xs font-medium mb-1">✉️ ${esc(p.email)}</p>` : '<p class="text-gray-300 text-xs mb-1">✉️ 未填寫 Email</p>'}
       ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">"${esc(p.reason)}"</p>` : ''}
     </div>`,
     '這次沒有人表達想認識你，繼續加油！'
@@ -263,6 +264,7 @@ function renderReport(data) {
         <span class="font-black text-gray-800 text-base">${esc(p.name)}</span>
         <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">${esc(p.identity || '')}</span>
       </div>
+      ${p.email ? `<p class="text-green-600 text-xs font-medium mb-1">✉️ ${esc(p.email)}</p>` : '<p class="text-gray-300 text-xs mb-1">✉️ 未填寫 Email</p>'}
       ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">"${esc(p.reason)}"</p>` : ''}
     </div>`,
     '這次沒有人提供幫助'
@@ -275,6 +277,7 @@ function renderReport(data) {
         <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">${esc(p.identity || '')}</span>
         <span class="text-xs text-blue-600 font-bold ml-auto">第 ${esc(p.table_number || '?')} 桌</span>
       </div>
+      ${p.email ? `<p class="text-blue-500 text-xs font-medium mb-1">✉️ ${esc(p.email)}</p>` : '<p class="text-gray-300 text-xs mb-1">✉️ 未填寫 Email</p>'}
       ${p.needs ? `<p class="text-gray-500 text-xs mb-1">需求：${esc(p.needs)}</p>` : ''}
       ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">你的原因：「${esc(p.reason)}」</p>` : ''}
     </div>`,

@@ -595,7 +595,7 @@ app.post('/api/my-report', (req, res) => {
 
   // 誰想認識我
   const meeters = dbAll(`
-    SELECT p.name, p.identity, c.reason
+    SELECT p.name, p.identity, p.email, c.reason
     FROM connections c JOIN participants p ON c.user_id = p.id
     WHERE c.participant_id = ? AND c.type = 'want_to_meet'
     ORDER BY c.timestamp
@@ -603,15 +603,15 @@ app.post('/api/my-report', (req, res) => {
 
   // 誰可以幫助我
   const helpers = dbAll(`
-    SELECT p.name, p.identity, c.reason
+    SELECT p.name, p.identity, p.email, c.reason
     FROM connections c JOIN participants p ON c.user_id = p.id
     WHERE c.participant_id = ? AND c.type = 'can_provide'
     ORDER BY c.timestamp
   `, [member.id]);
 
-  // 我想認識的人（含桌號作為聯絡線索）
+  // 我想認識的人（含桌號與 email 作為聯絡線索）
   const myWants = dbAll(`
-    SELECT p.name, p.identity, p.table_number, p.needs, c.reason
+    SELECT p.name, p.identity, p.email, p.table_number, p.needs, c.reason
     FROM connections c JOIN participants p ON c.participant_id = p.id
     WHERE c.user_id = ? AND c.type = 'want_to_meet'
     ORDER BY c.timestamp
