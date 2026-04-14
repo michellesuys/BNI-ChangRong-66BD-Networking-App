@@ -3,19 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BNI 管理員後台</title>
+  <title>BNI 管理員後台 · 商機變變變</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     * { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
     #admin-toast { transition: transform 0.3s ease, opacity 0.3s ease; }
     button:active { transform: scale(0.97); }
+    .phase-btn.active { ring: 2; }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
 
-  <!-- ════════════════════════════════════════════ -->
-  <!-- ADMIN LOGIN                                   -->
-  <!-- ════════════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- 管理員登入 -->
+  <!-- ═══════════════════════════════════════════ -->
   <div id="admin-login" class="min-h-screen flex items-center justify-center p-6 bg-gradient-to-b from-red-50 to-white">
     <div class="bg-white rounded-3xl shadow-xl p-8 w-full max-w-sm">
       <div class="text-center mb-6">
@@ -23,22 +24,14 @@
           <span class="text-3xl">🔐</span>
         </div>
         <h1 class="text-2xl font-black text-gray-800">管理員後台</h1>
-        <p class="text-gray-500 text-sm mt-1">BNI 商務交流媒合系統</p>
+        <p class="text-gray-500 text-sm mt-1">BNI 長榮 20 周年慶・商機變變變</p>
       </div>
       <div class="space-y-4">
-        <input
-          id="admin-password"
-          type="password"
-          placeholder="請輸入管理員密碼"
+        <input id="admin-password" type="password" placeholder="請輸入管理員密碼"
           class="w-full border-2 border-gray-200 rounded-2xl px-4 py-4 text-lg focus:border-red-500 focus:outline-none transition-colors"
-          onkeydown="if(event.key==='Enter') adminLogin()"
-          autocomplete="current-password"
-        >
-        <button
-          onclick="adminLogin()"
-          id="btn-admin-login"
-          class="w-full bg-red-600 text-white font-black py-4 rounded-2xl text-lg shadow-lg active:bg-red-700"
-        >
+          onkeydown="if(event.key==='Enter') adminLogin()" autocomplete="current-password">
+        <button onclick="adminLogin()" id="btn-admin-login"
+          class="w-full bg-red-600 text-white font-black py-4 rounded-2xl text-lg shadow-lg active:bg-red-700">
           進入管理後台
         </button>
         <p id="login-error" class="text-red-600 text-sm text-center hidden font-semibold">密碼錯誤，請重試</p>
@@ -46,17 +39,16 @@
     </div>
   </div>
 
-  <!-- ════════════════════════════════════════════ -->
-  <!-- ADMIN MAIN                                    -->
-  <!-- ════════════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- 管理員主畫面 -->
+  <!-- ═══════════════════════════════════════════ -->
   <div id="admin-main" class="hidden">
 
-    <!-- Header -->
     <header class="bg-red-600 px-6 py-4 shadow-lg sticky top-0 z-20">
       <div class="max-w-3xl mx-auto flex items-center justify-between">
         <div>
           <h1 class="text-white font-black text-xl">BNI 管理員後台</h1>
-          <p class="text-red-200 text-xs mt-0.5">長榮20週年 · 商務交流活動</p>
+          <p class="text-red-200 text-xs mt-0.5">長榮 20 周年慶・商機變變變・產業閃電秀</p>
         </div>
         <button onclick="adminLogout()" class="text-red-200 border border-red-400 rounded-xl px-4 py-2 text-sm font-semibold active:bg-red-700">
           登出
@@ -66,105 +58,153 @@
 
     <div class="max-w-3xl mx-auto p-4 space-y-5 pb-24">
 
-      <!-- ── Stats ── -->
+      <!-- ── 統計 ── -->
       <section class="grid grid-cols-5 gap-2">
-        <div class="bg-white rounded-2xl p-3 text-center shadow-sm col-span-1">
+        <div class="bg-white rounded-2xl p-3 text-center shadow-sm">
           <div id="stat-participants" class="text-2xl font-black text-red-600">-</div>
-          <div class="text-gray-500 text-xs mt-0.5">參與者</div>
+          <div class="text-gray-500 text-xs mt-0.5">成員</div>
         </div>
-        <div class="bg-white rounded-2xl p-3 text-center shadow-sm col-span-1">
-          <div id="stat-users" class="text-2xl font-black text-red-600">-</div>
-          <div class="text-gray-500 text-xs mt-0.5">使用者</div>
-        </div>
-        <div class="bg-white rounded-2xl p-3 text-center shadow-sm col-span-1">
+        <div class="bg-white rounded-2xl p-3 text-center shadow-sm">
           <div id="stat-connections" class="text-2xl font-black text-red-600">-</div>
-          <div class="text-gray-500 text-xs mt-0.5">總媒合</div>
+          <div class="text-gray-500 text-xs mt-0.5">總互動</div>
         </div>
-        <div class="bg-white rounded-2xl p-3 text-center shadow-sm col-span-1">
+        <div class="bg-white rounded-2xl p-3 text-center shadow-sm">
           <div id="stat-want" class="text-2xl font-black text-red-600">-</div>
           <div class="text-gray-500 text-xs mt-0.5">想認識</div>
         </div>
-        <div class="bg-white rounded-2xl p-3 text-center shadow-sm col-span-1">
+        <div class="bg-white rounded-2xl p-3 text-center shadow-sm">
           <div id="stat-provide" class="text-2xl font-black text-red-600">-</div>
-          <div class="text-gray-500 text-xs mt-0.5">可提供</div>
+          <div class="text-gray-500 text-xs mt-0.5">幫助燈</div>
+        </div>
+        <div class="bg-white rounded-2xl p-3 text-center shadow-sm">
+          <div id="stat-phase" class="text-lg font-black text-red-600">-</div>
+          <div class="text-gray-500 text-xs mt-0.5">階段</div>
         </div>
       </section>
       <div class="flex justify-end">
         <button onclick="loadStats()" class="text-xs text-gray-400 underline">重新整理數據</button>
       </div>
 
-      <!-- ── Current Speaker ── -->
+      <!-- ── 活動階段控制 ── -->
+      <section class="bg-white rounded-3xl shadow-sm p-5">
+        <h2 class="text-lg font-black text-gray-800 mb-1">🎬 活動階段控制</h2>
+        <p class="text-gray-500 text-xs mb-4">切換階段會即時推送到大螢幕（預熱頁 / 展示頁）</p>
+
+        <div class="grid grid-cols-2 gap-2 mb-4">
+          <button onclick="setPhase('warmup')" id="phase-btn-warmup"
+            class="phase-btn py-3 rounded-2xl font-bold text-sm border-2 transition-all border-gray-300 text-gray-600">
+            🌡️ 預熱中
+          </button>
+          <button onclick="setPhase('drawing')" id="phase-btn-drawing"
+            class="phase-btn py-3 rounded-2xl font-bold text-sm border-2 transition-all border-gray-300 text-gray-600">
+            🎲 抽選中
+          </button>
+          <button onclick="setPhase('speaking')" id="phase-btn-speaking"
+            class="phase-btn py-3 rounded-2xl font-bold text-sm border-2 transition-all border-gray-300 text-gray-600">
+            🎤 發言中
+          </button>
+          <button onclick="setPhase('ended')" id="phase-btn-ended"
+            class="phase-btn py-3 rounded-2xl font-bold text-sm border-2 transition-all border-gray-300 text-gray-600">
+            🏁 活動結束
+          </button>
+        </div>
+
+        <!-- 倒數目標時間 -->
+        <div class="bg-gray-50 rounded-2xl p-4 space-y-2">
+          <label class="block text-gray-700 font-bold text-sm">預熱倒數目標時間（選填）</label>
+          <div class="flex gap-2">
+            <input id="countdown-input" type="datetime-local"
+              class="flex-1 border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-red-500 focus:outline-none">
+            <button onclick="setCountdown()"
+              class="bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-sm active:bg-red-700">
+              設定
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 抽選功能 ── -->
+      <section class="bg-white rounded-3xl shadow-sm p-5">
+        <h2 class="text-lg font-black text-gray-800 mb-1">🎯 隨機抽選發言者</h2>
+        <p class="text-gray-500 text-xs mb-4">從所有成員中隨機抽出一位，並自動切換到「抽選中」階段，在大螢幕展示轉盤動畫。</p>
+
+        <div class="flex items-center gap-2 mb-4">
+          <input type="checkbox" id="exclude-current" class="w-4 h-4 accent-red-600">
+          <label for="exclude-current" class="text-sm text-gray-600">排除目前發言者</label>
+        </div>
+
+        <button onclick="drawSpeaker()"
+          class="w-full bg-gradient-to-r from-red-600 to-orange-500 text-white font-black py-5 rounded-2xl shadow-lg text-lg active:opacity-90 transition-all">
+          🎲 開始抽選！
+        </button>
+
+        <div id="draw-result" class="hidden mt-4 bg-red-50 border-2 border-red-200 rounded-2xl p-4 text-center">
+          <p class="text-red-600 font-bold text-sm mb-1">抽選結果</p>
+          <p class="font-black text-gray-800 text-2xl" id="draw-result-name"></p>
+          <p class="text-gray-500 text-sm" id="draw-result-detail"></p>
+          <button onclick="confirmDrawAsSpeaker()" id="draw-confirm-btn"
+            class="mt-3 bg-red-600 text-white font-bold px-6 py-2 rounded-xl text-sm active:bg-red-700">
+            設為發言者
+          </button>
+        </div>
+      </section>
+
+      <!-- ── 目前發言者 ── -->
       <section class="bg-white rounded-3xl shadow-sm p-5">
         <h2 class="text-lg font-black text-gray-800 mb-3">🎤 目前發言者</h2>
-        <div id="current-speaker-display" class="text-gray-500 text-sm mb-4 p-3 bg-gray-50 rounded-2xl min-h-[44px] flex items-center">
+        <div id="current-speaker-display"
+          class="text-gray-500 text-sm mb-4 p-3 bg-gray-50 rounded-2xl min-h-[44px] flex items-center">
           載入中...
         </div>
-        <button
-          onclick="clearSpeaker()"
-          class="w-full border-2 border-gray-300 text-gray-600 font-bold py-3 rounded-2xl text-sm active:bg-gray-50 transition-colors"
-        >
+        <button onclick="clearSpeaker()"
+          class="w-full border-2 border-gray-300 text-gray-600 font-bold py-3 rounded-2xl text-sm active:bg-gray-50 transition-colors">
           🔕 清除目前發言者
         </button>
       </section>
 
-      <!-- ── CSV Upload ── -->
+      <!-- ── CSV 匯入 ── -->
       <section class="bg-white rounded-3xl shadow-sm p-5">
-        <h2 class="text-lg font-black text-gray-800 mb-1">📤 匯入參與者名單</h2>
+        <h2 class="text-lg font-black text-gray-800 mb-1">📤 匯入成員名單（CSV）</h2>
         <p class="text-gray-500 text-xs mb-4">
-          CSV 格式（UTF-8，第一列為標題）：
-          <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono">name,industry,table,needs</code>
-          <br>其中 <code class="font-mono text-xs">needs</code> 欄位為選填
+          CSV 格式（第一列為標題）：<br>
+          <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono">name,industry,table,needs,identity,email</code>
         </p>
 
         <div class="space-y-3">
           <label class="block">
-            <div class="border-2 border-dashed border-gray-300 rounded-2xl p-5 text-center cursor-pointer hover:border-red-400 transition-colors">
+            <div id="csv-drop-area"
+              class="border-2 border-dashed border-gray-300 rounded-2xl p-5 text-center cursor-pointer hover:border-red-400 transition-colors">
               <div class="text-3xl mb-2">📁</div>
               <p class="text-gray-500 text-sm">點擊選擇 CSV 檔案</p>
               <input id="csv-file" type="file" accept=".csv,text/csv" class="hidden">
             </div>
           </label>
           <div id="file-name" class="text-center text-gray-400 text-xs hidden"></div>
-          <button
-            onclick="uploadCSV()"
-            class="w-full bg-red-600 text-white font-black py-4 rounded-2xl shadow active:bg-red-700 transition-colors"
-          >
+          <button onclick="uploadCSV()"
+            class="w-full bg-red-600 text-white font-black py-4 rounded-2xl shadow active:bg-red-700 transition-colors">
             上傳並匯入
           </button>
           <div id="upload-result" class="text-sm text-center hidden"></div>
         </div>
 
         <div class="mt-4 pt-4 border-t border-gray-100 space-y-2">
-          <button
-            onclick="clearAllUsers()"
-            class="w-full border-2 border-orange-200 text-orange-500 font-bold py-3 rounded-2xl text-sm active:bg-orange-50 transition-colors"
-          >
-            👥 清除所有使用者資料（含媒合記錄）
-          </button>
-          <button
-            onclick="clearAllParticipants()"
-            class="w-full border-2 border-red-200 text-red-500 font-bold py-3 rounded-2xl text-sm active:bg-red-50 transition-colors"
-          >
-            🗑️ 清除所有參與者資料（含媒合記錄）
+          <button onclick="clearAllParticipants()"
+            class="w-full border-2 border-red-200 text-red-500 font-bold py-3 rounded-2xl text-sm active:bg-red-50 transition-colors">
+            🗑️ 清除所有成員資料（含媒合記錄）
           </button>
         </div>
       </section>
 
-      <!-- ── Participants List ── -->
+      <!-- ── 成員清單 ── -->
       <section class="bg-white rounded-3xl shadow-sm p-5">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-black text-gray-800">👥 所有參與者</h2>
+          <h2 class="text-lg font-black text-gray-800">👥 所有成員</h2>
           <span id="admin-count" class="text-gray-400 text-sm"></span>
         </div>
 
-        <!-- Search -->
-        <input
-          id="admin-search"
-          type="search"
-          placeholder="🔍 搜尋姓名或桌號..."
+        <input id="admin-search" type="search" placeholder="🔍 搜尋姓名或桌號..."
           oninput="filterAdminList()"
-          class="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none mb-4 transition-colors"
-        >
+          class="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none mb-4 transition-colors">
 
         <div id="admin-participants-list">
           <div class="text-center py-12 text-gray-400">
@@ -174,49 +214,48 @@
         </div>
       </section>
 
-      <!-- ── Export ── -->
+      <!-- ── 匯出 ── -->
       <section class="bg-white rounded-3xl shadow-sm p-5">
-        <h2 class="text-lg font-black text-gray-800 mb-1">📊 匯出媒合報表</h2>
+        <h2 class="text-lg font-black text-gray-800 mb-1">📊 匯出 / 報表</h2>
         <p class="text-gray-500 text-xs mb-4">
-          匯出所有用戶的媒合記錄，含姓名、身份、交流對象、時間等欄位。
-          檔案以 UTF-8 with BOM 編碼，可直接用 Excel 開啟。
+          媒合報表含幫助原因與認識原因。活動後報表（JSON）只包含有填 Email 的成員。
         </p>
-        <button
-          onclick="exportCSV()"
-          class="w-full bg-green-600 text-white font-black py-4 rounded-2xl shadow active:bg-green-700 transition-colors"
-        >
-          📥 下載 CSV 報表
-        </button>
+        <div class="space-y-3">
+          <button onclick="exportCSV()"
+            class="w-full bg-green-600 text-white font-black py-4 rounded-2xl shadow active:bg-green-700 transition-colors">
+            📥 下載媒合報表 CSV
+          </button>
+          <button onclick="exportReport()"
+            class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow active:bg-blue-700 transition-colors">
+            📋 下載活動後聯絡包（JSON）
+          </button>
+        </div>
       </section>
 
     </div>
   </div>
 
-  <!-- ════════════════════════════════════════════ -->
-  <!-- TOAST                                         -->
-  <!-- ════════════════════════════════════════════ -->
-  <div
-    id="admin-toast"
-    style="transform: translateY(120px); opacity: 0;"
-    class="fixed bottom-6 left-4 right-4 max-w-sm mx-auto bg-gray-800 text-white text-center py-3.5 px-5 rounded-2xl shadow-2xl z-50 text-base font-semibold"
-  >
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- Toast -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="admin-toast" style="transform: translateY(120px); opacity: 0;"
+    class="fixed bottom-6 left-4 right-4 max-w-sm mx-auto bg-gray-800 text-white text-center py-3.5 px-5 rounded-2xl shadow-2xl z-50 text-base font-semibold">
     訊息
   </div>
 
   <script>
     'use strict';
 
-    let _adminPassword = '';
+    let _adminPassword   = '';
     let _allParticipants = [];
+    let _drawWinner      = null;
+    let _currentPhase    = 'warmup';
 
-    // ── API helper ─────────────────────────────
+    // ── API helper ──────────────────────────────
     async function adminApi(method, url, body) {
       const opts = {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-password': _adminPassword,
-        },
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': _adminPassword },
       };
       if (body) opts.body = JSON.stringify(body);
       const res = await fetch(url, opts);
@@ -229,11 +268,8 @@
     async function adminLogin() {
       const pw = document.getElementById('admin-password').value;
       if (!pw) return;
-
       const btn = document.getElementById('btn-admin-login');
-      btn.disabled = true;
-      btn.textContent = '驗證中...';
-
+      btn.disabled = true; btn.textContent = '驗證中...';
       try {
         _adminPassword = pw;
         await loadStats();
@@ -241,18 +277,17 @@
         document.getElementById('admin-main').classList.remove('hidden');
         document.getElementById('login-error').classList.add('hidden');
         loadParticipants();
+        startAdminSSE();
       } catch {
         document.getElementById('login-error').classList.remove('hidden');
         _adminPassword = '';
       } finally {
-        btn.disabled = false;
-        btn.textContent = '進入管理後台';
+        btn.disabled = false; btn.textContent = '進入管理後台';
       }
     }
 
     function adminLogout() {
-      _adminPassword = '';
-      _allParticipants = [];
+      _adminPassword = ''; _allParticipants = []; _drawWinner = null;
       document.getElementById('admin-login').classList.remove('hidden');
       document.getElementById('admin-main').classList.add('hidden');
       document.getElementById('admin-password').value = '';
@@ -262,10 +297,89 @@
     async function loadStats() {
       const s = await adminApi('GET', '/api/admin/stats');
       document.getElementById('stat-participants').textContent = s.participants;
-      document.getElementById('stat-users').textContent        = s.users;
       document.getElementById('stat-connections').textContent  = s.connections;
       document.getElementById('stat-want').textContent         = s.wantToMeet;
       document.getElementById('stat-provide').textContent      = s.canProvide;
+      _currentPhase = s.phase || 'warmup';
+      document.getElementById('stat-phase').textContent        = phaseLabel(_currentPhase);
+      updatePhaseBtns(_currentPhase);
+    }
+
+    function phaseLabel(p) {
+      return { warmup: '預熱', drawing: '抽選', speaking: '發言', ended: '結束' }[p] || p;
+    }
+
+    function updatePhaseBtns(phase) {
+      const phaseColors = {
+        warmup:  'bg-orange-100 border-orange-400 text-orange-700',
+        drawing: 'bg-purple-100 border-purple-400 text-purple-700',
+        speaking: 'bg-red-100 border-red-500 text-red-700',
+        ended:   'bg-gray-200 border-gray-400 text-gray-700',
+      };
+      ['warmup', 'drawing', 'speaking', 'ended'].forEach(p => {
+        const btn = document.getElementById(`phase-btn-${p}`);
+        if (!btn) return;
+        if (p === phase) {
+          btn.className = `phase-btn py-3 rounded-2xl font-bold text-sm border-2 transition-all ${phaseColors[p]}`;
+        } else {
+          btn.className = 'phase-btn py-3 rounded-2xl font-bold text-sm border-2 transition-all border-gray-300 text-gray-500';
+        }
+      });
+    }
+
+    // ── 活動階段控制 ────────────────────────────
+    async function setPhase(phase) {
+      try {
+        await adminApi('POST', '/api/admin/set-phase', { phase });
+        showAdminToast(`已切換到「${phaseLabel(phase)}」階段`, 'success');
+        // 從伺服器重新讀取確保同步
+        await loadStats();
+      } catch (e) {
+        showAdminToast('切換失敗：' + e.message, 'error');
+      }
+    }
+
+    async function setCountdown() {
+      const val = document.getElementById('countdown-input').value;
+      if (!val) { showAdminToast('請選擇時間', 'error'); return; }
+      try {
+        await adminApi('POST', '/api/admin/set-phase', { phase: _currentPhase, countdownTarget: new Date(val).toISOString() });
+        showAdminToast('倒數時間已設定', 'success');
+      } catch (e) {
+        showAdminToast('設定失敗：' + e.message, 'error');
+      }
+    }
+
+    // ── 抽選 ────────────────────────────────────
+    async function drawSpeaker() {
+      const excludeCurrent = document.getElementById('exclude-current').checked;
+      try {
+        const data = await adminApi('POST', '/api/admin/draw', { excludeSpeakers: excludeCurrent });
+        _drawWinner = data.winner;
+
+        document.getElementById('draw-result-name').textContent = _drawWinner.name;
+        document.getElementById('draw-result-detail').textContent =
+          `${_drawWinner.identity || ''} · 第 ${_drawWinner.table_number || '?'} 桌`;
+        document.getElementById('draw-result').classList.remove('hidden');
+        showAdminToast(`抽選結果：${_drawWinner.name}`, 'success');
+        // 伺服器抽選後自動切 drawing，同步按鈕狀態
+        await loadStats();
+      } catch (e) {
+        showAdminToast('抽選失敗：' + e.message, 'error');
+      }
+    }
+
+    async function confirmDrawAsSpeaker() {
+      if (!_drawWinner) return;
+      try {
+        await adminApi('POST', '/api/admin/set-speaker', { participantId: _drawWinner.id });
+        await Promise.all([loadParticipants(), loadStats()]);
+        document.getElementById('draw-result').classList.add('hidden');
+        _drawWinner = null;
+        showAdminToast('已設定為發言者並切換到發言階段', 'success');
+      } catch (e) {
+        showAdminToast('設定失敗：' + e.message, 'error');
+      }
     }
 
     // ── Participants ─────────────────────────────
@@ -285,7 +399,7 @@
       const filtered = q
         ? _allParticipants.filter(p =>
             p.name.toLowerCase().includes(q) ||
-            (p.industry || '').toLowerCase().includes(q) ||
+            (p.identity || p.industry || '').toLowerCase().includes(q) ||
             (p.table_number || '').includes(q)
           )
         : _allParticipants;
@@ -297,7 +411,7 @@
       if (!list.length) {
         el.innerHTML = `<div class="text-center py-12 text-gray-400">
           <div class="text-4xl mb-2">📭</div>
-          <p>尚無參與者資料，請上傳 CSV</p>
+          <p>尚無成員資料</p>
         </div>`;
         return;
       }
@@ -308,27 +422,24 @@
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="font-black text-gray-800 text-base">${esc(p.name)}</span>
-                <span class="text-gray-500 text-sm">${esc(p.industry || '')}</span>
+                <span class="text-gray-500 text-sm">${esc(p.identity || p.industry || '')}</span>
                 <span class="text-red-600 text-sm font-bold">第${esc(p.table_number || '?')}桌</span>
                 ${p.is_current_speaker ? '<span class="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">🎤 發言中</span>' : ''}
+                ${p.email ? '<span class="bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded-full font-semibold">有 Email</span>' : ''}
               </div>
-              ${p.needs ? `<p class="text-gray-400 text-xs mt-1 truncate">我在商務上需要的協助：${esc(p.needs)}</p>` : ''}
+              ${p.needs ? `<p class="text-gray-400 text-xs mt-1 truncate">需求：${esc(p.needs)}</p>` : ''}
             </div>
             <div class="shrink-0 flex flex-col gap-1">
-              <button
-                onclick="setSpeaker(${p.id})"
+              <button onclick="setSpeaker(${p.id})"
                 class="text-xs font-bold px-3 py-2 rounded-xl whitespace-nowrap transition-colors ${
                   p.is_current_speaker
                     ? 'bg-red-600 text-white'
                     : 'border-2 border-red-500 text-red-600 active:bg-red-50'
-                }"
-              >
+                }">
                 ${p.is_current_speaker ? '發言中' : '設為發言者'}
               </button>
-              <button
-                onclick="deleteParticipant(${p.id}, '${esc(p.name)}')"
-                class="text-xs font-semibold px-3 py-1.5 rounded-xl border border-gray-200 text-gray-400 active:bg-gray-50 transition-colors"
-              >
+              <button onclick="deleteParticipant(${p.id}, '${esc(p.name)}')"
+                class="text-xs font-semibold px-3 py-1.5 rounded-xl border border-gray-200 text-gray-400 active:bg-gray-50 transition-colors">
                 刪除
               </button>
             </div>
@@ -342,13 +453,12 @@
       const el = document.getElementById('current-speaker-display');
       if (speaker) {
         el.innerHTML = `
-          <span class="inline-flex items-center gap-2">
+          <span class="inline-flex items-center gap-2 flex-wrap">
             <span class="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">🎤 LIVE</span>
             <span class="font-bold text-gray-800">${esc(speaker.name)}</span>
-            <span class="text-gray-500">${esc(speaker.industry || '')}</span>
+            <span class="text-gray-500">${esc(speaker.identity || speaker.industry || '')}</span>
             <span class="text-red-600 font-semibold">第${esc(speaker.table_number || '?')}桌</span>
-          </span>
-        `;
+          </span>`;
       } else {
         el.textContent = '目前尚無發言者';
       }
@@ -359,9 +469,7 @@
         await adminApi('POST', '/api/admin/set-speaker', { participantId });
         await Promise.all([loadParticipants(), loadStats()]);
         showAdminToast('已設定發言者', 'success');
-      } catch (e) {
-        showAdminToast('設定失敗：' + e.message, 'error');
-      }
+      } catch (e) { showAdminToast('設定失敗：' + e.message, 'error'); }
     }
 
     async function clearSpeaker() {
@@ -369,9 +477,7 @@
         await adminApi('POST', '/api/admin/set-speaker', { participantId: null });
         await loadParticipants();
         showAdminToast('已清除發言者', 'success');
-      } catch (e) {
-        showAdminToast('操作失敗：' + e.message, 'error');
-      }
+      } catch (e) { showAdminToast('操作失敗：' + e.message, 'error'); }
     }
 
     async function deleteParticipant(id, name) {
@@ -380,27 +486,43 @@
         await adminApi('DELETE', `/api/admin/participant/${id}`);
         await Promise.all([loadParticipants(), loadStats()]);
         showAdminToast(`已刪除 ${name}`, 'success');
-      } catch (e) {
-        showAdminToast('刪除失敗：' + e.message, 'error');
-      }
+      } catch (e) { showAdminToast('刪除失敗：' + e.message, 'error'); }
+    }
+
+    // ── SSE 同步（只監聽 phase 變化，不做頁面跳轉） ──
+    let _sseSource = null;
+    function startAdminSSE() {
+      if (_sseSource) return;
+      _sseSource = new EventSource('/api/event-stream');
+      _sseSource.addEventListener('event-state', e => {
+        try {
+          const state = JSON.parse(e.data);
+          if (state.phase && state.phase !== _currentPhase) {
+            _currentPhase = state.phase;
+            document.getElementById('stat-phase').textContent = phaseLabel(state.phase);
+            updatePhaseBtns(state.phase);
+          }
+        } catch (_) {}
+      });
+      _sseSource.onerror = () => {
+        _sseSource.close();
+        _sseSource = null;
+        // 5 秒後重連
+        setTimeout(startAdminSSE, 5000);
+      };
     }
 
     // ── CSV Upload ──────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
       const fileInput = document.getElementById('csv-file');
-      const fileLabel = fileInput?.closest('label');
+      const dropArea  = document.getElementById('csv-drop-area');
       const fileName  = document.getElementById('file-name');
 
-      if (fileInput) {
-        // Make the entire label area clickable
-        fileLabel?.querySelector('div')?.addEventListener('click', () => fileInput.click());
-
+      if (fileInput && dropArea) {
+        dropArea.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', () => {
           const f = fileInput.files[0];
-          if (f) {
-            fileName.textContent = `已選擇：${f.name}`;
-            fileName.classList.remove('hidden');
-          }
+          if (f) { fileName.textContent = `已選擇：${f.name}`; fileName.classList.remove('hidden'); }
         });
       }
     });
@@ -416,7 +538,6 @@
 
       const formData = new FormData();
       formData.append('csv', file);
-
       try {
         const res = await fetch('/api/admin/upload', {
           method: 'POST',
@@ -425,16 +546,10 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
-
         resultEl.textContent = `✅ 成功匯入 ${data.imported} 筆資料`;
         resultEl.className = 'text-sm text-center text-green-600 font-semibold block';
-
-        if (data.errors?.length) {
-          console.warn('CSV warnings:', data.errors);
-        }
-
         await Promise.all([loadParticipants(), loadStats()]);
-        showAdminToast(`已匯入 ${data.imported} 位參與者`, 'success');
+        showAdminToast(`已匯入 ${data.imported} 位成員`, 'success');
       } catch (e) {
         resultEl.textContent = '❌ 匯入失敗：' + e.message;
         resultEl.className = 'text-sm text-center text-red-600 font-semibold block';
@@ -442,49 +557,45 @@
       }
     }
 
-    async function clearAllUsers() {
-      if (!confirm('確定要清除所有使用者資料（含所有媒合記錄）？此操作無法復原！')) return;
-      try {
-        await adminApi('DELETE', '/api/admin/users');
-        await Promise.all([loadParticipants(), loadStats()]);
-        showAdminToast('已清除所有使用者資料', 'success');
-      } catch (e) {
-        showAdminToast('操作失敗：' + e.message, 'error');
-      }
-    }
-
     async function clearAllParticipants() {
-      if (!confirm('確定要清除所有參與者資料（含所有媒合記錄）？此操作無法復原！')) return;
+      if (!confirm('確定要清除所有成員資料（含所有媒合記錄）？此操作無法復原！')) return;
       try {
         await adminApi('DELETE', '/api/admin/participants');
         await Promise.all([loadParticipants(), loadStats()]);
         showAdminToast('已清除所有資料', 'success');
-      } catch (e) {
-        showAdminToast('操作失敗：' + e.message, 'error');
-      }
+      } catch (e) { showAdminToast('操作失敗：' + e.message, 'error'); }
     }
 
     // ── Export ──────────────────────────────────
     async function exportCSV() {
       try {
-        const res = await fetch('/api/admin/export', {
-          headers: { 'x-admin-password': _adminPassword },
-        });
-        if (!res.ok) {
-          const d = await res.json();
-          throw new Error(d.error);
-        }
+        const res = await fetch('/api/admin/export', { headers: { 'x-admin-password': _adminPassword } });
+        if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
         const blob = await res.blob();
         const url  = URL.createObjectURL(blob);
         const a    = document.createElement('a');
-        a.href     = url;
+        a.href = url;
         a.download = `bni-connections-${new Date().toISOString().slice(0, 10)}.csv`;
         a.click();
         URL.revokeObjectURL(url);
-        showAdminToast('報表已下載', 'success');
-      } catch (e) {
-        showAdminToast('匯出失敗：' + e.message, 'error');
-      }
+        showAdminToast('媒合報表已下載', 'success');
+      } catch (e) { showAdminToast('匯出失敗：' + e.message, 'error'); }
+    }
+
+    async function exportReport() {
+      try {
+        const res = await fetch('/api/admin/report', { headers: { 'x-admin-password': _adminPassword } });
+        if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
+        const data = await res.json();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url;
+        a.download = `bni-report-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showAdminToast('聯絡包報表已下載', 'success');
+      } catch (e) { showAdminToast('匯出失敗：' + e.message, 'error'); }
     }
 
     // ── Toast ────────────────────────────────────
@@ -493,28 +604,21 @@
       const el = document.getElementById('admin-toast');
       el.textContent = msg;
       el.className = 'fixed bottom-6 left-4 right-4 max-w-sm mx-auto text-white text-center py-3.5 px-5 rounded-2xl shadow-2xl z-50 text-base font-semibold';
-      if (type === 'error')        el.classList.add('bg-red-600');
+      if (type === 'error') el.classList.add('bg-red-600');
       else if (type === 'success') el.classList.add('bg-green-600');
-      else                         el.classList.add('bg-gray-800');
-
-      el.style.transform = 'translateY(0)';
-      el.style.opacity   = '1';
+      else el.classList.add('bg-gray-800');
+      el.style.transform = 'translateY(0)'; el.style.opacity = '1';
       clearTimeout(_toastTimer);
       _toastTimer = setTimeout(() => {
-        el.style.transform = 'translateY(120px)';
-        el.style.opacity   = '0';
+        el.style.transform = 'translateY(120px)'; el.style.opacity = '0';
       }, 2500);
     }
 
-    // ── Escape ───────────────────────────────────
     function esc(str) {
       return String(str || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
   </script>
-  <footer class="text-center text-gray-400 text-xs py-4">義鑫數據技術支持</footer>
 </body>
 </html>
