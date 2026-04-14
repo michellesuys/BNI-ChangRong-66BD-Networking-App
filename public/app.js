@@ -329,7 +329,7 @@ function renderReport(data) {
       ${contactLine(p, 'text-rose-500')}
       ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">"${esc(p.reason)}"</p>` : ''}
     </div>`,
-    '這次尚無新的交流邀請，持續被看見，連結就會發生。'
+    '這次尚無新的交流邀請，<br>持續被看見，連結就會發生。'
   );
 
   renderList('report-helpers', data.helpers,
@@ -341,7 +341,7 @@ function renderReport(data) {
       ${contactLine(p, 'text-green-600')}
       ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">"${esc(p.reason)}"</p>` : ''}
     </div>`,
-    '這次尚未媒合到協助，需求越具體，越容易找到資源。'
+    '這次尚未媒合到協助，<br>需求越具體，越容易找到資源。'
   );
 
   renderList('report-mywants', data.myWants,
@@ -355,7 +355,7 @@ function renderReport(data) {
       ${p.needs ? `<p class="text-gray-500 text-xs mb-1">需求：${esc(p.needs)}</p>` : ''}
       ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">你的原因：「${esc(p.reason)}」</p>` : ''}
     </div>`,
-    '這次尚未建立新連結，下次遇到合適夥伴，歡迎主動開口。'
+    '這次尚未建立新連結，<br>下次遇到合適夥伴，歡迎主動開口。'
   );
 
   renderList('report-myhelps', data.myHelps,
@@ -369,7 +369,7 @@ function renderReport(data) {
       ${p.needs ? `<p class="text-gray-500 text-xs mb-1">需求：${esc(p.needs)}</p>` : ''}
       ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">你的承諾：「${esc(p.reason)}」</p>` : ''}
     </div>`,
-    '這次尚未提供協助，你的專業，可能正是別人的需要。'
+    '這次尚未提供協助，<br>你的專業，可能正是別人的需要。'
   );
 }
 
