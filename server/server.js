@@ -462,7 +462,7 @@ app.post('/api/admin/set-speaker', adminAuth, (req, res) => {
   dbRun('UPDATE participants SET is_current_speaker = 0');
   if (participantId) {
     dbRun(
-      "UPDATE participants SET is_current_speaker = 1, spoke_at = datetime('now','localtime') WHERE id = ?",
+      "UPDATE participants SET is_current_speaker = 1, spoke_at = datetime('now','+8 hours') WHERE id = ?",
       [Number(participantId)]
     );
   }

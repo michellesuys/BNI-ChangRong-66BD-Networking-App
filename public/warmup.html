@@ -431,7 +431,7 @@
   // ─────────────────────────────────────────────
   // 轉盤動畫
   // ─────────────────────────────────────────────
-  function runReelAnimation(participants, winnerIdx) {
+  function runReelAnimation(participants, winnerIdx, winnerData) {
     if (reelAnimating) return;
     reelAnimating = true;
 
@@ -444,7 +444,8 @@
     const ITEM_H   = 76;
     const WRAP_H   = 220;
     const CENTER_Y = (WRAP_H - ITEM_H) / 2;  // 72px — 選中項置中
-    const winner   = participants[winnerIdx];
+    // 優先使用完整的 winnerData（含 table_number / needs），pool 項目僅含 id/name
+    const winner   = winnerData || participants[winnerIdx];
 
     // 建立：8 圈隨機打亂的名字 + 贏家壓軸
     const LOOPS = 8;
@@ -562,7 +563,7 @@
     if (winnerIdx < 0) return;
 
     showDrawing();
-    runReelAnimation(pool, winnerIdx);
+    runReelAnimation(pool, winnerIdx, winner);
   }
 
   // ─────────────────────────────────────────────

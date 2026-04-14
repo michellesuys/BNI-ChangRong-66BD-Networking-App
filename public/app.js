@@ -26,7 +26,7 @@ async function init() {
   try {
     const ev = await fetch('/api/event-state').then(r => r.json());
     currentPhase = ev.phase || 'warmup';
-  } catch (_) {}
+  } catch (_) { }
 
   const saved = localStorage.getItem('bni_session');
   if (saved) {
@@ -80,7 +80,7 @@ async function startApp() {
   try {
     const eventState = await api('GET', '/api/event-state');
     applyPhase(eventState.phase);
-  } catch (_) {}
+  } catch (_) { }
   connectSSE();
 }
 
@@ -118,7 +118,7 @@ async function loadCurrentSpeaker() {
       try {
         const lights = await api('GET', '/api/lights');
         state.speakerLightCount = lights.count || 0;
-      } catch (_) {}
+      } catch (_) { }
     } else {
       state.speakerLightCount = 0;
     }
@@ -167,7 +167,7 @@ function startLoginPhasePolling(initialPhase = 'warmup') {
         showScreen('login');
         showReturnLogin();
       }
-    } catch (_) {}
+    } catch (_) { }
   }, 5000);
 }
 
@@ -179,7 +179,7 @@ function startSpeakerPolling() {
     try {
       const es = await api('GET', '/api/event-state');
       applyPhase(es.phase);
-    } catch (_) {}
+    } catch (_) { }
   }, 5000);
 }
 
@@ -192,7 +192,7 @@ function connectSSE() {
     try {
       const data = JSON.parse(e.data);
       applyPhase(data.phase);
-    } catch (_) {}
+    } catch (_) { }
   });
   es.onerror = () => {
     es.close();
@@ -201,28 +201,28 @@ function connectSSE() {
 }
 
 function applyPhase(phase) {
-  const tabNav      = document.querySelector('nav');
-  const tabSpeaker  = document.getElementById('tab-speaker');
-  const tabBrowse   = document.getElementById('tab-browse');
-  const tabEnded    = document.getElementById('tab-ended');
+  const tabNav = document.querySelector('nav');
+  const tabSpeaker = document.getElementById('tab-speaker');
+  const tabBrowse = document.getElementById('tab-browse');
+  const tabEnded = document.getElementById('tab-ended');
   if (!tabEnded) return;
 
   if (phase === 'ended') {
-    if (tabNav)     tabNav.classList.add('hidden');
+    if (tabNav) tabNav.classList.add('hidden');
     if (tabSpeaker) tabSpeaker.classList.add('hidden');
-    if (tabBrowse)  tabBrowse.classList.add('hidden');
+    if (tabBrowse) tabBrowse.classList.add('hidden');
     tabEnded.classList.remove('hidden');
     showEndedScreen();
   } else {
-    if (tabNav)     tabNav.classList.remove('hidden');
+    if (tabNav) tabNav.classList.remove('hidden');
     tabEnded.classList.add('hidden');
     // 恢復目前 active tab
     if (state.activeTab === 'browse') {
       if (tabSpeaker) tabSpeaker.classList.add('hidden');
-      if (tabBrowse)  tabBrowse.classList.remove('hidden');
+      if (tabBrowse) tabBrowse.classList.remove('hidden');
     } else {
       if (tabSpeaker) tabSpeaker.classList.remove('hidden');
-      if (tabBrowse)  tabBrowse.classList.add('hidden');
+      if (tabBrowse) tabBrowse.classList.add('hidden');
     }
   }
 }
@@ -231,8 +231,8 @@ function applyPhase(phase) {
 // 商機小錦囊
 // ════════════════════════════════════════════════
 function showEndedScreen() {
-  const emailForm   = document.getElementById('ended-email-form');
-  const reportArea  = document.getElementById('ended-report');
+  const emailForm = document.getElementById('ended-email-form');
+  const reportArea = document.getElementById('ended-report');
   if (!emailForm || !reportArea) return;
 
   if (state.user?.email) {
@@ -251,7 +251,7 @@ function showEndedScreen() {
 async function submitEmailForReport() {
   const input = document.getElementById('ended-email-input');
   const errEl = document.getElementById('ended-email-error');
-  const btn   = document.getElementById('ended-email-btn');
+  const btn = document.getElementById('ended-email-btn');
   const email = input?.value.trim();
 
   if (!email) {
@@ -297,7 +297,7 @@ async function loadMyReport(name, email) {
 }
 
 function renderReport(data) {
-  document.getElementById('report-name').textContent     = data.name || '—';
+  document.getElementById('report-name').textContent = data.name || '—';
   document.getElementById('report-identity').textContent = data.identity || '—';
 
   const renderList = (containerId, items, renderFn, emptyMsg) => {
@@ -312,9 +312,9 @@ function renderReport(data) {
 
   const contactLine = (p, colorClass) => {
     const parts = [];
-    if (p.phone)   parts.push(`📞 ${esc(p.phone)}`);
+    if (p.phone) parts.push(`📞 ${esc(p.phone)}`);
     if (p.line_id) parts.push(`💬 LINE：${esc(p.line_id)}`);
-    if (p.email)   parts.push(`✉️ ${esc(p.email)}`);
+    if (p.email) parts.push(`✉️ ${esc(p.email)}`);
     return parts.length
       ? `<p class="text-xs font-medium mb-1 ${colorClass}">${parts.join('　')}</p>`
       : `<p class="text-gray-300 text-xs mb-1">（未填寫聯絡方式）</p>`;
@@ -329,7 +329,7 @@ function renderReport(data) {
       ${contactLine(p, 'text-rose-500')}
       ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">"${esc(p.reason)}"</p>` : ''}
     </div>`,
-    '這次沒有人表達想認識你，繼續加油！'
+    '這次尚無新的交流邀請，持續被看見，連結就會發生。'
   );
 
   renderList('report-helpers', data.helpers,
@@ -341,7 +341,7 @@ function renderReport(data) {
       ${contactLine(p, 'text-green-600')}
       ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">"${esc(p.reason)}"</p>` : ''}
     </div>`,
-    '這次沒有人提供幫助'
+    '這次尚未媒合到協助，需求越具體，越容易找到資源。'
   );
 
   renderList('report-mywants', data.myWants,
@@ -355,7 +355,7 @@ function renderReport(data) {
       ${p.needs ? `<p class="text-gray-500 text-xs mb-1">需求：${esc(p.needs)}</p>` : ''}
       ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">你的原因：「${esc(p.reason)}」</p>` : ''}
     </div>`,
-    '這次沒有想認識的人'
+    '這次尚未建立新連結，下次遇到合適夥伴，歡迎主動開口。'
   );
 
   renderList('report-myhelps', data.myHelps,
@@ -369,7 +369,7 @@ function renderReport(data) {
       ${p.needs ? `<p class="text-gray-500 text-xs mb-1">需求：${esc(p.needs)}</p>` : ''}
       ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">你的承諾：「${esc(p.reason)}」</p>` : ''}
     </div>`,
-    '這次沒有表示可以幫助的人'
+    '這次尚未提供協助，你的專業，可能正是別人的需要。'
   );
 }
 
@@ -487,16 +487,16 @@ function renderSpeaker() {
       <div class="text-center py-20 text-gray-400">
         <div class="text-6xl mb-4">🎤</div>
         <p class="text-xl font-semibold">等待發言者...</p>
-        <p class="text-sm mt-2">請稍候，管理員將設定目前的發言者</p>
+        <p class="text-sm mt-2">請稍候，等待下一位發言者</p>
       </div>
     `;
     return;
   }
 
-  const conns       = state.connections[s.id] || {};
-  const wantMeet    = !!conns['want_to_meet'];
-  const canProvide  = !!conns['can_provide'];
-  const isSelf      = state.user?.userId === s.id;
+  const conns = state.connections[s.id] || {};
+  const wantMeet = !!conns['want_to_meet'];
+  const canProvide = !!conns['can_provide'];
+  const isSelf = state.user?.userId === s.id;
 
   el.innerHTML = `
     <div class="bg-white rounded-3xl shadow-lg overflow-hidden mb-4">
@@ -531,9 +531,9 @@ function renderSpeaker() {
             onclick="openReasonModal(${s.id}, 'want_to_meet', 'speaker')"
             ${wantMeet ? 'disabled' : ''}
             class="py-5 rounded-2xl font-bold text-base border-2 transition-all ${wantMeet
-              ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-              : 'border-red-500 text-red-600 bg-white active:bg-red-50'
-            }"
+      ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+      : 'border-red-500 text-red-600 bg-white active:bg-red-50'
+    }"
           >
             ${wantMeet ? '✓ 已送出認識' : '🤝 我想認識他'}
           </button>
@@ -541,9 +541,9 @@ function renderSpeaker() {
             onclick="openReasonModal(${s.id}, 'can_provide', 'speaker')"
             ${canProvide ? 'disabled' : ''}
             class="py-5 rounded-2xl font-bold text-base border-2 transition-all ${canProvide
-              ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-              : 'border-red-500 text-red-600 bg-white active:bg-red-50'
-            }"
+      ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+      : 'border-red-500 text-red-600 bg-white active:bg-red-50'
+    }"
           >
             ${canProvide ? '✓ 已送出幫助' : '💼 我想幫助他'}
           </button>
@@ -565,12 +565,12 @@ function renderParticipantsList() {
 
   const list = search
     ? state.participants.filter(p =>
-        p.name.toLowerCase().includes(search) ||
-        (p.identity || p.industry || '').toLowerCase().includes(search) ||
-        (p.specialty || '').toLowerCase().includes(search) ||
-        (p.needs || '').toLowerCase().includes(search) ||
-        (p.table_number || '').includes(search)
-      )
+      p.name.toLowerCase().includes(search) ||
+      (p.identity || p.industry || '').toLowerCase().includes(search) ||
+      (p.specialty || '').toLowerCase().includes(search) ||
+      (p.needs || '').toLowerCase().includes(search) ||
+      (p.table_number || '').includes(search)
+    )
     : state.participants;
 
   if (list.length === 0) {
@@ -582,12 +582,12 @@ function renderParticipantsList() {
   }
 
   el.innerHTML = list.map(p => {
-    const conns      = state.connections[p.id] || {};
-    const wantMeet   = !!conns['want_to_meet'];
+    const conns = state.connections[p.id] || {};
+    const wantMeet = !!conns['want_to_meet'];
     const canProvide = !!conns['can_provide'];
-    const hasAny     = wantMeet || canProvide;
-    const isSpeaker  = state.currentSpeaker?.id === p.id;
-    const isSelf     = state.user?.userId === p.id;
+    const hasAny = wantMeet || canProvide;
+    const isSpeaker = state.currentSpeaker?.id === p.id;
+    const isSelf = state.user?.userId === p.id;
 
     return `
       <div class="bg-white rounded-2xl shadow-sm mb-3 overflow-hidden ${hasAny ? 'ring-2 ring-red-400' : 'border border-gray-100'}">
@@ -621,9 +621,9 @@ function renderParticipantsList() {
                 onclick="openReasonModal(${p.id}, 'want_to_meet', 'browse')"
                 ${wantMeet ? 'disabled' : ''}
                 class="py-3.5 rounded-xl font-bold text-sm border-2 transition-all ${wantMeet
-                  ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                  : 'border-gray-300 text-gray-600 bg-white active:bg-gray-50'
-                }"
+          ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+          : 'border-gray-300 text-gray-600 bg-white active:bg-gray-50'
+        }"
               >
                 ${wantMeet ? '✓ 已送出認識' : '🤝 我想認識他'}
               </button>
@@ -631,9 +631,9 @@ function renderParticipantsList() {
                 onclick="openReasonModal(${p.id}, 'can_provide', 'browse')"
                 ${canProvide ? 'disabled' : ''}
                 class="py-3.5 rounded-xl font-bold text-sm border-2 transition-all ${canProvide
-                  ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                  : 'border-gray-300 text-gray-600 bg-white active:bg-gray-50'
-                }"
+          ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+          : 'border-gray-300 text-gray-600 bg-white active:bg-gray-50'
+        }"
               >
                 ${canProvide ? '✓ 已送出幫助' : '💼 我想幫助他'}
               </button>
@@ -671,7 +671,7 @@ function showScreen(name) {
 }
 
 function updateHeaderUser() {
-  const el      = document.getElementById('header-user');
+  const el = document.getElementById('header-user');
   const logoutBtn = document.getElementById('header-logout-btn');
   if (state.user) {
     if (el) el.textContent = `${state.user.name} · ${state.user.identity || ''}`;
@@ -699,13 +699,13 @@ function showReturnLogin() {
 // 登入（第一次完整表單）
 // ════════════════════════════════════════════════
 async function handleLogin() {
-  const name      = document.getElementById('input-name').value.trim();
-  const tableNum  = document.getElementById('input-table').value.trim();
+  const name = document.getElementById('input-name').value.trim();
+  const tableNum = document.getElementById('input-table').value.trim();
   const specialty = document.getElementById('input-specialty').value.trim();
-  const needs     = document.getElementById('input-needs').value.trim();
-  const email     = document.getElementById('input-email').value.trim();
-  const phone     = document.getElementById('input-phone').value.trim();
-  const lineId    = document.getElementById('input-line').value.trim();
+  const needs = document.getElementById('input-needs').value.trim();
+  const email = document.getElementById('input-email').value.trim();
+  const phone = document.getElementById('input-phone').value.trim();
+  const lineId = document.getElementById('input-line').value.trim();
   const identityEl = document.querySelector('input[name="identity"]:checked');
 
   if (!name) { showToast('請輸入你的名字', 'error'); document.getElementById('input-name').focus(); return; }
@@ -743,7 +743,7 @@ async function handleLogin() {
 // 回訪快速登入
 // ════════════════════════════════════════════════
 async function handleReturnLogin() {
-  const name     = document.getElementById('input-name-return').value.trim();
+  const name = document.getElementById('input-name-return').value.trim();
   const tableNum = document.getElementById('input-table-return').value.trim();
 
   if (!name) { showToast('請輸入你的名字', 'error'); document.getElementById('input-name-return').focus(); return; }
@@ -798,6 +798,12 @@ function handleLogout() {
   });
   document.querySelectorAll('input[name="identity"]').forEach(r => r.checked = false);
   updateRoleStyle();
+
+  // Reset button states (may have been locked from a previous login attempt)
+  const btnLogin = document.getElementById('btn-login');
+  if (btnLogin) { btnLogin.disabled = false; btnLogin.textContent = '加入活動！'; }
+  const btnReturn = document.getElementById('btn-return');
+  if (btnReturn) { btnReturn.disabled = false; btnReturn.textContent = '進入活動'; }
 }
 
 // ════════════════════════════════════════════════
