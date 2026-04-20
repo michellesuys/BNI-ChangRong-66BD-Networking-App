@@ -570,6 +570,17 @@ const CHASE_SIZE       = 10; // consecutive lit bulbs in marquee
 const CHASE_INTERVAL   = 50; // ms per step
 const CHASE_STEP       = 4;  // positions to advance per tick
 
+// 燈號音效切片（秒）：[start, duration]，共 20 筆。
+// 若現場聽起來音效太短/太長，直接調整對應項的數值即可，不需重啟。
+const LIGHT_CLIPS = [
+  [0.13, 0.18], [1.32, 0.18], [2.43, 0.18], [2.76, 0.18], [3.23, 0.18],
+  [3.47, 0.18], [3.66, 0.18], [3.84, 0.18], [4.03, 0.18], [4.22, 0.22],
+  [4.46, 0.18], [4.65, 0.18], [4.84, 0.18], [5.03, 0.22], [5.26, 0.18],
+  [5.45, 0.20], [5.65, 0.20], [5.85, 0.20], [6.05, 0.20], [6.25, 0.22],
+];
+// 慶祝音樂（jackpot 時播放，從最後一盞燈之後到尾端靜音前）
+const CELEBRATION_CLIP = [6.50, 5.30]; // [start, duration] 秒
+
 /* ── State ── */
 const S = {
   speakerId:      null,
@@ -578,6 +589,9 @@ const S = {
   animating:      false,
   audioCtx:       null,
   audioUnlocked:  false,
+  lightBuffer:    null, // decoded light.mp3 AudioBuffer
+  celebrationSrc: null, // currently-playing jackpot BufferSource
+  wasJackpot:     false, // 上次 refreshUI 時是否已是 jackpot（邊緣觸發用）
   qrReady:        false,
   bulbBuilt:      false,
   chaseInterval:  null,
@@ -702,10 +716,12 @@ function setLamp(n, on) {
 
 function resetLamps() {
   for (let i = 1; i <= TOTAL_LAMPS; i++) setLamp(i, false);
-  S.displayed = 0;
-  S.target    = 0;
-  S.animating = false;
+  S.displayed  = 0;
+  S.target     = 0;
+  S.animating  = false;
+  S.wasJackpot = false;
   stopChase();
+  stopCelebration();
 }
 
 /* ──────────────────────────────────────
@@ -739,68 +755,69 @@ function refreshUI() {
   const shell = document.getElementById('tower-shell');
   const isJackpot = S.displayed >= TOTAL_LAMPS;
   shell.classList.toggle('jackpot', isJackpot);
-  if (isJackpot) { startChase(); } else { stopChase(); }
+
+  if (isJackpot) {
+    startChase();
+    // 只在「首次進入 jackpot」時播放慶祝音樂，避免 SSE 重複廣播導致重播
+    if (!S.wasJackpot) playCelebration();
+  } else {
+    stopChase();
+    stopCelebration();
+  }
+  S.wasJackpot = isJackpot;
 }
 
 /* ──────────────────────────────────────
-   Web Audio — bell / pentatonic scale
+   Web Audio — 從 light.mp3 切時間區段播放
 ────────────────────────────────────── */
-function unlockAudio() {
+async function unlockAudio() {
   if (S.audioUnlocked) return;
   S.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   S.audioUnlocked = true;
+  try {
+    const res = await fetch('/audio/light.mp3');
+    const buf = await res.arrayBuffer();
+    S.lightBuffer = await S.audioCtx.decodeAudioData(buf);
+  } catch (e) {
+    console.warn('light.mp3 載入失敗', e);
+  }
 }
 
-const NOTE_FREQS = [
-  261.63, 293.66, 329.63, 392.00, 440.00,
-  523.25, 587.33, 659.26, 783.99, 880.00,
-  1046.50,1174.66,1318.51,1567.98,1760.00,
-  2093.00,2349.32,2637.02,3135.96,3520.00,
-];
-
 function playLightSound(level) {
-  if (!S.audioUnlocked || !S.audioCtx) return;
+  if (!S.audioUnlocked || !S.audioCtx || !S.lightBuffer) return;
   const ctx = S.audioCtx;
   if (ctx.state === 'suspended') ctx.resume();
-  const now  = ctx.currentTime;
-  const freq = NOTE_FREQS[Math.min(level - 1, NOTE_FREQS.length - 1)];
-  const isRed = level >= REWARD_THRESHOLD;
-  const vol   = isRed ? 0.24 : 0.15;
 
-  // Master envelope
-  const master = ctx.createGain();
-  master.gain.setValueAtTime(vol, now);
-  master.gain.exponentialRampToValueAtTime(0.001, now + 1.7);
-  master.connect(ctx.destination);
+  const idx = Math.min(Math.max(level, 1), LIGHT_CLIPS.length) - 1;
+  const [start, dur] = LIGHT_CLIPS[idx];
 
-  // Sine body
-  const o1 = ctx.createOscillator();
-  o1.type = 'sine';
-  o1.frequency.setValueAtTime(freq, now);
-  o1.connect(master);
-  o1.start(now); o1.stop(now + 1.7);
+  const src = ctx.createBufferSource();
+  src.buffer = S.lightBuffer;
+  // 紅燈（>= REWARD_THRESHOLD）音量略大，維持原設計精神
+  const gain = ctx.createGain();
+  gain.gain.value = level >= REWARD_THRESHOLD ? 1.0 : 0.75;
+  src.connect(gain).connect(ctx.destination);
+  src.start(0, start, dur);
+}
 
-  // Inharmonic partial (bell character)
-  const g2 = ctx.createGain();
-  g2.gain.setValueAtTime(vol * 0.5, now);
-  g2.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
-  g2.connect(ctx.destination);
-  const o2 = ctx.createOscillator();
-  o2.type = 'sine';
-  o2.frequency.setValueAtTime(freq * 2.756, now);
-  o2.connect(g2);
-  o2.start(now); o2.stop(now + 0.75);
+function playCelebration() {
+  if (!S.audioUnlocked || !S.audioCtx || !S.lightBuffer || S.celebrationSrc) return;
+  const ctx = S.audioCtx;
+  if (ctx.state === 'suspended') ctx.resume();
 
-  // Attack click
-  const g3 = ctx.createGain();
-  g3.gain.setValueAtTime(vol * 0.35, now);
-  g3.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
-  g3.connect(ctx.destination);
-  const o3 = ctx.createOscillator();
-  o3.type = 'triangle';
-  o3.frequency.setValueAtTime(freq * 4.2, now);
-  o3.connect(g3);
-  o3.start(now); o3.stop(now + 0.07);
+  const [start, dur] = CELEBRATION_CLIP;
+  const src = ctx.createBufferSource();
+  src.buffer = S.lightBuffer;
+  src.connect(ctx.destination);
+  src.start(0, start, dur);
+  src.onended = () => { if (S.celebrationSrc === src) S.celebrationSrc = null; };
+  S.celebrationSrc = src;
+}
+
+function stopCelebration() {
+  if (!S.celebrationSrc) return;
+  try { S.celebrationSrc.stop(); } catch (_) {}
+  S.celebrationSrc = null;
 }
 
 /* ──────────────────────────────────────
