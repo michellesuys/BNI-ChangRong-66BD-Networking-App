@@ -119,6 +119,10 @@ function initDB() {
     db.exec("ALTER TABLE participants ADD COLUMN spoke_at TEXT DEFAULT NULL");
     console.log('✅ 遷移：participants.spoke_at 已新增');
   }
+  if (!partCols.includes('admin_lights')) {
+    db.exec("ALTER TABLE participants ADD COLUMN admin_lights INTEGER DEFAULT 0");
+    console.log('✅ 遷移：participants.admin_lights 已新增');
+  }
 
   // ── 遷移：舊 connections 缺少 reason 欄位 ──
   const connCols = db.prepare('PRAGMA table_info(connections)').all().map(c => c.name);
@@ -154,17 +158,25 @@ function getEventState() {
   const phase = dbScalar("SELECT value FROM event_state WHERE key = 'phase'") || 'warmup';
   const countdownTarget = dbScalar("SELECT value FROM event_state WHERE key = 'countdown_target'") || '';
   const drawResult = dbScalar("SELECT value FROM event_state WHERE key = 'draw_result'") || '';
+  const drawDuration = Number(dbScalar("SELECT value FROM event_state WHERE key = 'draw_duration'")) || 0.5;
 
   const speaker = dbGet(
     'SELECT id, name, industry, identity, table_number, needs, specialty FROM participants WHERE is_current_speaker = 1 LIMIT 1'
   );
 
-  // 燈號：認識或幫助任一互動都算，但同一人只算一票
+  // 燈號：認識或幫助任一互動都算，但同一人只算一票；加上後台手動燈號
   const lightCount = speaker
-    ? Math.min(Number(dbScalar(
-        'SELECT COUNT(DISTINCT user_id) FROM connections WHERE participant_id = ?',
-        [speaker.id]
-      )) || 0, DISPLAY_MAX_LIGHTS)
+    ? Math.min(
+        (Number(dbScalar(
+          'SELECT COUNT(DISTINCT user_id) FROM connections WHERE participant_id = ?',
+          [speaker.id]
+        )) || 0) +
+        (Number(dbScalar(
+          'SELECT COALESCE(admin_lights, 0) FROM participants WHERE id = ?',
+          [speaker.id]
+        )) || 0),
+        DISPLAY_MAX_LIGHTS
+      )
     : 0;
 
   const totalCanProvide = speaker
@@ -184,6 +196,7 @@ function getEventState() {
   return {
     phase,
     countdownTarget,
+    drawDuration,
     drawResult: drawResult ? JSON.parse(drawResult) : null,
     speaker: speaker || null,
     lightCount,
@@ -250,21 +263,20 @@ app.get('/api/event-stream', (req, res) => {
 // 使用者 API
 // ─────────────────────────────────────────────
 
-// POST /api/login — 寫入 participants（第一次建立，之後以 name+table_number 恢復）
+// POST /api/login — 寫入 participants（第一次建立，之後以 email 恢復）
 app.post('/api/login', (req, res) => {
   const { name, tableNumber, needs, identity, email, isFirstTime, specialty, phone, lineId } = req.body;
-  if (!name?.trim())        return res.status(400).json({ error: '請輸入名字' });
-  if (!tableNumber?.toString().trim()) return res.status(400).json({ error: '請輸入桌號' });
 
-  const nm = name.trim();
-  const tn = tableNumber.toString().trim();
+  const emailTrimmed = email?.trim();
 
-  // Session 恢復：name + table_number 已存在
-  const existing = dbGet(
-    'SELECT id, name, identity, email, specialty, phone, line_id, table_number, needs FROM participants WHERE name = ? AND table_number = ?',
-    [nm, tn]
-  );
-  if (existing) {
+  // ─── 回訪路徑：只需 email ───
+  if (!isFirstTime) {
+    if (!emailTrimmed) return res.status(400).json({ error: '請輸入 Email' });
+    const existing = dbGet(
+      'SELECT id, name, identity, email, specialty, phone, line_id, table_number, needs FROM participants WHERE LOWER(email) = LOWER(?)',
+      [emailTrimmed]
+    );
+    if (!existing) return res.status(404).json({ error: '找不到此 Email 的帳號，請重新填寫完整資料' });
     return res.json({
       userId:      existing.id,
       name:        existing.name,
@@ -279,22 +291,48 @@ app.post('/api/login', (req, res) => {
     });
   }
 
-  // 第一次：需要完整資料
+  // ─── 第一次：需要完整資料 ───
+  if (!name?.trim())        return res.status(400).json({ error: '請輸入名字' });
+  if (!tableNumber?.toString().trim()) return res.status(400).json({ error: '請輸入桌號' });
+
+  const nm = name.trim();
+  const tn = tableNumber.toString().trim();
+
   const VALID_IDENTITY = ['長榮會員', '金手環', '銀手環'];
   if (!VALID_IDENTITY.includes(identity)) return res.status(400).json({ error: '請選擇身份' });
-  if (!email?.trim()) return res.status(400).json({ error: '請填寫 Email' });
+  if (!emailTrimmed) return res.status(400).json({ error: '請填寫 Email' });
   if (!specialty?.trim()) return res.status(400).json({ error: '請填寫專業別' });
+
+  // 若 email 已存在，直接回傳現有帳號（防止重複建立）
+  const byEmail = dbGet(
+    'SELECT id, name, identity, email, specialty, phone, line_id, table_number, needs FROM participants WHERE LOWER(email) = LOWER(?)',
+    [emailTrimmed]
+  );
+  if (byEmail) {
+    return res.json({
+      userId:      byEmail.id,
+      name:        byEmail.name,
+      identity:    byEmail.identity,
+      email:       byEmail.email,
+      specialty:   byEmail.specialty,
+      phone:       byEmail.phone,
+      lineId:      byEmail.line_id,
+      tableNumber: byEmail.table_number,
+      needs:       byEmail.needs,
+      isNew:       false,
+    });
+  }
 
   const r = dbRun(
     'INSERT INTO participants (name, table_number, needs, identity, email, specialty, phone, line_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    [nm, tn, (needs || '').trim(), identity, email.trim(), specialty.trim(), phone?.trim() || null, lineId?.trim() || null]
+    [nm, tn, (needs || '').trim(), identity, emailTrimmed, specialty.trim(), phone?.trim() || null, lineId?.trim() || null]
   );
   broadcastEventState(); // 人數增加，通知預熱頁
   res.json({
     userId:      r.lastInsertRowid,
     name:        nm,
     identity,
-    email:       email.trim(),
+    email:       emailTrimmed,
     specialty:   specialty.trim(),
     phone:       phone?.trim() || null,
     lineId:      lineId?.trim() || null,
@@ -367,6 +405,49 @@ app.post('/api/connect', (req, res) => {
   res.json({ success: true });
 });
 
+// PATCH /api/profile — 使用者更新個人資料（email 不可改）
+app.patch('/api/profile', (req, res) => {
+  const { userId, name, tableNumber, specialty, needs, phone, lineId, identity } = req.body;
+  if (!userId) return res.status(400).json({ error: '缺少 userId' });
+
+  const participant = dbGet('SELECT id FROM participants WHERE id = ?', [Number(userId)]);
+  if (!participant) return res.status(404).json({ error: '找不到此帳號' });
+
+  const VALID_IDENTITY = ['長榮會員', '金手環', '銀手環'];
+  const fields = [];
+  const params = [];
+
+  if (name?.trim())        { fields.push('name = ?');         params.push(name.trim()); }
+  if (tableNumber?.toString().trim()) { fields.push('table_number = ?'); params.push(tableNumber.toString().trim()); }
+  if (specialty?.trim())   { fields.push('specialty = ?');    params.push(specialty.trim()); }
+  if (needs !== undefined) { fields.push('needs = ?');        params.push((needs || '').trim()); }
+  if (phone !== undefined) { fields.push('phone = ?');        params.push(phone?.trim() || null); }
+  if (lineId !== undefined){ fields.push('line_id = ?');      params.push(lineId?.trim() || null); }
+  if (identity && VALID_IDENTITY.includes(identity)) { fields.push('identity = ?'); params.push(identity); }
+
+  if (fields.length === 0) return res.status(400).json({ error: '沒有可更新的欄位' });
+
+  params.push(Number(userId));
+  dbRun(`UPDATE participants SET ${fields.join(', ')} WHERE id = ?`, params);
+
+  const updated = dbGet(
+    'SELECT id, name, identity, email, specialty, phone, line_id, table_number, needs FROM participants WHERE id = ?',
+    [Number(userId)]
+  );
+  broadcastEventState();
+  res.json({
+    userId:      updated.id,
+    name:        updated.name,
+    identity:    updated.identity,
+    email:       updated.email,
+    specialty:   updated.specialty,
+    phone:       updated.phone,
+    lineId:      updated.line_id,
+    tableNumber: updated.table_number,
+    needs:       updated.needs,
+  });
+});
+
 // GET /api/warmup-stats — 預熱頁輪詢用
 app.get('/api/warmup-stats', (_req, res) => {
   const state = getEventState();
@@ -413,6 +494,7 @@ app.get('/api/admin/stats', adminAuth, (_req, res) => {
     canProvide:   dbScalar("SELECT COUNT(*) FROM connections WHERE type='can_provide'"),
     phase:           dbScalar("SELECT value FROM event_state WHERE key='phase'") || 'warmup',
     countdownTarget: dbScalar("SELECT value FROM event_state WHERE key='countdown_target'") || '',
+    drawDuration:    Number(dbScalar("SELECT value FROM event_state WHERE key='draw_duration'")) || 0.5,
   });
 });
 
@@ -492,6 +574,16 @@ app.post('/api/admin/set-phase', adminAuth, (req, res) => {
   res.json({ success: true });
 });
 
+// POST /api/admin/draw-duration — 設��抽選動畫秒數
+app.post('/api/admin/draw-duration', adminAuth, (req, res) => {
+  const { seconds } = req.body;
+  const val = Number(seconds);
+  if (!val || val < 0.1 || val > 30) return res.status(400).json({ error: '秒數須介�� 0.1 ~ 30' });
+  dbRun("INSERT OR REPLACE INTO event_state (key, value) VALUES ('draw_duration', ?)", [val]);
+  broadcastEventState();
+  res.json({ success: true, drawDuration: val });
+});
+
 // GET /api/admin/candidates — 取得金手環候選人清單（含發言記錄）
 app.get('/api/admin/candidates', adminAuth, (req, res) => {
   const rows = dbAll(
@@ -529,6 +621,24 @@ app.post('/api/admin/draw', adminAuth, (req, res) => {
   );
   broadcastEventState();
   res.json({ success: true, winner });
+});
+
+// POST /api/admin/add-light/:id — 手動增加燈號
+app.post('/api/admin/add-light/:id', adminAuth, (req, res) => {
+  const id = Number(req.params.id);
+  if (!id) return res.status(400).json({ error: '無效的 id' });
+  dbRun('UPDATE participants SET admin_lights = COALESCE(admin_lights, 0) + 1 WHERE id = ?', [id]);
+  broadcastEventState();
+  res.json({ success: true });
+});
+
+// POST /api/admin/remove-light/:id — 手動移除燈號（不低於 0）
+app.post('/api/admin/remove-light/:id', adminAuth, (req, res) => {
+  const id = Number(req.params.id);
+  if (!id) return res.status(400).json({ error: '無效的 id' });
+  dbRun('UPDATE participants SET admin_lights = MAX(0, COALESCE(admin_lights, 0) - 1) WHERE id = ?', [id]);
+  broadcastEventState();
+  res.json({ success: true });
 });
 
 // DELETE /api/admin/connections/:participantId — 清除單一參與者的所有互動記錄（保留本人帳號）

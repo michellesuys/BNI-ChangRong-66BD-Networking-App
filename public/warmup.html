@@ -36,11 +36,11 @@
       padding: 16px 20px; min-width: 80px;
     }
     .countdown-value {
-      font-size: 3rem; font-weight: 900; line-height: 1;
+      font-size: 4.5rem; font-weight: 900; line-height: 1;
       color: #FFFFFF; text-shadow: 0 2px 8px rgba(0,0,0,0.4);
     }
     .countdown-label {
-      font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-top: 4px;
+      font-size: 1.2rem; color: rgba(255,255,255,0.7); margin-top: 4px;
     }
 
     /* ── QR Code ── */
@@ -89,7 +89,7 @@
     }
     .reel-item {
       height: 76px; display: flex; align-items: center; justify-content: center;
-      font-size: 2.2rem; font-weight: 900; color: white;
+      font-size: 3.3rem; font-weight: 900; color: white;
       letter-spacing: 0.08em;
       flex-shrink: 0; width: 100%;
       text-shadow: 0 2px 12px rgba(0,0,0,0.8);
@@ -136,18 +136,16 @@
     <!-- 標題區 -->
     <div class="text-center mb-8">
       <div class="inline-flex items-center gap-3 mb-4">
-        <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg">
-          <span class="text-red-600 text-2xl font-black">BNI</span>
-        </div>
+        <img src="/images/bni-logo.png" class="h-14 shadow-lg" alt="BNI">
         <div class="text-left">
-          <p class="text-red-200 text-sm font-semibold tracking-widest uppercase">長榮分會 · 20 周年慶</p>
-          <h1 class="text-white text-3xl font-black leading-tight">商機變變變・產業閃電秀</h1>
+          <p class="text-red-200 text-xl font-semibold tracking-widest uppercase">長榮分會 · 20 周年慶</p>
+          <h1 class="text-white text-5xl font-black leading-tight">商機變變變・產業閃電秀</h1>
         </div>
       </div>
-      <p class="text-yellow-300 text-lg font-bold mt-2">
+      <p class="text-yellow-300 text-2xl font-bold mt-2">
         20 年磨一劍，長榮分會為你點亮全台的商機燈號。
       </p>
-      <p class="text-red-200 text-sm mt-1">
+      <p class="text-red-200 text-xl mt-1">
         拒絕無效社交，用數據與視覺證明你的產業影響力。
       </p>
     </div>
@@ -158,19 +156,19 @@
       <!-- 左：即時人數 -->
       <div class="flex flex-col items-center text-center">
         <div class="bg-white/10 backdrop-blur rounded-3xl p-8 border border-white/20 w-full">
-          <p class="text-red-200 text-sm font-semibold mb-2 tracking-wide">目前已登記人數</p>
-          <div id="count-display" class="text-white font-black" style="font-size: 6rem; line-height: 1; text-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+          <p class="text-red-200 text-xl font-semibold mb-2 tracking-wide">目前已登記人數</p>
+          <div id="count-display" class="text-white font-black" style="font-size: 9rem; line-height: 1; text-shadow: 0 4px 20px rgba(0,0,0,0.4);">
             0
           </div>
-          <p class="text-red-200 text-sm mt-2">位夥伴已加入</p>
+          <p class="text-red-200 text-xl mt-2">位夥伴已加入</p>
           <div class="mt-4 flex items-center justify-center gap-2">
             <div id="live-dot" class="w-2.5 h-2.5 rounded-full bg-green-400"></div>
-            <span class="text-green-300 text-xs font-semibold">即時更新中</span>
+            <span class="text-green-300 text-lg font-semibold">即時更新中</span>
           </div>
         </div>
 
         <!-- 活動階段徽章 -->
-        <div id="phase-badge" class="mt-4 px-5 py-2 rounded-full bg-yellow-400 text-yellow-900 font-black text-sm">
+        <div id="phase-badge" class="mt-4 px-5 py-2 rounded-full bg-yellow-400 text-yellow-900 font-black text-xl">
           活動預熱中
         </div>
       </div>
@@ -183,43 +181,38 @@
             <span class="text-gray-400 text-xs">載入中...</span>
           </div>
         </div>
-        <p class="text-white font-bold text-lg mt-4">掃碼加入活動</p>
-        <p class="text-red-200 text-sm mt-1" id="qr-url-display">請用手機掃描</p>
+        <p class="text-white font-bold text-2xl mt-4">掃碼加入活動</p>
       </div>
 
       <!-- 右：倒數計時 -->
       <div class="flex flex-col items-center text-center">
         <div class="bg-white/10 backdrop-blur rounded-3xl p-6 border border-white/20 w-full">
-          <p class="text-red-200 text-sm font-semibold mb-4 tracking-wide">活動開始倒數</p>
+          <p class="text-red-200 text-xl font-semibold mb-4 tracking-wide">活動開始倒數</p>
           <div id="countdown-container" class="flex items-center justify-center gap-3">
             <div class="countdown-unit">
               <span class="countdown-value" id="cd-hours">--</span>
               <span class="countdown-label">時</span>
             </div>
-            <span class="text-white text-3xl font-black mb-4">:</span>
+            <span class="text-white text-5xl font-black mb-4">:</span>
             <div class="countdown-unit">
               <span class="countdown-value" id="cd-minutes">--</span>
               <span class="countdown-label">分</span>
             </div>
-            <span class="text-white text-3xl font-black mb-4">:</span>
+            <span class="text-white text-5xl font-black mb-4">:</span>
             <div class="countdown-unit">
               <span class="countdown-value" id="cd-seconds">--</span>
               <span class="countdown-label">秒</span>
             </div>
           </div>
-          <p id="countdown-started" class="hidden text-yellow-300 font-bold text-lg mt-4">活動已開始！</p>
+          <p id="countdown-started" class="hidden text-yellow-300 font-bold text-2xl mt-4">活動已開始！</p>
         </div>
 
-        <div class="mt-5 text-center">
-          <p class="text-red-200 text-xs">今日現場暗語</p>
-          <p class="text-yellow-200 text-2xl font-black mt-1">「商機無限，連結未來」</p>
-        </div>
       </div>
     </div>
 
     <!-- 底部裝飾 -->
     <div class="mt-8 text-center">
-      <p class="text-red-300 text-xs">BNI 長榮 20 周年慶 · 商機變變變 · 產業閃電秀</p>
+      <p class="text-red-300 text-lg">BNI 長榮 20 周年慶 · 商機變變變 · 產業閃電秀</p>
     </div>
   </div>
 
@@ -227,9 +220,9 @@
   <div id="drawing-view" class="hidden min-h-screen flex flex-col items-center justify-center px-8 py-8">
 
     <div class="text-center mb-8">
-      <p class="text-red-200 text-sm font-semibold tracking-widest mb-2">BNI 長榮 20 周年慶</p>
-      <h2 class="text-white text-4xl font-black">🎰 抽選發言者</h2>
-      <p class="text-yellow-300 text-lg mt-2">命運之輪，即將揭曉！</p>
+      <p class="text-red-200 text-xl font-semibold tracking-widest mb-2">BNI 長榮 20 周年慶</p>
+      <h2 class="text-white text-6xl font-black">🎰 抽選發言者</h2>
+      <p class="text-yellow-300 text-2xl mt-2">命運之輪，即將揭曉！</p>
     </div>
 
     <div class="w-full max-w-lg">
@@ -242,22 +235,22 @@
       <!-- 抽中結果（抽選完後顯示） -->
       <div id="winner-result" class="hidden mt-8 text-center">
         <div id="winner-reveal" class="inline-block bg-white rounded-3xl px-10 py-8 shadow-2xl halo-pulse">
-          <p class="text-gray-500 text-sm font-semibold mb-2">恭喜！本輪發言者</p>
-          <p id="winner-name" class="text-red-600 text-5xl font-black my-2"></p>
-          <p id="winner-table" class="text-gray-400 text-base mt-1"></p>
-          <p id="winner-needs" class="text-gray-600 text-sm mt-3 max-w-xs mx-auto"></p>
+          <p class="text-gray-500 text-xl font-semibold mb-2">恭喜！本輪發言者</p>
+          <p id="winner-name" class="text-red-600 text-7xl font-black my-2"></p>
+          <p id="winner-table" class="text-gray-400 text-2xl mt-1"></p>
+          <p id="winner-needs" class="text-gray-600 text-xl mt-3 max-w-xs mx-auto"></p>
         </div>
 
         <!-- 彩色粒子容器 -->
         <div id="confetti-container" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
 
-        <p class="text-red-200 text-sm mt-6">管理員請按「設為發言者」確認</p>
+        <p class="text-red-200 text-xl mt-6">管理員請按「設為發言者」確認</p>
       </div>
 
       <!-- 抽選中提示 -->
       <div id="drawing-tip" class="text-center mt-6">
-        <p class="text-yellow-300 text-lg font-bold">命運轉動中...</p>
-        <p class="text-red-200 text-sm mt-1">請稍候，即將揭曉！</p>
+        <p class="text-yellow-300 text-2xl font-bold">命運轉動中...</p>
+        <p class="text-red-200 text-xl mt-1">請稍候，即將揭曉！</p>
       </div>
     </div>
   </div>
@@ -274,6 +267,7 @@
   let countdownInterval = null;
   let allParticipants = [];
   let reelAnimating = false;
+  let drawDurationMs = 500;  // 預設 0.5 秒，由後台設定覆蓋
 
   // ─────────────────────────────────────────────
   // 飄動球背景
@@ -332,8 +326,6 @@
   // ─────────────────────────────────────────────
   function initQRCode() {
     const url = 'https://bni-changrong66-yiseadata.zeabur.app/';
-    document.getElementById('qr-url-display').textContent = 'bni-changrong66-yiseadata.zeabur.app';
-
     const container = document.getElementById('qr-code');
     const encoded   = encodeURIComponent(url);
     container.innerHTML = `<img
@@ -412,7 +404,7 @@
   function updatePhaseBadge(phase) {
     const el = document.getElementById('phase-badge');
     el.textContent = PHASE_LABELS[phase] || phase;
-    el.className = 'mt-4 px-5 py-2 rounded-full font-black text-sm ' + (PHASE_COLORS[phase] || 'bg-white text-gray-700');
+    el.className = 'mt-4 px-5 py-2 rounded-full font-black text-xl ' + (PHASE_COLORS[phase] || 'bg-white text-gray-700');
   }
 
   // ─────────────────────────────────────────────
@@ -426,6 +418,51 @@
   function showDrawing() {
     document.getElementById('warmup-view').classList.add('hidden');
     document.getElementById('drawing-view').classList.remove('hidden');
+  }
+
+  // ─────────────────────────────────────────────
+  // 音效（Web Audio API）
+  // ─────────────────────────────────────────────
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  let audioCtx = null;
+  function getAudioCtx() {
+    if (!audioCtx) audioCtx = new AudioCtx();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  // 轉盤滾動 tick 聲
+  function playTick() {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 600 + Math.random() * 300;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.06);
+  }
+
+  // 中獎揭曉音效（上行琶音）
+  function playWinnerSound() {
+    const ctx = getAudioCtx();
+    const notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'triangle';
+      const t = ctx.currentTime + i * 0.12;
+      gain.gain.setValueAtTime(0.18, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+      osc.start(t);
+      osc.stop(t + 0.4);
+    });
   }
 
   // ─────────────────────────────────────────────
@@ -469,8 +506,9 @@
 
     const finalY   = CENTER_Y - ((items.length - 1) * ITEM_H);
     const travel   = Math.abs(finalY - CENTER_Y);
-    const DURATION = 7000;  // 7 秒：前段快速名字輪轉，後段明顯減速
+    const DURATION = drawDurationMs;  // 由後台設定控制
     let   startTime = null;
+    let   lastTickIdx = -1;  // 追蹤上一次 tick 的項目索引
 
     // easeOutQuart：開頭極快（名字快速輪過），後 30% 明顯減速可看清楚名字
     function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
@@ -478,11 +516,20 @@
     function frame(ts) {
       if (!startTime) startTime = ts;
       const t = Math.min((ts - startTime) / DURATION, 1);
-      reel.style.transform = `translateY(${CENTER_Y - travel * easeOutQuart(t)}px)`;
+      const currentOffset = travel * easeOutQuart(t);
+      reel.style.transform = `translateY(${CENTER_Y - currentOffset}px)`;
+
+      // 每經過一個項目邊界播放 tick 聲
+      const itemIdx = Math.floor(currentOffset / ITEM_H);
+      if (itemIdx !== lastTickIdx) {
+        lastTickIdx = itemIdx;
+        playTick();
+      }
+
       if (t < 1) {
         requestAnimationFrame(frame);
       } else {
-        setTimeout(showWinner, 700);
+        setTimeout(showWinner, 300);
       }
     }
 
@@ -492,6 +539,7 @@
       document.getElementById('winner-needs').textContent = winner.needs || '';
       tip.classList.add('hidden');
       result.classList.remove('hidden');
+      playWinnerSound();
       spawnConfetti();
       reelAnimating = false;
     }
@@ -523,6 +571,9 @@
   // ─────────────────────────────────────────────
   function applyState(state) {
     const phase = state.phase || 'warmup';
+
+    // 抽選動畫秒數
+    if (state.drawDuration) drawDurationMs = state.drawDuration * 1000;
 
     // 人數
     if (state.memberCount != null) updateCount(state.memberCount);

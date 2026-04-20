@@ -74,11 +74,8 @@
       position: relative;
       z-index: 5;
     }
-    .idle-logo {
-      width: 120px; height: 120px;
-      background: #DC2626; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 3rem; font-weight: 900; color: #fff;
+    .idle-logo-img {
+      height: 120px; width: auto;
       box-shadow: 0 0 60px rgba(220,38,38,0.4);
     }
     #screen-idle h1 {
@@ -146,14 +143,13 @@
     /* ──────────────────────────
        Speaker screen
     ────────────────────────── */
-    /* 限制在上方 80vh — 下方實體遮擋區不放內容 */
+    /* 上方 80vh 為主要顯示區（下方可能有實體遮擋），overflow: visible 避免截斷 */
     #screen-speaker {
       display: none;
       flex-direction: column;
       width: 100%;
-      height: 80vh;
-      max-height: 80vh;
-      overflow: hidden;
+      min-height: 80vh;
+      overflow: visible;
       position: relative;
       z-index: 5;
     }
@@ -170,7 +166,7 @@
       gap: 0.7rem;
     }
     .oscar-star {
-      font-size: clamp(1.4rem, 2.5vw, 2.2rem);
+      font-size: clamp(2.1rem, 2.5vw, 3.3rem);
       color: #f0c040;
       text-shadow: 0 0 18px rgba(240,192,64,0.9), 0 0 36px rgba(240,192,64,0.4);
       animation: star-twinkle 2.2s ease-in-out infinite;
@@ -180,7 +176,7 @@
       50%      { transform: scale(1.1); text-shadow: 0 0 28px rgba(240,192,64,1),   0 0 56px rgba(240,192,64,0.6); }
     }
     .oscar-brand {
-      font-size: clamp(1.3rem, 2.6vw, 2.3rem);
+      font-size: clamp(1.95rem, 2.6vw, 3.45rem);
       font-weight: 900;
       background: linear-gradient(135deg, #f8d660, #e8a820, #f5d880, #d49010);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
@@ -363,7 +359,7 @@
     }
 
     .speaker-name {
-      font-size: clamp(3.5rem, 10vw, 9rem);
+      font-size: clamp(5.25rem, 10vw, 13.5rem);
       font-weight: 900;
       color: #fff;
       line-height: 1;
@@ -379,10 +375,10 @@
       border-radius: 999px;
       width: fit-content;
     }
-    .table-label    { font-size: clamp(0.85rem, 1.5vw, 1.4rem); font-weight: 700; color: rgba(255,255,255,0.85); }
-    .table-num      { font-size: clamp(1.7rem, 3.8vw, 3.4rem); font-weight: 900; color: #fff; line-height: 1; }
+    .table-label    { font-size: clamp(1.275rem, 1.5vw, 2.1rem); font-weight: 700; color: rgba(255,255,255,0.85); }
+    .table-num      { font-size: clamp(2.55rem, 3.8vw, 5.1rem); font-weight: 900; color: #fff; line-height: 1; }
     .table-row      { display: flex; align-items: center; gap: 1em; }
-    .disp-specialty { font-size: clamp(1.2rem, 2.4vw, 2.1rem); font-weight: 700; color: rgba(255,255,255,0.85); }
+    .disp-specialty { font-size: clamp(1.8rem, 2.4vw, 3.15rem); font-weight: 700; color: rgba(255,255,255,0.85); }
 
     .needs-box {
       background: rgba(255,255,255,0.05);
@@ -392,7 +388,7 @@
       padding: 0.9rem 1.3rem;
     }
     .needs-lbl {
-      font-size: clamp(0.6rem, 0.95vw, 0.82rem);
+      font-size: clamp(0.9rem, 0.95vw, 1.23rem);
       color: #DC2626;
       font-weight: 700;
       letter-spacing: 0.13em;
@@ -400,7 +396,7 @@
       margin-bottom: 0.35rem;
     }
     .needs-txt {
-      font-size: clamp(0.95rem, 1.9vw, 1.7rem);
+      font-size: clamp(1.425rem, 1.9vw, 2.55rem);
       color: #ccc;
       line-height: 1.55;
     }
@@ -418,7 +414,7 @@
       flex-shrink: 0;
     }
     .qr-hint {
-      font-size: clamp(0.7rem, 1.15vw, 1rem);
+      font-size: clamp(1.05rem, 1.15vw, 1.5rem);
       color: #888;
       line-height: 1.55;
     }
@@ -478,7 +474,7 @@
 
 <!-- ── Idle ── -->
 <div id="screen-idle">
-  <div class="idle-logo">BNI</div>
+  <img src="/images/bni-logo.png" class="idle-logo-img" alt="BNI">
   <h1>BNI 長榮 20 周年慶<br>商機變變變・產業閃電秀</h1>
   <p>等待發言者上台…</p>
 </div>

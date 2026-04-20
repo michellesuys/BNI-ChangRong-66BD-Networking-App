@@ -33,8 +33,8 @@ async function init() {
     try {
       const session = JSON.parse(saved);
       const data = await api('POST', '/api/login', {
-        name: session.name,
-        tableNumber: session.tableNumber,
+        email: session.email,
+        isFirstTime: false,
       });
       state.user = {
         userId: data.userId,
@@ -44,7 +44,7 @@ async function init() {
         needs: data.needs,
         email: data.email,
       };
-      localStorage.setItem('bni_session', JSON.stringify({ name: state.user.name, tableNumber: state.user.tableNumber }));
+      localStorage.setItem('bni_session', JSON.stringify({ email: state.user.email }));
       await startApp();
       return;
     } catch {
@@ -396,6 +396,11 @@ function updateRewardBanner() {
 // ════════════════════════════════════════════════
 let _pendingConnection = null; // { participantId, type, source }
 
+const REASON_OPTIONS = {
+  want_to_meet: ['有潛在合作機會', '想了解你的業務', '想為你介紹轉介', '個人交流，想認識你'],
+  can_provide:  ['有相關資源可介紹', '我有轉介名單可提供', '業務上可以合作', '有具體需求想討論'],
+};
+
 function openReasonModal(participantId, type, source) {
   const pid = Number(participantId);
 
@@ -410,18 +415,20 @@ function openReasonModal(participantId, type, source) {
   const isHelp = type === 'can_provide';
   document.getElementById('reason-modal-title').textContent = isHelp ? '我想幫助他' : '我想認識他';
   document.getElementById('reason-modal-subtitle').textContent = isHelp
-    ? '請描述你可以提供的資源或協助'
-    : '請說明你想認識他的原因';
-  document.getElementById('reason-label').innerHTML = isHelp
-    ? '可提供的資源或協助 <span class="text-red-500">*</span>'
-    : '想認識的原因 <span class="text-red-500">*</span>';
-  document.getElementById('reason-input').placeholder = isHelp
-    ? '例如：我有建材供應商人脈，可以幫忙介紹...'
-    : '例如：我對他的產業很有興趣，希望深入交流...';
-  document.getElementById('reason-input').value = '';
+    ? '選擇你可以提供的資源或協助'
+    : '選擇你想認識他的原因';
+
+  // Render radio options
+  const options = REASON_OPTIONS[type] || [];
+  const container = document.getElementById('reason-options-container');
+  container.innerHTML = options.map((opt, i) => `
+    <label class="flex items-center gap-3 p-3.5 rounded-2xl border-2 border-gray-200 cursor-pointer transition-all hover:border-red-300 has-checked:border-red-500 has-checked:bg-red-50">
+      <input type="radio" name="reason-option" value="${esc(opt)}" class="w-4 h-4 accent-red-600" ${i === 0 ? 'checked' : ''}>
+      <span class="text-gray-700 font-medium text-sm">${esc(opt)}</span>
+    </label>
+  `).join('');
 
   document.getElementById('reason-modal').classList.remove('hidden');
-  setTimeout(() => document.getElementById('reason-input').focus(), 100);
 }
 
 function closeReasonModal() {
@@ -432,10 +439,10 @@ function closeReasonModal() {
 async function submitReason() {
   if (!_pendingConnection) return;
 
-  const reason = document.getElementById('reason-input').value.trim();
+  const checkedEl = document.querySelector('input[name="reason-option"]:checked');
+  const reason = checkedEl?.value || '';
   if (!reason) {
-    showToast('請填寫原因後再送出', 'error');
-    document.getElementById('reason-input').focus();
+    showToast('請選擇一個原因', 'error');
     return;
   }
 
@@ -673,19 +680,23 @@ function showScreen(name) {
 function updateHeaderUser() {
   const el = document.getElementById('header-user');
   const logoutBtn = document.getElementById('header-logout-btn');
+  const editBtn   = document.getElementById('header-edit-btn');
   if (state.user) {
     if (el) el.textContent = `${state.user.name} · ${state.user.identity || ''}`;
     logoutBtn?.classList.remove('hidden');
+    editBtn?.classList.remove('hidden');
   } else {
     if (el) el.textContent = '';
     logoutBtn?.classList.add('hidden');
+    editBtn?.classList.add('hidden');
   }
 }
 
 // ════════════════════════════════════════════════
 // 登入畫面切換
 // ════════════════════════════════════════════════
-function showFullForm() {
+function showFullForm() { showFullReg(); }
+function showFullReg() {
   document.getElementById('form-fullreg').classList.remove('hidden');
   document.getElementById('form-return').classList.add('hidden');
 }
@@ -730,7 +741,7 @@ async function handleLogin() {
       userId: data.userId, name: data.name, identity: data.identity,
       tableNumber: data.tableNumber, needs: data.needs, email: data.email,
     };
-    localStorage.setItem('bni_session', JSON.stringify({ name: state.user.name, tableNumber: state.user.tableNumber }));
+    localStorage.setItem('bni_session', JSON.stringify({ email: state.user.email }));
     await startApp();
   } catch (e) {
     showToast(e.message || '登入失敗，請重試', 'error');
@@ -740,33 +751,30 @@ async function handleLogin() {
 }
 
 // ════════════════════════════════════════════════
-// 回訪快速登入
+// 回訪快速登入（以 Email 識別）
 // ════════════════════════════════════════════════
 async function handleReturnLogin() {
-  const name = document.getElementById('input-name-return').value.trim();
-  const tableNum = document.getElementById('input-table-return').value.trim();
+  const email = document.getElementById('input-email-return').value.trim();
 
-  if (!name) { showToast('請輸入你的名字', 'error'); document.getElementById('input-name-return').focus(); return; }
-  if (!tableNum) { showToast('請輸入你的桌號', 'error'); document.getElementById('input-table-return').focus(); return; }
+  if (!email) { showToast('請輸入你的 Email', 'error'); document.getElementById('input-email-return').focus(); return; }
 
   const btn = document.getElementById('btn-return');
   btn.disabled = true;
   btn.textContent = '登入中...';
 
   try {
-    const data = await api('POST', '/api/login', { name, tableNumber: tableNum });
+    const data = await api('POST', '/api/login', { email, isFirstTime: false });
     state.user = {
       userId: data.userId, name: data.name, identity: data.identity,
       tableNumber: data.tableNumber, needs: data.needs, email: data.email,
     };
-    localStorage.setItem('bni_session', JSON.stringify({ name: state.user.name, tableNumber: state.user.tableNumber }));
+    localStorage.setItem('bni_session', JSON.stringify({ email: state.user.email }));
     await startApp();
   } catch (e) {
-    // 找不到紀錄 → server 回傳「請選擇身份」，自動帶入資料跳轉完整表單
-    if (e.message === '請選擇身份') {
-      showFullForm();
-      document.getElementById('input-name').value = name;
-      document.getElementById('input-table').value = tableNum;
+    // 找不到此 email → 帶入 email 切換到完整表單
+    if (e.message?.includes('找不到此 Email')) {
+      showFullReg();
+      document.getElementById('input-email').value = email;
       btn.disabled = false;
       btn.textContent = '進入活動';
       return;
@@ -792,7 +800,7 @@ function handleLogout() {
   showReturnLogin();
 
   // Reset form
-  ['input-name', 'input-table', 'input-specialty', 'input-needs', 'input-email', 'input-phone', 'input-line'].forEach(id => {
+  ['input-name', 'input-table', 'input-specialty', 'input-needs', 'input-email', 'input-phone', 'input-line', 'input-email-return'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -860,6 +868,81 @@ function esc(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+// ════════════════════════════════════════════════
+// PROFILE EDIT MODAL
+// ════════════════════════════════════════════════
+function openProfileEdit() {
+  if (!state.user) return;
+  const u = state.user;
+  document.getElementById('edit-name').value      = u.name || '';
+  document.getElementById('edit-table').value     = u.tableNumber || '';
+  document.getElementById('edit-specialty').value = u.specialty || '';
+  document.getElementById('edit-needs').value     = u.needs || '';
+  document.getElementById('edit-phone').value     = u.phone || '';
+  document.getElementById('edit-line').value      = u.lineId || '';
+
+  // Set identity radio
+  document.querySelectorAll('input[name="edit-identity"]').forEach(r => {
+    r.checked = r.value === u.identity;
+  });
+  updateEditRoleStyle();
+
+  document.getElementById('profile-edit-modal').classList.remove('hidden');
+}
+
+function closeProfileEdit() {
+  document.getElementById('profile-edit-modal').classList.add('hidden');
+}
+
+function updateEditRoleStyle() {
+  document.querySelectorAll('.edit-role-label').forEach(label => {
+    const radio = label.querySelector('input[type="radio"]');
+    if (radio?.checked) {
+      label.classList.add('border-red-500', 'bg-red-50');
+      label.classList.remove('border-gray-200');
+    } else {
+      label.classList.remove('border-red-500', 'bg-red-50');
+      label.classList.add('border-gray-200');
+    }
+  });
+}
+
+async function submitProfileEdit() {
+  if (!state.user) return;
+
+  const name      = document.getElementById('edit-name').value.trim();
+  const table     = document.getElementById('edit-table').value.trim();
+  const specialty = document.getElementById('edit-specialty').value.trim();
+  const needs     = document.getElementById('edit-needs').value.trim();
+  const phone     = document.getElementById('edit-phone').value.trim();
+  const lineId    = document.getElementById('edit-line').value.trim();
+  const identityEl = document.querySelector('input[name="edit-identity"]:checked');
+
+  if (!name)      { showToast('請輸入姓名', 'error'); return; }
+  if (!table)     { showToast('請輸入桌號', 'error'); return; }
+  if (!specialty) { showToast('請填寫專業別', 'error'); return; }
+
+  try {
+    const data = await api('PATCH', '/api/profile', {
+      userId: state.user.userId,
+      name, tableNumber: table, specialty, needs,
+      phone: phone || null,
+      lineId: lineId || null,
+      identity: identityEl?.value,
+    });
+
+    // Update local state
+    state.user = { ...state.user, ...data };
+    localStorage.setItem('bni_session', JSON.stringify({ email: state.user.email }));
+
+    closeProfileEdit();
+    updateHeaderUser();
+    showToast('資料已更新', 'success');
+  } catch (e) {
+    showToast(e.message || '更新失敗，請重試', 'error');
+  }
 }
 
 // ════════════════════════════════════════════════

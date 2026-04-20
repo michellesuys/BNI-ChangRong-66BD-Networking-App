@@ -129,8 +129,23 @@
 
       <!-- ── 抽選功能 ── -->
       <section class="bg-white rounded-3xl shadow-sm p-5">
-        <h2 class="text-lg font-black text-gray-800 mb-1">🎯 抽選發言者（金手環）</h2>
+        <h2 class="text-lg font-black text-gray-800 mb-1">🎯 抽選發言者（金��環）</h2>
         <p class="text-gray-500 text-xs mb-4">僅從金手環成員中抽選。請先切換到「抽選中」階段，確認名單後再按開始抽選。</p>
+
+        <!-- 抽選動畫秒數 -->
+        <div class="bg-gray-50 rounded-2xl p-4 space-y-2 mb-4">
+          <label class="block text-gray-700 font-bold text-sm">抽選動畫秒數</label>
+          <div class="flex gap-2">
+            <input id="draw-duration-input" type="number" min="0.1" max="30" step="0.1" placeholder="0.5"
+              class="flex-1 border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-red-500 focus:outline-none">
+            <span class="flex items-center text-gray-500 text-sm font-semibold">秒</span>
+            <button onclick="setDrawDuration()"
+              class="bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-sm active:bg-red-700">
+              設定
+            </button>
+          </div>
+          <p id="draw-duration-current" class="hidden text-xs text-green-700 bg-green-50 rounded-lg px-3 py-1.5"></p>
+        </div>
 
         <!-- 候選名單 -->
         <div class="bg-gray-50 rounded-2xl p-3 mb-4 max-h-52 overflow-y-auto">
@@ -333,6 +348,14 @@
       } else {
         cdDisplay.classList.add('hidden');
       }
+
+      // 抽選動畫秒數
+      const ddInput = document.getElementById('draw-duration-input');
+      const ddDisplay = document.getElementById('draw-duration-current');
+      const ddVal = s.drawDuration || 0.5;
+      ddInput.value = ddVal;
+      ddDisplay.textContent = `目前設定：${ddVal} 秒`;
+      ddDisplay.classList.remove('hidden');
     }
 
     function phaseLabel(p) {
@@ -367,6 +390,16 @@
       } catch (e) {
         showAdminToast('切換失敗：' + e.message, 'error');
       }
+    }
+
+    async function setDrawDuration() {
+      const val = parseFloat(document.getElementById('draw-duration-input').value);
+      if (!val || val < 0.1 || val > 30) { showAdminToast('秒數須介於 0.1 ~ 30', 'error'); return; }
+      try {
+        await adminApi('POST', '/api/admin/draw-duration', { seconds: val });
+        showAdminToast(`抽選動畫已設為 ${val} 秒`, 'success');
+        await loadStats();
+      } catch (e) { showAdminToast('設定失敗：' + e.message, 'error'); }
     }
 
     async function setCountdown() {
@@ -540,6 +573,14 @@
                 }">
                 ${p.is_current_speaker ? '發言中' : '設為發言者'}
               </button>
+              <div class="flex gap-1">
+                <button onclick="addLight(${p.id})"
+                  class="flex-1 text-xs font-bold px-2 py-1.5 rounded-xl bg-yellow-100 text-yellow-700 active:bg-yellow-200 transition-colors"
+                  title="手動增加燈號">＋燈</button>
+                <button onclick="removeLight(${p.id})"
+                  class="flex-1 text-xs font-semibold px-2 py-1.5 rounded-xl bg-gray-100 text-gray-500 active:bg-gray-200 transition-colors"
+                  title="移除燈號">－燈</button>
+              </div>
               <button onclick="deleteParticipant(${p.id}, '${esc(p.name)}')"
                 class="text-xs font-semibold px-3 py-1.5 rounded-xl border border-gray-200 text-gray-400 active:bg-gray-50 transition-colors">
                 刪除
@@ -589,6 +630,20 @@
         await Promise.all([loadParticipants(), loadStats()]);
         showAdminToast(`已刪除 ${name}`, 'success');
       } catch (e) { showAdminToast('刪除失敗：' + e.message, 'error'); }
+    }
+
+    async function addLight(id) {
+      try {
+        await adminApi('POST', `/api/admin/add-light/${id}`);
+        showAdminToast('已增加燈號', 'success');
+      } catch (e) { showAdminToast('操作失敗：' + e.message, 'error'); }
+    }
+
+    async function removeLight(id) {
+      try {
+        await adminApi('POST', `/api/admin/remove-light/${id}`);
+        showAdminToast('已移除燈號', 'success');
+      } catch (e) { showAdminToast('操作失敗：' + e.message, 'error'); }
     }
 
     // ── SSE 同步（監聽 phase 變化 + 人數變化） ──
