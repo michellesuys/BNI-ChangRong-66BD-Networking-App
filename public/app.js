@@ -397,8 +397,8 @@ function updateRewardBanner() {
 let _pendingConnection = null; // { participantId, type, source }
 
 const REASON_OPTIONS = {
-  want_to_meet: ['有潛在合作機會', '想了解你的業務', '想為你介紹轉介', '個人交流，想認識你'],
-  can_provide:  ['有相關資源可介紹', '我有轉介名單可提供', '業務上可以合作', '有具體需求想討論'],
+  want_to_meet: ['有潛在合作機會', '想了解你的業務', '想體驗你的產品/服務'],
+  can_provide:  ['有相關資源可介紹', '我有轉介名單可提供', '業務上可以合作'],
 };
 
 function openReasonModal(participantId, type, source) {
@@ -418,7 +418,7 @@ function openReasonModal(participantId, type, source) {
     ? '選擇你可以提供的資源或協助'
     : '選擇你想認識他的原因';
 
-  // Render radio options
+  // Render radio options + 其他（自填）
   const options = REASON_OPTIONS[type] || [];
   const container = document.getElementById('reason-options-container');
   container.innerHTML = options.map((opt, i) => `
@@ -426,7 +426,27 @@ function openReasonModal(participantId, type, source) {
       <input type="radio" name="reason-option" value="${esc(opt)}" class="w-4 h-4 accent-red-600" ${i === 0 ? 'checked' : ''}>
       <span class="text-gray-700 font-medium text-sm">${esc(opt)}</span>
     </label>
-  `).join('');
+  `).join('') + `
+    <label class="flex items-center gap-3 p-3.5 rounded-2xl border-2 border-gray-200 cursor-pointer transition-all hover:border-red-300 has-checked:border-red-500 has-checked:bg-red-50">
+      <input type="radio" name="reason-option" value="__custom__" class="w-4 h-4 accent-red-600"
+        onchange="document.getElementById('reason-custom-input').classList.remove('hidden'); document.getElementById('reason-custom-input').focus();">
+      <span class="text-gray-700 font-medium text-sm">其他</span>
+    </label>
+    <input id="reason-custom-input" type="text" maxlength="50" placeholder="請輸入原因..."
+      class="hidden w-full border-2 border-gray-200 rounded-2xl px-4 py-3 text-sm focus:border-red-500 focus:outline-none transition-colors">`;
+
+  // 選回預設選項時隱藏自填欄位
+  container.querySelectorAll('input[name="reason-option"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const customInput = document.getElementById('reason-custom-input');
+      if (radio.value === '__custom__') {
+        customInput.classList.remove('hidden');
+        customInput.focus();
+      } else {
+        customInput.classList.add('hidden');
+      }
+    });
+  });
 
   document.getElementById('reason-modal').classList.remove('hidden');
 }
@@ -440,9 +460,12 @@ async function submitReason() {
   if (!_pendingConnection) return;
 
   const checkedEl = document.querySelector('input[name="reason-option"]:checked');
-  const reason = checkedEl?.value || '';
+  let reason = checkedEl?.value || '';
+  if (reason === '__custom__') {
+    reason = document.getElementById('reason-custom-input').value.trim();
+  }
   if (!reason) {
-    showToast('請選擇一個原因', 'error');
+    showToast('請選擇或填寫一個原因', 'error');
     return;
   }
 
