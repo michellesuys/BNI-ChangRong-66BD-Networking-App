@@ -397,8 +397,8 @@ function updateRewardBanner() {
 let _pendingConnection = null; // { participantId, type, source }
 
 const REASON_OPTIONS = {
-  want_to_meet: ['有潛在合作機會', '想了解你的業務', '想體驗你的產品/服務'],
-  can_provide:  ['有相關資源可介紹', '我有轉介名單可提供', '業務上可以合作'],
+  want_to_meet: ['想體驗你的產品/服務', '想聊聊彼此合作機會'],
+  can_provide:  ['我可介紹客戶', '我可介紹合作夥伴'],
 };
 
 function openReasonModal(participantId, type, source) {
@@ -413,38 +413,55 @@ function openReasonModal(participantId, type, source) {
   _pendingConnection = { participantId: pid, type, source };
 
   const isHelp = type === 'can_provide';
-  document.getElementById('reason-modal-title').textContent = isHelp ? '我想幫助他' : '我想認識他';
-  document.getElementById('reason-modal-subtitle').textContent = isHelp
-    ? '選擇你可以提供的資源或協助'
-    : '選擇你想認識他的原因';
+  document.getElementById('reason-modal-title').textContent = isHelp ? '我想幫助商務串聯' : '我想認識他';
+  document.getElementById('reason-modal-subtitle').textContent = '可留空直接送出，或簡單說明一下';
+  const placeholder = isHelp ? '歡迎分享想幫助串聯哪種專業別…' : '歡迎分享想認識的原因';
 
-  // Render radio options + 其他（自填）
+  // 自填輸入欄（主要），下方為「常見原因」可點擊的標籤（點了就填入輸入欄）
   const options = REASON_OPTIONS[type] || [];
   const container = document.getElementById('reason-options-container');
-  container.innerHTML = options.map((opt, i) => `
-    <label class="flex items-center gap-3 p-3.5 rounded-2xl border-2 border-gray-200 cursor-pointer transition-all hover:border-red-300 has-checked:border-red-500 has-checked:bg-red-50">
-      <input type="radio" name="reason-option" value="${esc(opt)}" class="w-4 h-4 accent-red-600" ${i === 0 ? 'checked' : ''}>
-      <span class="text-gray-700 font-medium text-sm">${esc(opt)}</span>
+  container.innerHTML = `
+    <label class="block text-gray-700 font-semibold text-sm mb-1.5">
+      原因 <span class="text-gray-400 font-normal">（選填）</span>
     </label>
-  `).join('') + `
-    <label class="flex items-center gap-3 p-3.5 rounded-2xl border-2 border-gray-200 cursor-pointer transition-all hover:border-red-300 has-checked:border-red-500 has-checked:bg-red-50">
-      <input type="radio" name="reason-option" value="__custom__" class="w-4 h-4 accent-red-600"
-        onchange="document.getElementById('reason-custom-input').classList.remove('hidden'); document.getElementById('reason-custom-input').focus();">
-      <span class="text-gray-700 font-medium text-sm">其他</span>
-    </label>
-    <input id="reason-custom-input" type="text" maxlength="50" placeholder="請輸入原因..."
-      class="hidden w-full border-2 border-gray-200 rounded-2xl px-4 py-3 text-sm focus:border-red-500 focus:outline-none transition-colors">`;
+    <textarea id="reason-custom-input" rows="2" maxlength="80"
+      placeholder="${esc(placeholder)}"
+      class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 text-sm focus:border-red-500 focus:outline-none transition-colors resize-none"></textarea>
+    <p class="text-gray-400 text-xs mt-2 mb-1">💡 快速帶入常見原因：</p>
+    <div id="reason-chips" class="flex flex-wrap gap-2">
+      ${options.map(opt => `
+        <button type="button" data-reason="${esc(opt)}"
+          class="reason-chip px-3 py-2 rounded-full border-2 border-gray-200 text-gray-600 text-sm font-medium active:scale-95 transition-all hover:border-red-300">
+          ${esc(opt)}
+        </button>
+      `).join('')}
+    </div>
+  `;
 
-  // 選回預設選項時隱藏自填欄位
-  container.querySelectorAll('input[name="reason-option"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      const customInput = document.getElementById('reason-custom-input');
-      if (radio.value === '__custom__') {
-        customInput.classList.remove('hidden');
-        customInput.focus();
+  const input = document.getElementById('reason-custom-input');
+  container.querySelectorAll('.reason-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const val = chip.dataset.reason;
+      // 若 chip 已 active → 取消；否則填入並 highlight
+      const alreadyActive = chip.classList.contains('is-active');
+      container.querySelectorAll('.reason-chip').forEach(c => {
+        c.classList.remove('is-active', 'bg-red-50', 'border-red-500', 'text-red-600');
+        c.classList.add('border-gray-200', 'text-gray-600');
+      });
+      if (alreadyActive) {
+        input.value = '';
       } else {
-        customInput.classList.add('hidden');
+        chip.classList.add('is-active', 'bg-red-50', 'border-red-500', 'text-red-600');
+        chip.classList.remove('border-gray-200', 'text-gray-600');
+        input.value = val;
       }
+    });
+  });
+  // 使用者手動改輸入欄時取消 chip 高亮
+  input.addEventListener('input', () => {
+    container.querySelectorAll('.reason-chip').forEach(c => {
+      c.classList.remove('is-active', 'bg-red-50', 'border-red-500', 'text-red-600');
+      c.classList.add('border-gray-200', 'text-gray-600');
     });
   });
 
@@ -459,15 +476,8 @@ function closeReasonModal() {
 async function submitReason() {
   if (!_pendingConnection) return;
 
-  const checkedEl = document.querySelector('input[name="reason-option"]:checked');
-  let reason = checkedEl?.value || '';
-  if (reason === '__custom__') {
-    reason = document.getElementById('reason-custom-input').value.trim();
-  }
-  if (!reason) {
-    showToast('請選擇或填寫一個原因', 'error');
-    return;
-  }
+  // 原因為選填，可留空
+  const reason = document.getElementById('reason-custom-input')?.value.trim() || '';
 
   const { participantId, type, source } = _pendingConnection;
   const btn = document.getElementById('reason-submit-btn');
@@ -575,7 +585,7 @@ function renderSpeaker() {
       : 'border-red-500 text-red-600 bg-white active:bg-red-50'
     }"
           >
-            ${canProvide ? '✓ 已送出幫助' : '💼 我想幫助他'}
+            ${canProvide ? '✓ 已送出幫助' : '💼 我想幫助商務串聯'}
           </button>
         </div>
       `}
@@ -665,7 +675,7 @@ function renderParticipantsList() {
           : 'border-gray-300 text-gray-600 bg-white active:bg-gray-50'
         }"
               >
-                ${canProvide ? '✓ 已送出幫助' : '💼 我想幫助他'}
+                ${canProvide ? '✓ 已送出幫助' : '💼 我想幫助商務串聯'}
               </button>
             </div>
           `}

@@ -372,11 +372,10 @@ app.get('/api/connections', (req, res) => {
   res.json(rows);
 });
 
-// POST /api/connect — 送出互動（不可撤銷，reason 必填）
+// POST /api/connect — 送出互動（不可撤銷，reason 選填）
 app.post('/api/connect', (req, res) => {
   const { userId, participantId, type, source, reason } = req.body;
   if (!userId || !participantId || !type) return res.status(400).json({ error: '缺少必要欄位' });
-  if (!reason?.trim()) return res.status(400).json({ error: '請填寫原因' });
 
   const VALID_T = ['want_to_meet', 'can_provide'];
   const VALID_S = ['speaker', 'browse'];
