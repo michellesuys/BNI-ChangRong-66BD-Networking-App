@@ -698,8 +698,12 @@ async function syncLights(newTarget) {
       playLightSound(S.displayed);
       await sleep(270);
     } else {
-      // count dropped (new speaker reset) — already handled externally
-      break;
+      // displayed > target：管理員減燈或真實互動被清除 → 從最上層往下關燈
+      setLamp(S.displayed, false);
+      S.displayed--;
+      // jackpot 狀態下降 → 立刻 refresh 讓 chase / 慶祝音樂停止
+      if (S.wasJackpot && S.displayed < TOTAL_LAMPS) refreshUI();
+      await sleep(120);
     }
   }
   S.animating = false;
