@@ -570,16 +570,18 @@ const CHASE_SIZE       = 10; // consecutive lit bulbs in marquee
 const CHASE_INTERVAL   = 50; // ms per step
 const CHASE_STEP       = 4;  // positions to advance per tick
 
-// 燈號音效切片（秒）：[start, duration]，共 20 筆。
-// 若現場聽起來音效太短/太長，直接調整對應項的數值即可，不需重啟。
+// 燈號音效切片（秒）：[start, duration]。MP3 裡只有 15 個獨立脈衝（0.13~5.37s），
+// 第 16 盞開始沒有對應音，所以超過 15 會重播最後一個脈衝 + 音高上升 1 半音/盞。
+// 若現場聽起來某一盞音效太短/太長，直接調整對應項的數值即可，不需重啟。
 const LIGHT_CLIPS = [
-  [0.13, 0.18], [1.32, 0.18], [2.43, 0.18], [2.76, 0.18], [3.23, 0.18],
-  [3.47, 0.18], [3.66, 0.18], [3.84, 0.18], [4.03, 0.18], [4.22, 0.22],
-  [4.46, 0.18], [4.65, 0.18], [4.84, 0.18], [5.03, 0.22], [5.26, 0.18],
-  [5.45, 0.20], [5.65, 0.20], [5.85, 0.20], [6.05, 0.20], [6.25, 0.22],
+  [0.13, 0.20], [1.32, 0.20], [2.43, 0.20], [2.76, 0.20], [3.23, 0.20],
+  [3.47, 0.20], [3.66, 0.20], [3.84, 0.20], [4.03, 0.20], [4.22, 0.20],
+  [4.46, 0.20], [4.65, 0.20], [4.84, 0.20], [5.03, 0.22], [5.26, 0.22],
 ];
+// 超過 LIGHT_CLIPS 長度時，每多一盞升高多少 cents（100 = 1 半音）
+const EXTRA_LEVEL_DETUNE = 100;
 // 慶祝音樂（jackpot 時播放，從最後一盞燈之後到尾端靜音前）
-const CELEBRATION_CLIP = [6.50, 5.30]; // [start, duration] 秒
+const CELEBRATION_CLIP = [5.50, 6.30]; // [start, duration] 秒
 
 /* ── State ── */
 const S = {
@@ -774,17 +776,28 @@ function refreshUI() {
 /* ──────────────────────────────────────
    Web Audio — 從 light.mp3 切時間區段播放
 ────────────────────────────────────── */
-async function unlockAudio() {
-  if (S.audioUnlocked) return;
-  S.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  S.audioUnlocked = true;
+// 頁面載入時就建立 AudioContext + 預載 buffer。
+// 在 kiosk/launch flag 模式下 (--autoplay-policy=no-user-gesture-required)，
+// AudioContext 會直接是 running 狀態，不用點擊即可播音。
+// 一般模式下 state 為 suspended，仍需 unlockAudio() 在點擊時 resume。
+async function initAudio() {
+  if (S.audioCtx) return;
   try {
+    S.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (S.audioCtx.state === 'running') S.audioUnlocked = true;
     const res = await fetch('/audio/light.mp3');
     const buf = await res.arrayBuffer();
     S.lightBuffer = await S.audioCtx.decodeAudioData(buf);
   } catch (e) {
-    console.warn('light.mp3 載入失敗', e);
+    console.warn('audio init 失敗', e);
   }
+}
+
+function unlockAudio() {
+  if (S.audioUnlocked) return;
+  if (!S.audioCtx) { initAudio().then(unlockAudio); return; }
+  if (S.audioCtx.state === 'suspended') S.audioCtx.resume();
+  S.audioUnlocked = true;
 }
 
 function playLightSound(level) {
@@ -792,12 +805,16 @@ function playLightSound(level) {
   const ctx = S.audioCtx;
   if (ctx.state === 'suspended') ctx.resume();
 
-  const idx = Math.min(Math.max(level, 1), LIGHT_CLIPS.length) - 1;
-  const [start, dur] = LIGHT_CLIPS[idx];
+  const maxIdx = LIGHT_CLIPS.length - 1;                 // 最後一個真實脈衝的索引
+  const idx    = Math.min(Math.max(level, 1), LIGHT_CLIPS.length) - 1;
+  const [start, dur] = LIGHT_CLIPS[Math.min(idx, maxIdx)];
+
+  // 超過 15 盞後，重播最後一個脈衝並每盞升高 1 半音
+  const extra = Math.max(0, level - LIGHT_CLIPS.length);
 
   const src = ctx.createBufferSource();
   src.buffer = S.lightBuffer;
-  // 紅燈（>= REWARD_THRESHOLD）音量略大，維持原設計精神
+  src.detune.value = extra * EXTRA_LEVEL_DETUNE;
   const gain = ctx.createGain();
   gain.gain.value = level >= REWARD_THRESHOLD ? 1.0 : 0.75;
   src.connect(gain).connect(ctx.destination);
@@ -1009,6 +1026,9 @@ buildSparkles();
 refreshUI();
 connectSSE();
 setInterval(pollState, 8000);
+// 頁面載入即建立 AudioContext + 預載 light.mp3。
+// 若 launch 帶 --autoplay-policy=no-user-gesture-required → 直接 running 不用點擊
+initAudio();
 </script>
 </body>
 </html>
