@@ -391,7 +391,7 @@ app.post('/api/connect', (req, res) => {
   try {
     dbRun(
       'INSERT INTO connections (user_id, participant_id, type, source, reason) VALUES (?, ?, ?, ?, ?)',
-      [Number(userId), Number(participantId), type, source || 'speaker', reason.trim()]
+      [Number(userId), Number(participantId), type, source || 'speaker', (reason || '').trim()]
     );
   } catch (err) {
     if (err.message.includes('UNIQUE')) {
