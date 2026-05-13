@@ -573,11 +573,11 @@ app.post('/api/admin/set-phase', adminAuth, (req, res) => {
   res.json({ success: true });
 });
 
-// POST /api/admin/draw-duration — 設��抽選動畫秒數
+// POST /api/admin/draw-duration — 設定抽選動畫秒數
 app.post('/api/admin/draw-duration', adminAuth, (req, res) => {
   const { seconds } = req.body;
   const val = Number(seconds);
-  if (!val || val < 0.1 || val > 30) return res.status(400).json({ error: '秒數須介�� 0.1 ~ 30' });
+  if (!val || val < 0.1 || val > 30) return res.status(400).json({ error: '秒數須介於 0.1 ~ 30' });
   dbRun("INSERT OR REPLACE INTO event_state (key, value) VALUES ('draw_duration', ?)", [val]);
   broadcastEventState();
   res.json({ success: true, drawDuration: val });
