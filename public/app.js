@@ -320,12 +320,17 @@ function renderReport(data) {
       : `<p class="text-gray-300 text-xs mb-1">（未填寫聯絡方式）</p>`;
   };
 
+  const specialtyLine = p => p.specialty
+    ? `<p class="text-gray-600 text-xs mb-1">🏷️ ${esc(p.specialty)}</p>`
+    : '';
+
   renderList('report-meeters', data.meeters,
     p => `<div class="border border-rose-100 rounded-2xl p-3.5">
       <div class="flex items-center gap-2 mb-1">
         <span class="font-black text-gray-800 text-base">${esc(p.name)}</span>
         <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">${esc(p.identity || '')}</span>
       </div>
+      ${specialtyLine(p)}
       ${contactLine(p, 'text-rose-500')}
       ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">"${esc(p.reason)}"</p>` : ''}
     </div>`,
@@ -338,6 +343,7 @@ function renderReport(data) {
         <span class="font-black text-gray-800 text-base">${esc(p.name)}</span>
         <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">${esc(p.identity || '')}</span>
       </div>
+      ${specialtyLine(p)}
       ${contactLine(p, 'text-green-600')}
       ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">"${esc(p.reason)}"</p>` : ''}
     </div>`,
@@ -351,6 +357,7 @@ function renderReport(data) {
         <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">${esc(p.identity || '')}</span>
         <span class="text-xs text-blue-600 font-bold ml-auto">第 ${esc(p.table_number || '?')} 桌</span>
       </div>
+      ${specialtyLine(p)}
       ${contactLine(p, 'text-blue-500')}
       ${p.needs ? `<p class="text-gray-500 text-xs mb-1">需求：${esc(p.needs)}</p>` : ''}
       ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">你的原因：「${esc(p.reason)}」</p>` : ''}
@@ -365,6 +372,7 @@ function renderReport(data) {
         <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">${esc(p.identity || '')}</span>
         <span class="text-xs text-orange-600 font-bold ml-auto">第 ${esc(p.table_number || '?')} 桌</span>
       </div>
+      ${specialtyLine(p)}
       ${contactLine(p, 'text-orange-500')}
       ${p.needs ? `<p class="text-gray-500 text-xs mb-1">需求：${esc(p.needs)}</p>` : ''}
       ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">你的承諾：「${esc(p.reason)}」</p>` : ''}

@@ -408,6 +408,7 @@
       try {
         await adminApi('POST', '/api/admin/set-phase', { phase: _currentPhase, countdownTarget: new Date(val).toISOString() });
         showAdminToast('倒數時間已設定', 'success');
+        await loadStats(); // 重新讀取狀態，刷新下方「目前設定」顯示
       } catch (e) {
         showAdminToast('設定失敗：' + e.message, 'error');
       }
@@ -433,28 +434,56 @@
       // 已發言者預設排除
       _excludedIds = new Set(list.filter(p => p.spoke_at).map(p => p.id));
 
-      el.innerHTML = list.map(p => {
-        const hasSpoken  = !!p.spoke_at;
-        const spokenTime = hasSpoken ? p.spoke_at.substring(11, 16) : '';
-        const excluded   = _excludedIds.has(p.id);
+      // 依桌號分組
+      const groups = {};
+      for (const p of list) {
+        const t = p.table_number || '?';
+        if (!groups[t]) groups[t] = [];
+        groups[t].push(p);
+      }
+      const sortedTables = Object.keys(groups).sort((a, b) => {
+        const na = Number(a), nb = Number(b);
+        if (!isNaN(na) && !isNaN(nb)) return na - nb;
+        return a.localeCompare(b);
+      });
+
+      el.innerHTML = sortedTables.map(t => {
+        const members = groups[t];
         return `
-          <div class="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0" id="candidate-row-${p.id}">
-            <button type="button" onclick="toggleCandidate(${p.id}, ${hasSpoken})"
-              id="candidate-btn-${p.id}"
-              class="w-6 h-6 flex items-center justify-center rounded-full border-2 flex-shrink-0 transition-all text-xs font-black
-                ${excluded ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 text-transparent'}">
-              ✕
-            </button>
-            <span id="candidate-name-${p.id}"
-              class="flex-1 text-sm font-medium ${excluded && hasSpoken ? 'text-gray-400 line-through' : 'text-gray-700'}">
-              ${esc(p.name)}
-            </span>
-            <span class="text-xs text-gray-400">第${esc(p.table_number || '?')}桌</span>
-            ${hasSpoken
-              ? `<span class="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-semibold">已發言 ${spokenTime}</span>`
-              : '<span class="text-xs text-green-600 font-semibold">未發言</span>'}
-          </div>`;
+          <div class="mb-3 last:mb-0">
+            <div class="flex items-center justify-between mb-1 px-1">
+              <span class="text-xs font-bold text-gray-700">第 ${esc(t)} 桌（${members.length} 位）</span>
+              <button onclick="drawFromTable('${esc(t)}')"
+                class="text-xs font-bold px-2.5 py-1 rounded-lg bg-red-50 text-red-600 active:bg-red-100 transition-colors">
+                🎯 抽這桌
+              </button>
+            </div>
+            ${members.map(p => renderCandidateRow(p)).join('')}
+          </div>
+        `;
       }).join('');
+    }
+
+    function renderCandidateRow(p) {
+      const hasSpoken  = !!p.spoke_at;
+      const spokenTime = hasSpoken ? p.spoke_at.substring(11, 16) : '';
+      const excluded   = _excludedIds.has(p.id);
+      return `
+        <div class="flex items-center gap-3 py-1.5 border-b border-gray-100 last:border-0" id="candidate-row-${p.id}">
+          <button type="button" onclick="toggleCandidate(${p.id}, ${hasSpoken})"
+            id="candidate-btn-${p.id}"
+            class="w-6 h-6 flex items-center justify-center rounded-full border-2 flex-shrink-0 transition-all text-xs font-black
+              ${excluded ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 text-transparent'}">
+            ✕
+          </button>
+          <span id="candidate-name-${p.id}"
+            class="flex-1 text-sm font-medium ${excluded && hasSpoken ? 'text-gray-400 line-through' : 'text-gray-700'}">
+            ${esc(p.name)}
+          </span>
+          ${hasSpoken
+            ? `<span class="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-semibold">已發言 ${spokenTime}</span>`
+            : '<span class="text-xs text-green-600 font-semibold">未發言</span>'}
+        </div>`;
     }
 
     function toggleCandidate(id, hasSpoken) {
@@ -496,6 +525,33 @@
           `${_drawWinner.identity || ''} · 第 ${_drawWinner.table_number || '?'} 桌`;
         document.getElementById('draw-result').classList.remove('hidden');
         showAdminToast(`抽選結果：${_drawWinner.name}`, 'success');
+      } catch (e) {
+        showAdminToast('抽選失敗：' + e.message, 'error');
+      }
+    }
+
+    // 按單桌抽選（傳 tableNumber 給後端，winner 只會從那桌出，但動畫名單仍是全部成員）
+    async function drawFromTable(tableNumber) {
+      const tableMembers = _candidates.filter(c => (c.table_number || '?') === tableNumber);
+      const eligible = tableMembers.filter(c => !_excludedIds.has(c.id));
+      if (eligible.length === 0) {
+        showAdminToast(`第 ${tableNumber} 桌沒有可抽選的成員（可能都已發言）`, 'error');
+        return;
+      }
+
+      const excludeIds = Array.from(_excludedIds);
+      try {
+        await adminApi('POST', '/api/admin/set-phase', { phase: 'drawing' });
+        await loadStats();
+
+        const data = await adminApi('POST', '/api/admin/draw', { excludeIds, tableNumber });
+        _drawWinner = data.winner;
+
+        document.getElementById('draw-result-name').textContent = _drawWinner.name;
+        document.getElementById('draw-result-detail').textContent =
+          `${_drawWinner.identity || ''} · 第 ${_drawWinner.table_number || '?'} 桌`;
+        document.getElementById('draw-result').classList.remove('hidden');
+        showAdminToast(`第 ${tableNumber} 桌抽選結果：${_drawWinner.name}`, 'success');
       } catch (e) {
         showAdminToast('抽選失敗：' + e.message, 'error');
       }

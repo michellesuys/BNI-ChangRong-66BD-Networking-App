@@ -595,28 +595,39 @@ app.get('/api/admin/candidates', adminAuth, (req, res) => {
 });
 
 // POST /api/admin/draw — 從金手環成員隨機抽一人（不自動切換 phase）
+// 支援 tableNumber 篩選；reelPool 永遠是全部成員（含非金手環）讓大螢幕動畫熱鬧
 app.post('/api/admin/draw', adminAuth, (req, res) => {
-  const { excludeIds = [] } = req.body;
+  const { excludeIds = [], tableNumber } = req.body;
 
-  let sql = "SELECT id, name, identity, table_number, needs FROM participants WHERE identity = '金手環'";
-  const params = [];
-
+  // ── winner 候選池（金手環 + 排除 + 桌號篩選）──
+  let candSql = "SELECT id, name, identity, table_number, needs FROM participants WHERE identity = '金手環'";
+  const candParams = [];
   if (excludeIds.length > 0) {
-    const placeholders = excludeIds.map(() => '?').join(', ');
-    sql += ` AND id NOT IN (${placeholders})`;
-    params.push(...excludeIds.map(Number));
+    candSql += ` AND id NOT IN (${excludeIds.map(() => '?').join(', ')})`;
+    candParams.push(...excludeIds.map(Number));
+  }
+  if (tableNumber) {
+    candSql += ' AND table_number = ?';
+    candParams.push(String(tableNumber));
   }
 
-  const pool = dbAll(sql, params);
-  if (pool.length === 0) return res.status(404).json({ error: '沒有可抽選的金手環成員' });
+  const winnerPool = dbAll(candSql, candParams);
+  if (winnerPool.length === 0) {
+    const msg = tableNumber ? `第 ${tableNumber} 桌沒有可抽選的金手環成員` : '沒有可抽選的金手環成員';
+    return res.status(404).json({ error: msg });
+  }
 
-  const winner = pool[Math.floor(Math.random() * pool.length)];
-  const poolForReel = pool.map(p => ({ id: p.id, name: p.name }));
+  const winner = winnerPool[Math.floor(Math.random() * winnerPool.length)];
 
-  // 儲存抽選結果：winner + pool（供大螢幕轉盤只顯示候選名單）
+  // ── reelPool：所有成員（不限金手環、不限桌號），給動畫顯示用 ──
+  const reelPool = dbAll(
+    "SELECT id, name FROM participants ORDER BY CAST(table_number AS INTEGER), name"
+  );
+
+  // 儲存抽選結果：winner + reelPool（key 仍為 pool 以維持 warmup 端相容）
   dbRun(
     "INSERT OR REPLACE INTO event_state (key, value) VALUES ('draw_result', ?)",
-    [JSON.stringify({ winner, pool: poolForReel })]
+    [JSON.stringify({ winner, pool: reelPool })]
   );
   broadcastEventState();
   res.json({ success: true, winner });
@@ -757,7 +768,7 @@ app.post('/api/my-report', (req, res) => {
 
   // 誰想認識我
   const meeters = dbAll(`
-    SELECT p.name, p.identity, p.email, p.phone, p.line_id, c.reason
+    SELECT p.name, p.identity, p.specialty, p.email, p.phone, p.line_id, c.reason
     FROM connections c JOIN participants p ON c.user_id = p.id
     WHERE c.participant_id = ? AND c.type = 'want_to_meet'
     ORDER BY c.timestamp
@@ -765,7 +776,7 @@ app.post('/api/my-report', (req, res) => {
 
   // 誰可以幫助我
   const helpers = dbAll(`
-    SELECT p.name, p.identity, p.email, p.phone, p.line_id, c.reason
+    SELECT p.name, p.identity, p.specialty, p.email, p.phone, p.line_id, c.reason
     FROM connections c JOIN participants p ON c.user_id = p.id
     WHERE c.participant_id = ? AND c.type = 'can_provide'
     ORDER BY c.timestamp
@@ -773,7 +784,7 @@ app.post('/api/my-report', (req, res) => {
 
   // 我想認識的人（含桌號與聯絡方式）
   const myWants = dbAll(`
-    SELECT p.name, p.identity, p.email, p.phone, p.line_id, p.table_number, p.needs, c.reason
+    SELECT p.name, p.identity, p.specialty, p.email, p.phone, p.line_id, p.table_number, p.needs, c.reason
     FROM connections c JOIN participants p ON c.participant_id = p.id
     WHERE c.user_id = ? AND c.type = 'want_to_meet'
     ORDER BY c.timestamp
@@ -781,7 +792,7 @@ app.post('/api/my-report', (req, res) => {
 
   // 我可以幫助的人
   const myHelps = dbAll(`
-    SELECT p.name, p.identity, p.email, p.phone, p.line_id, p.table_number, p.needs, c.reason
+    SELECT p.name, p.identity, p.specialty, p.email, p.phone, p.line_id, p.table_number, p.needs, c.reason
     FROM connections c JOIN participants p ON c.participant_id = p.id
     WHERE c.user_id = ? AND c.type = 'can_provide'
     ORDER BY c.timestamp
