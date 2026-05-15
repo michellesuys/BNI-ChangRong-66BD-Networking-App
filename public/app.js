@@ -304,7 +304,7 @@ function renderReport(data) {
     const el = document.getElementById(containerId);
     if (!el) return;
     if (!items?.length) {
-      el.innerHTML = `<p class="text-gray-400 text-sm text-center py-4">${emptyMsg}</p>`;
+      el.innerHTML = `<p class="text-gray-400 text-base text-center py-4 leading-relaxed">${emptyMsg}</p>`;
       return;
     }
     el.innerHTML = items.map(renderFn).join('');
@@ -316,66 +316,66 @@ function renderReport(data) {
     if (p.line_id) parts.push(`💬 LINE：${esc(p.line_id)}`);
     if (p.email) parts.push(`✉️ ${esc(p.email)}`);
     return parts.length
-      ? `<p class="text-xs font-medium mb-1 ${colorClass}">${parts.join('　')}</p>`
-      : `<p class="text-gray-300 text-xs mb-1">（未填寫聯絡方式）</p>`;
+      ? `<p class="text-base font-medium mb-1 leading-relaxed ${colorClass}">${parts.join('<br>')}</p>`
+      : `<p class="text-gray-300 text-base mb-1">（未填寫聯絡方式）</p>`;
   };
 
   const specialtyLine = p => p.specialty
-    ? `<p class="text-gray-600 text-xs mb-1">🏷️ ${esc(p.specialty)}</p>`
+    ? `<p class="text-gray-600 text-base mb-1.5">🏷️ ${esc(p.specialty)}</p>`
     : '';
 
   renderList('report-meeters', data.meeters,
-    p => `<div class="border border-rose-100 rounded-2xl p-3.5">
-      <div class="flex items-center gap-2 mb-1">
-        <span class="font-black text-gray-800 text-base">${esc(p.name)}</span>
-        <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">${esc(p.identity || '')}</span>
+    p => `<div class="border border-rose-100 rounded-2xl p-4">
+      <div class="flex items-center flex-wrap gap-2 mb-2">
+        <span class="font-black text-gray-800 text-xl">${esc(p.name)}</span>
+        <span class="text-sm text-gray-500 bg-gray-100 px-2.5 py-0.5 rounded-full font-semibold">${esc(p.identity || '')}</span>
       </div>
       ${specialtyLine(p)}
-      ${contactLine(p, 'text-rose-500')}
-      ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">"${esc(p.reason)}"</p>` : ''}
+      ${contactLine(p, 'text-rose-600')}
+      ${p.reason ? `<p class="text-gray-700 text-base leading-relaxed mt-2">「${esc(p.reason)}」</p>` : ''}
     </div>`,
     '這次尚無新的交流邀請，<br>持續被看見，連結就會發生。'
   );
 
   renderList('report-helpers', data.helpers,
-    p => `<div class="border border-green-100 rounded-2xl p-3.5">
-      <div class="flex items-center gap-2 mb-1">
-        <span class="font-black text-gray-800 text-base">${esc(p.name)}</span>
-        <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">${esc(p.identity || '')}</span>
+    p => `<div class="border border-green-100 rounded-2xl p-4">
+      <div class="flex items-center flex-wrap gap-2 mb-2">
+        <span class="font-black text-gray-800 text-xl">${esc(p.name)}</span>
+        <span class="text-sm text-gray-500 bg-gray-100 px-2.5 py-0.5 rounded-full font-semibold">${esc(p.identity || '')}</span>
       </div>
       ${specialtyLine(p)}
-      ${contactLine(p, 'text-green-600')}
-      ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">"${esc(p.reason)}"</p>` : ''}
+      ${contactLine(p, 'text-green-700')}
+      ${p.reason ? `<p class="text-gray-700 text-base leading-relaxed mt-2">「${esc(p.reason)}」</p>` : ''}
     </div>`,
     '這次尚未媒合到協助，<br>需求越具體，越容易找到資源。'
   );
 
   renderList('report-mywants', data.myWants,
-    p => `<div class="border border-blue-100 rounded-2xl p-3.5">
-      <div class="flex items-center gap-2 mb-1">
-        <span class="font-black text-gray-800 text-base">${esc(p.name)}</span>
-        <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">${esc(p.identity || '')}</span>
-        <span class="text-xs text-blue-600 font-bold ml-auto">第 ${esc(p.table_number || '?')} 桌</span>
+    p => `<div class="border border-blue-100 rounded-2xl p-4">
+      <div class="flex items-center flex-wrap gap-2 mb-2">
+        <span class="font-black text-gray-800 text-xl">${esc(p.name)}</span>
+        <span class="text-sm text-gray-500 bg-gray-100 px-2.5 py-0.5 rounded-full font-semibold">${esc(p.identity || '')}</span>
+        <span class="text-sm text-blue-600 font-bold ml-auto">第 ${esc(p.table_number || '?')} 桌</span>
       </div>
       ${specialtyLine(p)}
-      ${contactLine(p, 'text-blue-500')}
-      ${p.needs ? `<p class="text-gray-500 text-xs mb-1">需求：${esc(p.needs)}</p>` : ''}
-      ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">你的原因：「${esc(p.reason)}」</p>` : ''}
+      ${contactLine(p, 'text-blue-600')}
+      ${p.needs ? `<p class="text-gray-600 text-sm mt-1.5 leading-relaxed">需求：${esc(p.needs)}</p>` : ''}
+      ${p.reason ? `<p class="text-gray-700 text-base leading-relaxed mt-2">你的原因：「${esc(p.reason)}」</p>` : ''}
     </div>`,
     '這次尚未建立新連結，<br>下次遇到合適夥伴，歡迎主動開口。'
   );
 
   renderList('report-myhelps', data.myHelps,
-    p => `<div class="border border-orange-100 rounded-2xl p-3.5">
-      <div class="flex items-center gap-2 mb-1">
-        <span class="font-black text-gray-800 text-base">${esc(p.name)}</span>
-        <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">${esc(p.identity || '')}</span>
-        <span class="text-xs text-orange-600 font-bold ml-auto">第 ${esc(p.table_number || '?')} 桌</span>
+    p => `<div class="border border-orange-100 rounded-2xl p-4">
+      <div class="flex items-center flex-wrap gap-2 mb-2">
+        <span class="font-black text-gray-800 text-xl">${esc(p.name)}</span>
+        <span class="text-sm text-gray-500 bg-gray-100 px-2.5 py-0.5 rounded-full font-semibold">${esc(p.identity || '')}</span>
+        <span class="text-sm text-orange-600 font-bold ml-auto">第 ${esc(p.table_number || '?')} 桌</span>
       </div>
       ${specialtyLine(p)}
-      ${contactLine(p, 'text-orange-500')}
-      ${p.needs ? `<p class="text-gray-500 text-xs mb-1">需求：${esc(p.needs)}</p>` : ''}
-      ${p.reason ? `<p class="text-gray-600 text-sm leading-relaxed">你的承諾：「${esc(p.reason)}」</p>` : ''}
+      ${contactLine(p, 'text-orange-600')}
+      ${p.needs ? `<p class="text-gray-600 text-sm mt-1.5 leading-relaxed">需求：${esc(p.needs)}</p>` : ''}
+      ${p.reason ? `<p class="text-gray-700 text-base leading-relaxed mt-2">你的承諾：「${esc(p.reason)}」</p>` : ''}
     </div>`,
     '這次尚未提供協助，<br>你的專業，可能正是別人的需要。'
   );
@@ -941,6 +941,7 @@ function esc(str) {
 function openProfileEdit() {
   if (!state.user) return;
   const u = state.user;
+  document.getElementById('edit-email').value     = u.email || '';
   document.getElementById('edit-name').value      = u.name || '';
   document.getElementById('edit-table').value     = u.tableNumber || '';
   document.getElementById('edit-specialty').value = u.specialty || '';
