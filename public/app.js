@@ -826,7 +826,7 @@ async function handleReturnLogin() {
   }
 }
 
-function handleLogout() {
+async function handleLogout() {
   clearInterval(state.speakerPollTimer);
   state.user = null;
   state.connections = {};
@@ -836,9 +836,33 @@ function handleLogout() {
   state.activeTab = 'speaker';
   localStorage.removeItem('bni_session');
 
+  // 取得目前 phase，決定登出後要回到哪個畫面
+  let phase = 'warmup';
+  try {
+    const ev = await fetch('/api/event-state').then(r => r.json());
+    phase = ev.phase || 'warmup';
+  } catch (_) { }
+
   switchTab('speaker');
-  showScreen('login');
-  showReturnLogin();
+
+  if (phase === 'ended') {
+    // 活動已結束 → 回到「商機小錦囊」領取頁面（不顯示活動登入）
+    showScreen('main');
+    updateHeaderUser(); // 確保 header 無使用者資訊
+    document.getElementById('ended-name-row')?.classList.remove('hidden');
+    // 清空可能殘留的查詢欄位與報表
+    ['ended-name-input', 'ended-email-input'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    document.getElementById('ended-report')?.classList.add('hidden');
+    document.getElementById('ended-email-form')?.classList.remove('hidden');
+    applyPhase('ended');
+    startLoginPhasePolling('ended'); // 持續追蹤 phase 變化
+  } else {
+    // 一般狀態 → 活動登入頁
+    showScreen('login');
+    showReturnLogin();
+  }
 
   // Reset form
   ['input-name', 'input-table', 'input-specialty', 'input-needs', 'input-email', 'input-phone', 'input-line', 'input-email-return'].forEach(id => {

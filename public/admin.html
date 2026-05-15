@@ -471,26 +471,28 @@
       const selected = _selectedTables.has(tableNumber);
       const spokenCount = members.filter(m => m.spoke_at).length;
       const totalCount  = members.length;
-      const ringCls = selected
+      const cardCls = selected
         ? 'border-red-500 bg-red-50/40 shadow-md'
         : 'border-gray-200 bg-white';
       const btnCls  = selected
-        ? 'bg-red-600 text-white'
-        : 'bg-red-50 text-red-600';
-      const btnText = selected ? '✓ 已選' : '🎯 抽這桌';
+        ? 'bg-red-600 text-white active:bg-red-700 ring-2 ring-red-200'
+        : 'bg-red-500 text-white active:bg-red-600 hover:bg-red-600';
+      const btnText = selected ? '✓ 已選擇' : '🎯 選此桌抽選';
 
       return `
-        <div class="border-2 rounded-2xl p-2.5 transition-all ${ringCls}">
+        <div class="border-2 rounded-2xl p-3 transition-all ${cardCls}">
+          <!-- 桌號資訊 -->
+          <div class="flex items-baseline justify-between mb-2 px-1">
+            <span class="text-sm font-bold text-gray-800">第 ${esc(tableNumber)} 桌</span>
+            <span class="text-xs text-gray-500">金手環 ${totalCount} 位・已發言 ${spokenCount} 位</span>
+          </div>
+
+          <!-- 大型「選此桌」按鈕（整列、大字、44px+ touch target） -->
           <button type="button" onclick="toggleTableSelection('${esc(tableNumber)}')"
-            class="w-full flex items-center justify-between mb-2 gap-2">
-            <span class="text-xs font-bold text-gray-700 text-left leading-tight">
-              第 ${esc(tableNumber)} 桌
-              <span class="font-normal text-gray-500">（金手環:${totalCount}位 / 已發言:${spokenCount}位）</span>
-            </span>
-            <span class="text-xs font-bold px-2 py-1 rounded-lg whitespace-nowrap transition-colors ${btnCls}">
-              ${btnText}
-            </span>
+            class="w-full py-2.5 mb-3 rounded-xl text-sm font-black transition-all shadow-sm ${btnCls}">
+            ${btnText}
           </button>
+
           ${members.map(p => renderCandidateRow(p)).join('')}
         </div>
       `;
