@@ -595,26 +595,35 @@ app.get('/api/admin/candidates', adminAuth, (req, res) => {
 });
 
 // POST /api/admin/draw — 從金手環成員隨機抽一人（不自動切換 phase）
-// 支援 tableNumber 篩選；reelPool 永遠是全部成員（含非金手環）讓大螢幕動畫熱鬧
+// 候選池支援 candidateIds（白名單）、excludeIds、tableNumber 任一組合；
+// reelPool 永遠是全部成員（含非金手環）讓大螢幕動畫熱鬧
 app.post('/api/admin/draw', adminAuth, (req, res) => {
-  const { excludeIds = [], tableNumber } = req.body;
+  const { excludeIds = [], tableNumber, candidateIds } = req.body;
 
-  // ── winner 候選池（金手環 + 排除 + 桌號篩選）──
-  let candSql = "SELECT id, name, identity, table_number, needs FROM participants WHERE identity = '金手環'";
-  const candParams = [];
-  if (excludeIds.length > 0) {
-    candSql += ` AND id NOT IN (${excludeIds.map(() => '?').join(', ')})`;
-    candParams.push(...excludeIds.map(Number));
-  }
-  if (tableNumber) {
-    candSql += ' AND table_number = ?';
-    candParams.push(String(tableNumber));
+  // ── winner 候選池 ──
+  // 優先以 candidateIds 為白名單（admin 桌卡選取模式）
+  // 否則 fallback 為 「金手環 - 已排除 - 桌號篩選（若有）」
+  let candSql, candParams;
+  if (Array.isArray(candidateIds) && candidateIds.length > 0) {
+    candSql = `SELECT id, name, identity, table_number, needs FROM participants
+               WHERE identity = '金手環' AND id IN (${candidateIds.map(() => '?').join(', ')})`;
+    candParams = candidateIds.map(Number);
+  } else {
+    candSql = "SELECT id, name, identity, table_number, needs FROM participants WHERE identity = '金手環'";
+    candParams = [];
+    if (excludeIds.length > 0) {
+      candSql += ` AND id NOT IN (${excludeIds.map(() => '?').join(', ')})`;
+      candParams.push(...excludeIds.map(Number));
+    }
+    if (tableNumber) {
+      candSql += ' AND table_number = ?';
+      candParams.push(String(tableNumber));
+    }
   }
 
   const winnerPool = dbAll(candSql, candParams);
   if (winnerPool.length === 0) {
-    const msg = tableNumber ? `第 ${tableNumber} 桌沒有可抽選的金手環成員` : '沒有可抽選的金手環成員';
-    return res.status(404).json({ error: msg });
+    return res.status(404).json({ error: '沒有可抽選的金手環成員' });
   }
 
   const winner = winnerPool[Math.floor(Math.random() * winnerPool.length)];
