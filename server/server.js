@@ -1,10 +1,11 @@
 'use strict';
 
-const express   = require('express');
-const path      = require('path');
-const fs        = require('fs');
-const multer    = require('multer');
-const Database  = require('better-sqlite3');
+const express     = require('express');
+const path        = require('path');
+const fs          = require('fs');
+const multer      = require('multer');
+const compression = require('compression');
+const Database    = require('better-sqlite3');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -219,6 +220,9 @@ function broadcastEventState() {
 // ─────────────────────────────────────────────
 // Middleware
 // ─────────────────────────────────────────────
+// gzip 壓縮：HTML/JS/CSS 自動壓縮，省 60-80% 流量
+app.use(compression());
+
 app.use(express.json());
 
 // 🔧 [PERF] 量測 API 回應時間（生產環境建議移除）
@@ -234,7 +238,16 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.static(path.join(__dirname, '..', 'public')));
+// 靜態檔加 cache header：HTML 不快取（內容會改）、圖片/音檔/JS/CSS 快取 1 小時
+app.use(express.static(path.join(__dirname, '..', 'public'), {
+  setHeaders: (res, filepath) => {
+    if (filepath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+    }
+  },
+}));
 
 const upload = multer({
   storage: multer.memoryStorage(),
