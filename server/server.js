@@ -225,19 +225,6 @@ app.use(compression());
 
 app.use(express.json());
 
-// 🔧 [PERF] 量測 API 回應時間（生產環境建議移除）
-// 超過 100ms 標 ⚠️、超過 500ms 標 🚨；event-stream 不計（長連線）
-app.use((req, res, next) => {
-  if (req.url.startsWith('/api/event-stream')) return next();
-  const start = Date.now();
-  res.on('finish', () => {
-    const ms = Date.now() - start;
-    const tag = ms > 500 ? '🚨' : ms > 100 ? '⚠️ ' : '  ';
-    console.log(`${tag} ${String(ms).padStart(4)}ms  ${req.method.padEnd(6)} ${req.url}`);
-  });
-  next();
-});
-
 // 靜態檔加 cache header：HTML 不快取（內容會改）、圖片/音檔/JS/CSS 快取 1 小時
 app.use(express.static(path.join(__dirname, '..', 'public'), {
   setHeaders: (res, filepath) => {

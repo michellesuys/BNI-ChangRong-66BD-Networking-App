@@ -40,112 +40,112 @@
       <!-- Logo -->
       <div class="text-center mb-6">
         <img src="/images/bni-logo.png" class="h-20 mx-auto mb-3" alt="BNI">
-        <h1 class="text-xl font-black text-gray-800 leading-tight">BNI 長榮 20 周年慶</h1>
-        <p class="text-red-600 font-bold text-base mt-0.5">商機變變變・產業閃電秀</p>
-        <p class="text-gray-400 text-xs mt-1">拒絕無效社交，用數據與視覺證明你的產業影響力</p>
+        <h1 class="text-2xl font-black text-gray-800 leading-tight">BNI 長榮 20 周年慶</h1>
+        <p class="text-red-600 font-bold text-lg mt-1">商機變變變・產業閃電秀</p>
+        <p class="text-gray-500 text-sm mt-1.5">拒絕無效社交，用數據與視覺證明你的產業影響力</p>
       </div>
 
       <!-- 第一次使用：完整表單 -->
       <div id="form-fullreg" class="hidden bg-white rounded-3xl shadow-xl p-6 space-y-4">
-        <p class="text-gray-500 text-sm text-center">✨ 歡迎報名參加，請填寫基本資料</p>
+        <p class="text-gray-600 text-base text-center">✨ 歡迎報名參加，請填寫基本資料</p>
 
         <!-- 姓名 -->
         <div>
-          <label class="block text-gray-700 font-bold mb-1.5 text-sm">你的名字 <span class="text-red-500">*</span></label>
+          <label class="block text-gray-700 font-bold mb-2 text-base">你的名字 <span class="text-red-500">*</span></label>
           <input id="input-name" type="text" placeholder="請輸入姓名" maxlength="20" autocomplete="name"
             class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 text-lg font-medium focus:border-red-500 focus:outline-none transition-colors">
         </div>
 
         <!-- 桌號 -->
         <div>
-          <label class="block text-gray-700 font-bold mb-1.5 text-sm">桌號 <span class="text-red-500">*</span></label>
+          <label class="block text-gray-700 font-bold mb-2 text-base">桌號 <span class="text-red-500">*</span></label>
           <input id="input-table" type="number" placeholder="請輸入桌號" min="1" max="99"
             class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 text-lg font-medium focus:border-red-500 focus:outline-none transition-colors">
         </div>
 
         <!-- 專業別 -->
         <div>
-          <label class="block text-gray-700 font-bold mb-1.5 text-sm">專業別 <span class="text-red-500">*</span></label>
+          <label class="block text-gray-700 font-bold mb-2 text-base">專業別 <span class="text-red-500">*</span></label>
           <input id="input-specialty" type="text" placeholder="例如：室內設計、保險、餐飲" maxlength="50"
             class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 text-lg font-medium focus:border-red-500 focus:outline-none transition-colors">
         </div>
 
         <!-- 商務需求 -->
         <div>
-          <label class="block text-gray-700 font-bold mb-1.5 text-sm">我在商務上需要的協助 <span class="text-red-500">*</span></label>
+          <label class="block text-gray-700 font-bold mb-2 text-base">我在商務上需要的協助 <span class="text-red-500">*</span></label>
           <textarea id="input-needs" placeholder="例如：希望認識建設業或室內設計的夥伴" maxlength="200" rows="2"
-            class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 text-base font-medium focus:border-red-500 focus:outline-none transition-colors resize-none"></textarea>
+            class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 text-lg font-medium focus:border-red-500 focus:outline-none transition-colors resize-none"></textarea>
         </div>
 
         <!-- 身份 -->
         <div>
-          <label class="block text-gray-700 font-bold mb-2 text-sm">身份別 <span class="text-red-500">*</span></label>
+          <label class="block text-gray-700 font-bold mb-2 text-base">身份別 <span class="text-red-500">*</span></label>
           <div class="flex gap-2">
             <label id="role-label-member" class="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-gray-200 cursor-pointer transition-all">
-              <input type="radio" name="identity" value="長榮會員" class="w-4 h-4 accent-red-600" onchange="updateRoleStyle()">
-              <span class="text-gray-700 text-sm font-semibold text-center leading-tight">長榮<br>會員</span>
+              <input type="radio" name="identity" value="長榮會員" class="w-5 h-5 accent-red-600" onchange="updateRoleStyle()">
+              <span class="text-gray-700 text-base font-semibold text-center leading-tight">長榮<br>會員</span>
             </label>
             <label id="role-label-guest" class="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-gray-200 cursor-pointer transition-all">
-              <input type="radio" name="identity" value="金手環" class="w-4 h-4 accent-red-600" onchange="updateRoleStyle()">
-              <span class="text-gray-700 text-sm font-semibold text-center leading-tight">金手環</span>
+              <input type="radio" name="identity" value="金手環" class="w-5 h-5 accent-red-600" onchange="updateRoleStyle()">
+              <span class="text-gray-700 text-base font-semibold text-center leading-tight">金手環</span>
             </label>
             <label id="role-label-friend" class="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-gray-200 cursor-pointer transition-all">
-              <input type="radio" name="identity" value="銀手環" class="w-4 h-4 accent-red-600" onchange="updateRoleStyle()">
-              <span class="text-gray-700 text-sm font-semibold text-center leading-tight">銀手環</span>
+              <input type="radio" name="identity" value="銀手環" class="w-5 h-5 accent-red-600" onchange="updateRoleStyle()">
+              <span class="text-gray-700 text-base font-semibold text-center leading-tight">銀手環</span>
             </label>
           </div>
         </div>
 
         <!-- Email（必填） -->
         <div>
-          <label class="block text-gray-700 font-bold mb-1.5 text-sm">Email <span class="text-red-500">*</span></label>
+          <label class="block text-gray-700 font-bold mb-2 text-base">Email <span class="text-red-500">*</span></label>
           <input id="input-email" type="email" placeholder="請填寫可收件的 Email" autocomplete="email"
-            class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 text-base font-medium focus:border-red-500 focus:outline-none transition-colors">
-          <p class="text-gray-400 text-xs mt-1">活動結束後，與您交流的夥伴名片將自動寄送到此信箱</p>
+            class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 text-lg font-medium focus:border-red-500 focus:outline-none transition-colors">
+          <p class="text-gray-500 text-sm mt-1.5">活動結束後，與您交流的夥伴名片將自動寄送到此信箱</p>
         </div>
 
         <!-- 電話 / LINE ID（擇一必填） -->
         <div>
-          <label class="block text-gray-700 font-bold mb-1.5 text-sm">電話 / LINE ID <span class="text-red-500">*</span> <span class="text-gray-400 font-normal text-xs">（擇一填寫即可）</span></label>
+          <label class="block text-gray-700 font-bold mb-2 text-base">電話 / LINE ID <span class="text-red-500">*</span> <span class="text-gray-500 font-normal text-sm">（擇一填寫即可）</span></label>
           <div class="space-y-2">
             <input id="input-phone" type="tel" placeholder="電話，例如：0912345678" autocomplete="tel"
-              class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 text-base font-medium focus:border-red-500 focus:outline-none transition-colors">
+              class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 text-lg font-medium focus:border-red-500 focus:outline-none transition-colors">
             <input id="input-line" type="text" placeholder="LINE ID" maxlength="50"
-              class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 text-base font-medium focus:border-red-500 focus:outline-none transition-colors">
+              class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 text-lg font-medium focus:border-red-500 focus:outline-none transition-colors">
           </div>
-          <p class="text-gray-400 text-xs mt-1">活動結束後，將作為名片與您交流的夥伴交換聯絡方式</p>
+          <p class="text-gray-500 text-sm mt-1.5">活動結束後，將作為名片與您交流的夥伴交換聯絡方式</p>
         </div>
 
         <!-- 送出 -->
         <button id="btn-login" onclick="handleLogin()"
-          class="w-full bg-red-600 text-white text-lg font-black py-4 rounded-2xl shadow-lg active:bg-red-700 transition-all">
+          class="w-full bg-red-600 text-white text-xl font-black py-5 rounded-2xl shadow-lg active:bg-red-700 transition-all">
           加入活動！
         </button>
 
         <button onclick="showReturnLogin()"
-          class="w-full text-gray-400 text-sm py-2 underline">
+          class="w-full text-gray-500 text-base py-2 underline">
           ← 返回
         </button>
       </div>
 
       <!-- 預設入口：Email 登入 -->
       <div id="form-return" class="bg-white rounded-3xl shadow-xl p-6 space-y-4">
-        <p class="text-gray-500 text-sm text-center">✨ 輸入 Email 加入活動</p>
+        <p class="text-gray-600 text-base text-center">✨ 輸入 Email 加入活動</p>
 
         <div>
-          <label class="block text-gray-700 font-bold mb-1.5 text-sm">Email</label>
+          <label class="block text-gray-700 font-bold mb-2 text-base">Email</label>
           <input id="input-email-return" type="email" placeholder="請輸入你的 Email" autocomplete="email"
             class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 text-lg font-medium focus:border-red-500 focus:outline-none transition-colors">
-          <p class="text-gray-400 text-xs mt-1">若第一次參加，請點下方「首次填寫完整資料」</p>
+          <p class="text-gray-500 text-sm mt-1.5">若第一次參加，請點下方「首次填寫完整資料」</p>
         </div>
 
         <button id="btn-return" onclick="handleReturnLogin()"
-          class="w-full bg-red-600 text-white text-lg font-black py-4 rounded-2xl shadow-lg active:bg-red-700 transition-all">
+          class="w-full bg-red-600 text-white text-xl font-black py-5 rounded-2xl shadow-lg active:bg-red-700 transition-all">
           進入活動
         </button>
 
         <button onclick="showFullReg()"
-          class="w-full text-gray-400 text-sm py-2 underline">
+          class="w-full text-gray-500 text-base py-2 underline">
           首次填寫完整資料 →
         </button>
       </div>
@@ -153,7 +153,7 @@
       <!-- 活動介紹（給會員邀請來的賓客） -->
       <div class="text-center mt-6">
         <a href="/about.html"
-          class="inline-flex items-center gap-1.5 text-red-600 font-semibold text-sm py-2 px-4 rounded-full border border-red-200 bg-white shadow-sm active:bg-red-50 transition-colors">
+          class="inline-flex items-center gap-1.5 text-red-600 font-bold text-base py-2.5 px-5 rounded-full border-2 border-red-200 bg-white shadow-sm active:bg-red-50 transition-colors">
           🎁 第一次參加？了解你能獲得什麼
         </a>
       </div>
@@ -169,29 +169,29 @@
     <!-- Header -->
     <header class="bg-red-600 px-4 py-3 flex items-center justify-between shadow-lg sticky top-0 z-20">
       <div class="min-w-0">
-        <h1 class="text-white font-black text-base leading-tight">長榮 20 周年慶<br>商機變變變・產業閃電秀</h1>
-        <p class="text-red-200 text-xs mt-0.5 truncate" id="header-user"></p>
+        <h1 class="text-white font-black text-lg leading-tight">長榮 20 周年慶<br>商機變變變・產業閃電秀</h1>
+        <p class="text-red-200 text-sm mt-1 truncate" id="header-user"></p>
       </div>
       <div class="flex items-center gap-2 ml-3 shrink-0">
         <button id="header-edit-btn" onclick="openProfileEdit()"
-          class="hidden text-red-200 text-xs border border-red-400 rounded-xl px-3 py-1.5 active:bg-red-700 transition-colors">
+          class="hidden text-white text-sm font-semibold border border-red-300 rounded-xl px-3 py-2 active:bg-red-700 transition-colors">
           ✏️ 編輯
         </button>
         <button id="header-logout-btn" onclick="handleLogout()"
-          class="hidden text-red-200 text-xs border border-red-400 rounded-xl px-3 py-1.5 active:bg-red-700 transition-colors">
+          class="hidden text-white text-sm font-semibold border border-red-300 rounded-xl px-3 py-2 active:bg-red-700 transition-colors">
           登出
         </button>
       </div>
     </header>
 
     <!-- Tabs -->
-    <nav class="bg-white shadow-sm sticky top-[60px] z-10 flex border-b border-gray-100">
+    <nav class="bg-white shadow-sm sticky top-[64px] z-10 flex border-b border-gray-100">
       <button id="tab-btn-speaker" onclick="switchTab('speaker')"
-        class="flex-1 py-3.5 text-center text-gray-500 font-semibold text-base tab-active transition-colors">
+        class="flex-1 py-4 text-center text-gray-500 font-bold text-lg tab-active transition-colors">
         🎤 目前發言者
       </button>
       <button id="tab-btn-browse" onclick="switchTab('browse')"
-        class="flex-1 py-3.5 text-center text-gray-500 font-semibold text-base transition-colors">
+        class="flex-1 py-4 text-center text-gray-500 font-bold text-lg transition-colors">
         👥 所有來賓
       </button>
     </nav>
@@ -245,10 +245,10 @@
           </div>
           <p id="ended-email-error" class="hidden text-red-500 text-base font-semibold text-center"></p>
           <button id="ended-email-btn" onclick="submitEmailForReport()"
-            class="w-full bg-red-600 text-white text-lg font-black py-4 rounded-2xl shadow-lg active:bg-red-700 transition-all">
+            class="w-full bg-red-600 text-white text-xl font-black py-5 rounded-2xl shadow-lg active:bg-red-700 transition-all">
             查看我的商機小錦囊
           </button>
-          <p class="text-gray-400 text-sm text-center leading-relaxed">如未填寫 Email，請聯繫現場工作人員</p>
+          <p class="text-gray-500 text-sm text-center leading-relaxed">如未填寫 Email，請聯繫現場工作人員</p>
         </div>
       </div>
 
@@ -269,7 +269,7 @@
             <p class="text-rose-500 text-sm mt-1 leading-relaxed">以下夥伴在活動中表達想與你深入交流</p>
           </div>
           <div id="report-meeters" class="p-4 space-y-3">
-            <p class="text-gray-400 text-base text-center py-4">無記錄</p>
+            <p class="text-gray-500 text-base text-center py-4">無記錄</p>
           </div>
         </div>
 
@@ -280,7 +280,7 @@
             <p class="text-green-500 text-sm mt-1 leading-relaxed">以下夥伴表示能提供你所需的協助</p>
           </div>
           <div id="report-helpers" class="p-4 space-y-3">
-            <p class="text-gray-400 text-base text-center py-4">無記錄</p>
+            <p class="text-gray-500 text-base text-center py-4">無記錄</p>
           </div>
         </div>
 
@@ -291,7 +291,7 @@
             <p class="text-blue-500 text-sm mt-1 leading-relaxed">你在活動中選擇想深入交流的夥伴</p>
           </div>
           <div id="report-mywants" class="p-4 space-y-3">
-            <p class="text-gray-400 text-base text-center py-4">無記錄</p>
+            <p class="text-gray-500 text-base text-center py-4">無記錄</p>
           </div>
         </div>
 
@@ -302,7 +302,7 @@
             <p class="text-orange-500 text-sm mt-1 leading-relaxed">你在活動中表示可以提供協助的夥伴</p>
           </div>
           <div id="report-myhelps" class="p-4 space-y-3">
-            <p class="text-gray-400 text-base text-center py-4">無記錄</p>
+            <p class="text-gray-500 text-base text-center py-4">無記錄</p>
           </div>
         </div>
 
@@ -311,12 +311,14 @@
 
     <!-- ── 所有來賓 Tab ── -->
     <div id="tab-browse" class="hidden flex-1 flex flex-col">
-      <div class="sticky top-[112px] z-10 bg-gray-50 px-4 pt-3 pb-2">
+      <div class="sticky top-[128px] z-10 bg-gray-50 px-4 pt-3 pb-2">
+        <label for="search-input" class="sr-only">搜尋來賓</label>
         <input id="search-input" type="search" placeholder="🔍 搜尋姓名、專業別、商務需求..." oninput="filterParticipants()"
-          class="w-full bg-white border-2 border-gray-200 rounded-2xl px-4 py-3 text-base focus:border-red-500 focus:outline-none transition-colors">
+          aria-label="搜尋來賓姓名、專業別或商務需求"
+          class="w-full bg-white border-2 border-gray-200 rounded-2xl px-4 py-3.5 text-lg focus:border-red-500 focus:outline-none transition-colors">
       </div>
       <div id="participants-list" class="flex-1 px-4 pb-6 pt-2 overflow-y-auto">
-        <div class="text-center py-16 text-gray-400">載入中...</div>
+        <div class="text-center py-16 text-gray-400 text-lg">載入中...</div>
       </div>
     </div>
   </div>
@@ -329,22 +331,22 @@
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden">
 
       <div id="reason-modal-header" class="bg-red-600 px-5 py-4">
-        <h2 class="text-white font-black text-lg" id="reason-modal-title">填寫原因</h2>
-        <p class="text-red-200 text-sm mt-0.5" id="reason-modal-subtitle">請描述你的想法</p>
+        <h2 class="text-white font-black text-xl" id="reason-modal-title">填寫原因</h2>
+        <p class="text-red-200 text-base mt-1" id="reason-modal-subtitle">請描述你的想法</p>
       </div>
 
       <div class="p-5 space-y-4">
         <div>
           <div id="reason-options-container"></div>
-          <p class="text-gray-400 text-xs mt-3">送出後不可修改</p>
+          <p class="text-gray-500 text-sm mt-3">送出後不可修改</p>
         </div>
 
         <button id="reason-submit-btn" onclick="submitReason()"
-          class="w-full bg-red-600 text-white text-base font-black py-4 rounded-2xl shadow-lg active:bg-red-700 transition-all">
+          class="w-full bg-red-600 text-white text-xl font-black py-5 rounded-2xl shadow-lg active:bg-red-700 transition-all">
           確認送出
         </button>
         <button onclick="closeReasonModal()"
-          class="w-full border-2 border-gray-200 text-gray-500 font-bold py-3 rounded-2xl text-sm active:bg-gray-50">
+          class="w-full border-2 border-gray-200 text-gray-600 font-bold py-3 rounded-2xl text-base active:bg-gray-50">
           取消
         </button>
       </div>
@@ -368,7 +370,7 @@
         <div>
           <label class="block text-gray-700 font-bold mb-1 text-sm">
             Email
-            <span class="text-gray-400 font-normal text-xs ml-1">（不可修改）</span>
+            <span class="text-gray-500 font-normal text-sm ml-1">（不可修改）</span>
           </label>
           <input id="edit-email" type="email" readonly
             class="w-full border-2 border-gray-100 rounded-2xl px-4 py-3 text-base font-medium bg-gray-50 text-gray-500 cursor-not-allowed">
@@ -404,7 +406,7 @@
             class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 text-base font-medium focus:border-red-500 focus:outline-none transition-colors">
         </div>
         <div>
-          <label class="block text-gray-700 font-bold mb-2 text-sm">身份別 <span class="text-red-500">*</span></label>
+          <label class="block text-gray-700 font-bold mb-2 text-base">身份別 <span class="text-red-500">*</span></label>
           <div class="flex gap-2">
             <label class="flex-1 flex items-center justify-center gap-1.5 p-2.5 rounded-xl border-2 border-gray-200 cursor-pointer transition-all edit-role-label">
               <input type="radio" name="edit-identity" value="長榮會員" class="w-4 h-4 accent-red-600" onchange="updateEditRoleStyle()">

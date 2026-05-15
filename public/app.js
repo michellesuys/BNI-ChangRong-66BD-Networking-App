@@ -212,10 +212,19 @@ function applyPhase(phase) {
     if (tabSpeaker) tabSpeaker.classList.add('hidden');
     if (tabBrowse) tabBrowse.classList.add('hidden');
     tabEnded.classList.remove('hidden');
+    // 小錦囊頁面一律顯示「重新查詢」按鈕（含未登入查詢使用者）
+    const logoutBtn = document.getElementById('header-logout-btn');
+    if (logoutBtn) {
+      logoutBtn.classList.remove('hidden');
+      logoutBtn.textContent = state.user ? '登出' : '重新查詢';
+    }
     showEndedScreen();
   } else {
     if (tabNav) tabNav.classList.remove('hidden');
     tabEnded.classList.add('hidden');
+    // 非 ended 階段：登出按鈕文字還原（由 updateHeaderUser 控制顯隱）
+    const logoutBtn = document.getElementById('header-logout-btn');
+    if (logoutBtn) logoutBtn.textContent = '登出';
     // 恢復目前 active tab
     if (state.activeTab === 'browse') {
       if (tabSpeaker) tabSpeaker.classList.add('hidden');
@@ -304,7 +313,7 @@ function renderReport(data) {
     const el = document.getElementById(containerId);
     if (!el) return;
     if (!items?.length) {
-      el.innerHTML = `<p class="text-gray-400 text-base text-center py-4 leading-relaxed">${emptyMsg}</p>`;
+      el.innerHTML = `<p class="text-gray-500 text-base text-center py-4 leading-relaxed">${emptyMsg}</p>`;
       return;
     }
     el.innerHTML = items.map(renderFn).join('');
@@ -429,17 +438,17 @@ function openReasonModal(participantId, type, source) {
   const options = REASON_OPTIONS[type] || [];
   const container = document.getElementById('reason-options-container');
   container.innerHTML = `
-    <label class="block text-gray-700 font-semibold text-sm mb-1.5">
-      原因 <span class="text-gray-400 font-normal">（選填）</span>
+    <label class="block text-gray-700 font-bold text-base mb-2">
+      原因 <span class="text-gray-500 font-normal text-sm">（選填）</span>
     </label>
     <textarea id="reason-custom-input" rows="2" maxlength="80"
       placeholder="${esc(placeholder)}"
-      class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 text-sm focus:border-red-500 focus:outline-none transition-colors resize-none"></textarea>
-    <p class="text-gray-400 text-xs mt-2 mb-1">💡 快速帶入常見原因：</p>
+      class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 text-base focus:border-red-500 focus:outline-none transition-colors resize-none"></textarea>
+    <p class="text-gray-500 text-sm mt-3 mb-2">💡 快速帶入常見原因：</p>
     <div id="reason-chips" class="flex flex-wrap gap-2">
       ${options.map(opt => `
         <button type="button" data-reason="${esc(opt)}"
-          class="reason-chip px-3 py-2 rounded-full border-2 border-gray-200 text-gray-600 text-sm font-medium active:scale-95 transition-all hover:border-red-300">
+          class="reason-chip px-4 py-2.5 rounded-full border-2 border-gray-200 text-gray-700 text-base font-medium active:scale-95 transition-all hover:border-red-300">
           ${esc(opt)}
         </button>
       `).join('')}
@@ -534,8 +543,8 @@ function renderSpeaker() {
     el.innerHTML = `
       <div class="text-center py-20 text-gray-400">
         <div class="text-6xl mb-4">🎤</div>
-        <p class="text-xl font-semibold">等待發言者...</p>
-        <p class="text-sm mt-2">請稍候，等待下一位發言者</p>
+        <p class="text-2xl font-semibold">等待發言者...</p>
+        <p class="text-base mt-2">請稍候，等待下一位發言者</p>
       </div>
     `;
     return;
@@ -549,36 +558,36 @@ function renderSpeaker() {
   el.innerHTML = `
     <div class="bg-white rounded-3xl shadow-lg overflow-hidden mb-4">
       <div class="bg-red-600 px-5 py-3 flex items-center gap-2">
-        <span class="bg-white text-red-600 text-xs font-black px-2 py-0.5 rounded-full pulse-red">LIVE</span>
-        <span class="text-white font-bold text-sm">目前發言者</span>
+        <span class="bg-white text-red-600 text-sm font-black px-2.5 py-0.5 rounded-full pulse-red">LIVE</span>
+        <span class="text-white font-bold text-base">目前發言者</span>
       </div>
 
       <div class="px-5 pt-5 pb-4">
-        <h2 class="text-4xl font-black text-gray-800 mb-1">${esc(s.name)}</h2>
-        <p class="text-gray-500 text-base">${esc(s.identity || s.industry || '')}</p>
-        ${s.specialty ? `<p class="text-gray-400 text-sm mt-0.5">🏷️ ${esc(s.specialty)}</p>` : ''}
-        <p class="text-red-600 font-bold text-base mt-1">
-          📍 第 <span class="text-2xl">${esc(s.table_number || '?')}</span> 桌
+        <h2 class="text-5xl font-black text-gray-800 mb-2">${esc(s.name)}</h2>
+        <p class="text-gray-600 text-lg">${esc(s.identity || s.industry || '')}</p>
+        ${s.specialty ? `<p class="text-gray-500 text-base mt-1">🏷️ ${esc(s.specialty)}</p>` : ''}
+        <p class="text-red-600 font-bold text-lg mt-2">
+          📍 第 <span class="text-3xl">${esc(s.table_number || '?')}</span> 桌
         </p>
 
         ${s.needs ? `
           <div class="mt-4 bg-red-50 border border-red-100 rounded-2xl p-4">
-            <p class="text-red-600 text-xs font-bold uppercase tracking-wide mb-1">我在商務上需要的協助</p>
-            <p class="text-gray-700 text-base leading-relaxed">${esc(s.needs)}</p>
+            <p class="text-red-600 text-sm font-bold uppercase tracking-wide mb-1.5">我在商務上需要的協助</p>
+            <p class="text-gray-800 text-lg leading-relaxed">${esc(s.needs)}</p>
           </div>
         ` : ''}
       </div>
 
       ${isSelf ? `
         <div class="px-5 pb-5">
-          <p class="text-center text-gray-400 text-sm py-3 bg-gray-50 rounded-2xl">這是你自己的發言</p>
+          <p class="text-center text-gray-500 text-base py-3 bg-gray-50 rounded-2xl">這是你自己的發言</p>
         </div>
       ` : `
         <div class="px-5 pb-5 grid grid-cols-2 gap-3">
           <button
             onclick="openReasonModal(${s.id}, 'want_to_meet', 'speaker')"
             ${wantMeet ? 'disabled' : ''}
-            class="py-5 rounded-2xl font-bold text-base border-2 transition-all ${wantMeet
+            class="py-6 rounded-2xl font-black text-lg border-2 transition-all ${wantMeet
       ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
       : 'border-red-500 text-red-600 bg-white active:bg-red-50'
     }"
@@ -588,7 +597,7 @@ function renderSpeaker() {
           <button
             onclick="openReasonModal(${s.id}, 'can_provide', 'speaker')"
             ${canProvide ? 'disabled' : ''}
-            class="py-5 rounded-2xl font-bold text-base border-2 transition-all ${canProvide
+            class="py-6 rounded-2xl font-black text-lg border-2 transition-all ${canProvide
       ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
       : 'border-red-500 text-red-600 bg-white active:bg-red-50'
     }"
@@ -598,7 +607,7 @@ function renderSpeaker() {
         </div>
       `}
     </div>
-    <p class="text-center text-gray-400 text-xs">每 5 秒自動同步發言者</p>
+    <p class="text-center text-gray-500 text-sm">每 5 秒自動同步發言者</p>
   `;
 
   updateRewardBanner();
@@ -624,7 +633,7 @@ function renderParticipantsList() {
   if (list.length === 0) {
     el.innerHTML = `<div class="text-center py-16 text-gray-400">
       <div class="text-4xl mb-2">🔍</div>
-      <p>找不到符合的成員</p>
+      <p class="text-lg">找不到符合的成員</p>
     </div>`;
     return;
   }
@@ -643,23 +652,23 @@ function renderParticipantsList() {
           <div class="flex items-start justify-between mb-3">
             <div class="min-w-0 flex-1">
               <div class="flex items-center gap-2 flex-wrap">
-                <h3 class="text-xl font-black text-gray-800">${esc(p.name)}</h3>
-                ${isSpeaker ? '<span class="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">發言中</span>' : ''}
-                ${isSelf ? '<span class="bg-gray-200 text-gray-500 text-xs px-2 py-0.5 rounded-full font-semibold">我</span>' : ''}
-                ${hasAny ? '<span class="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-semibold">已互動</span>' : ''}
+                <h3 class="text-2xl font-black text-gray-800">${esc(p.name)}</h3>
+                ${isSpeaker ? '<span class="bg-red-600 text-white text-sm px-2.5 py-0.5 rounded-full font-bold">發言中</span>' : ''}
+                ${isSelf ? '<span class="bg-gray-200 text-gray-600 text-sm px-2.5 py-0.5 rounded-full font-semibold">我</span>' : ''}
+                ${hasAny ? '<span class="bg-red-100 text-red-600 text-sm px-2.5 py-0.5 rounded-full font-semibold">已互動</span>' : ''}
               </div>
-              <p class="text-gray-500 text-sm mt-0.5">${esc(p.identity || p.industry || '')}</p>
-              ${p.specialty ? `<p class="text-gray-400 text-xs mt-0.5">🏷️ ${esc(p.specialty)}</p>` : ''}
+              <p class="text-gray-600 text-base mt-1">${esc(p.identity || p.industry || '')}</p>
+              ${p.specialty ? `<p class="text-gray-500 text-sm mt-0.5">🏷️ ${esc(p.specialty)}</p>` : ''}
             </div>
-            <span class="text-red-600 font-bold text-sm whitespace-nowrap ml-2">
+            <span class="text-red-600 font-bold text-lg whitespace-nowrap ml-2">
               第 ${esc(p.table_number || '?')} 桌
             </span>
           </div>
 
           ${p.needs ? `
             <div class="mt-1 mb-3 bg-red-50 border border-red-100 rounded-xl p-3">
-              <p class="text-red-600 text-xs font-bold uppercase tracking-wide mb-0.5">在商務上需要的協助</p>
-              <p class="text-gray-700 text-sm leading-relaxed">${esc(p.needs)}</p>
+              <p class="text-red-600 text-sm font-bold uppercase tracking-wide mb-1">在商務上需要的協助</p>
+              <p class="text-gray-800 text-base leading-relaxed">${esc(p.needs)}</p>
             </div>
           ` : ''}
 
@@ -668,9 +677,9 @@ function renderParticipantsList() {
               <button
                 onclick="openReasonModal(${p.id}, 'want_to_meet', 'browse')"
                 ${wantMeet ? 'disabled' : ''}
-                class="py-3.5 rounded-xl font-bold text-sm border-2 transition-all ${wantMeet
+                class="py-5 rounded-xl font-black text-base border-2 transition-all ${wantMeet
           ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-          : 'border-gray-300 text-gray-600 bg-white active:bg-gray-50'
+          : 'border-gray-300 text-gray-700 bg-white active:bg-gray-50'
         }"
               >
                 ${wantMeet ? '✓ 已送出認識' : '🤝 我想認識他'}
@@ -678,9 +687,9 @@ function renderParticipantsList() {
               <button
                 onclick="openReasonModal(${p.id}, 'can_provide', 'browse')"
                 ${canProvide ? 'disabled' : ''}
-                class="py-3.5 rounded-xl font-bold text-sm border-2 transition-all ${canProvide
+                class="py-5 rounded-xl font-black text-base border-2 transition-all ${canProvide
           ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-          : 'border-gray-300 text-gray-600 bg-white active:bg-gray-50'
+          : 'border-gray-300 text-gray-700 bg-white active:bg-gray-50'
         }"
               >
                 ${canProvide ? '✓ 已送出幫助' : '💼 我想幫助商務串聯'}

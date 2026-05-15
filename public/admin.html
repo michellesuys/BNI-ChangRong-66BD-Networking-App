@@ -502,18 +502,19 @@
       const hasSpoken  = !!p.spoke_at;
       const spokenTime = hasSpoken ? p.spoke_at.substring(11, 16) : '';
       const excluded   = _excludedIds.has(p.id);
-      // 按鈕設計：未排除 = 灰底實心 ✕（點 = 排除）、已排除 = 紅底實心 ✕（點 = 取消排除）
+      // 未排除 → 空圓圈（hover 顯示 ✕ 提示可排除）；已排除 → 紅底實心 ✕（點 = 取消排除）
       const btnCls  = excluded
         ? 'bg-red-500 border-red-500 text-white'
-        : 'bg-gray-100 border-gray-300 text-gray-500 hover:bg-red-50 hover:border-red-400 hover:text-red-500';
+        : 'bg-white border-gray-300 text-transparent hover:bg-red-50 hover:border-red-400 hover:text-red-500';
       const btnTitle = excluded ? '點擊加入抽選' : '點擊排除';
+      const btnIcon  = excluded ? '✕' : '';
       return `
         <div class="flex items-center gap-2 py-1.5 border-b border-gray-100 last:border-0" id="candidate-row-${p.id}">
           <button type="button" onclick="event.stopPropagation(); toggleCandidate(${p.id}, ${hasSpoken})"
             id="candidate-btn-${p.id}"
             title="${btnTitle}"
             class="w-7 h-7 flex items-center justify-center rounded-full border-2 flex-shrink-0 transition-all text-xs font-black ${btnCls}">
-            ✕
+            ${btnIcon}
           </button>
           <span id="candidate-name-${p.id}"
             class="flex-1 text-sm font-medium truncate ${excluded ? 'text-gray-400 line-through' : 'text-gray-700'}">
