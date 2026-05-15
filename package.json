@@ -7,8 +7,7 @@
     "start": "node server/server.js",
     "dev": "nodemon server/server.js",
     "build:css": "tailwindcss -i ./src/tailwind.css -o ./public/css/tailwind.css --minify",
-    "watch:css": "tailwindcss -i ./src/tailwind.css -o ./public/css/tailwind.css --watch",
-    "postinstall": "npm run build:css"
+    "watch:css": "tailwindcss -i ./src/tailwind.css -o ./public/css/tailwind.css --watch"
   },
   "dependencies": {
     "better-sqlite3": "^12.8.0",
