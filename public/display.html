@@ -466,7 +466,7 @@
     }
 
     /* ──────────────────────────
-       Drawing screen (轉盤抽選)
+       Drawing screen (轉盤抽選) — 與 warmup 同款紅色漸層 + 飄動球
     ────────────────────────── */
     #screen-drawing {
       display: none;
@@ -476,10 +476,17 @@
       min-height: 100vh;
       text-align: center;
       gap: 2rem;
-      position: relative;
-      z-index: 5;
+      position: fixed;
+      inset: 0;
+      z-index: 50;
       padding: 2rem;
+      background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 50%, #7f1d1d 100%);
+      overflow: hidden;
     }
+    #drawing-bubble-canvas {
+      position: absolute; inset: 0; pointer-events: none; z-index: 0;
+    }
+    #screen-drawing > * { position: relative; z-index: 1; }
     #screen-drawing .draw-title-row {
       color: white;
     }
@@ -607,6 +614,7 @@
 
 <!-- ── Drawing (抽選動畫) ── -->
 <div id="screen-drawing">
+  <canvas id="drawing-bubble-canvas"></canvas>
   <div class="draw-title-row">
     <p class="draw-eyebrow">BNI 長榮 20 周年慶</p>
     <h2 class="draw-title">🎰 抽選發言者</h2>
@@ -1090,6 +1098,57 @@ function showDrawing() {
   document.getElementById('screen-speaker').style.display  = 'none';
   document.getElementById('screen-ended').style.display    = 'none';
   document.getElementById('screen-drawing').style.display  = 'flex';
+  initDrawingBubbles();
+}
+
+// 抽選背景的飄動球（lazy init，第一次顯示時才啟動）
+let _drawingBubblesStarted = false;
+function initDrawingBubbles() {
+  if (_drawingBubblesStarted) return;
+  _drawingBubblesStarted = true;
+  const canvas = document.getElementById('drawing-bubble-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const screen = document.getElementById('screen-drawing');
+  function resize() {
+    canvas.width  = screen.clientWidth;
+    canvas.height = screen.clientHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const COLORS = [
+    'rgba(255,100,100,0.15)',
+    'rgba(255,200,100,0.12)',
+    'rgba(255,255,255,0.08)',
+    'rgba(200,50,50,0.10)',
+  ];
+  const balls = [];
+  for (let i = 0; i < 18; i++) {
+    balls.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: 30 + Math.random() * 80,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: (Math.random() - 0.5) * 0.4,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    });
+  }
+  (function frame() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    balls.forEach(b => {
+      b.x += b.vx; b.y += b.vy;
+      if (b.x < -b.r) b.x = canvas.width + b.r;
+      if (b.x > canvas.width + b.r) b.x = -b.r;
+      if (b.y < -b.r) b.y = canvas.height + b.r;
+      if (b.y > canvas.height + b.r) b.y = -b.r;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      ctx.fillStyle = b.color;
+      ctx.fill();
+    });
+    requestAnimationFrame(frame);
+  })();
 }
 
 function showEnded(totalConnections) {
