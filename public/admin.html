@@ -179,10 +179,17 @@
           <p class="text-red-600 font-bold text-sm mb-1">抽選結果</p>
           <p class="font-black text-gray-800 text-2xl" id="draw-result-name"></p>
           <p class="text-gray-500 text-sm" id="draw-result-detail"></p>
-          <button onclick="confirmDrawAsSpeaker()" id="draw-confirm-btn"
-            class="mt-3 bg-red-600 text-white font-bold px-6 py-2 rounded-xl text-sm active:bg-red-700">
-            設為發言者
-          </button>
+          <div class="mt-3 flex flex-col sm:flex-row gap-2 justify-center">
+            <button onclick="confirmDrawAsSpeaker()" id="draw-confirm-btn"
+              class="bg-red-600 text-white font-bold px-6 py-2 rounded-xl text-sm active:bg-red-700">
+              設為發言者
+            </button>
+            <button onclick="clearDrawResult()"
+              class="border-2 border-gray-300 text-gray-600 font-bold px-6 py-2 rounded-xl text-sm active:bg-gray-50"
+              title="清除目前抽到的名字，畫面回到「命運轉動中」待抽選狀態">
+              🔄 清除抽選結果
+            </button>
+          </div>
         </div>
       </section>
 
@@ -640,6 +647,18 @@
         showAdminToast(`第 ${tableNumber} 桌抽選結果：${_drawWinner.name}`, 'success');
       } catch (e) {
         showAdminToast('抽選失敗：' + e.message, 'error');
+      }
+    }
+
+    // 清除目前抽選結果（保持 drawing 階段，大螢幕回到「命運轉動中」）
+    async function clearDrawResult() {
+      try {
+        await adminApi('POST', '/api/admin/clear-draw');
+        document.getElementById('draw-result').classList.add('hidden');
+        _drawWinner = null;
+        showAdminToast('已清除抽選結果，回到待抽選狀態', 'success');
+      } catch (e) {
+        showAdminToast('清除失敗：' + e.message, 'error');
       }
     }
 

@@ -661,6 +661,13 @@ app.post('/api/admin/draw', adminAuth, (req, res) => {
   res.json({ success: true, winner });
 });
 
+// POST /api/admin/clear-draw — 清除抽選結果，回到「待抽選」狀態（不變更 phase）
+app.post('/api/admin/clear-draw', adminAuth, (_req, res) => {
+  dbRun("INSERT OR REPLACE INTO event_state (key, value) VALUES ('draw_result', '')");
+  broadcastEventState();
+  res.json({ success: true });
+});
+
 // POST /api/admin/add-light/:id — 手動增加燈號
 app.post('/api/admin/add-light/:id', adminAuth, (req, res) => {
   const id = Number(req.params.id);

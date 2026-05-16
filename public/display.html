@@ -466,6 +466,129 @@
     }
 
     /* ──────────────────────────
+       Warmup screen (預熱倒數)
+    ────────────────────────── */
+    #screen-warmup {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      padding: 2rem;
+      background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 50%, #7f1d1d 100%);
+      overflow: hidden;
+    }
+    #warmup-bubble-canvas {
+      position: absolute; inset: 0; pointer-events: none; z-index: 0;
+    }
+    #screen-warmup > div, #screen-warmup > p { position: relative; z-index: 1; }
+    .warmup-header { color: white; margin-bottom: 2rem; }
+    .warmup-header .header-row {
+      display: inline-flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;
+    }
+    .warmup-header .header-row img { height: 56px; }
+    .warmup-header .header-text { text-align: left; }
+    .warmup-header .header-eyebrow {
+      color: rgba(254,202,202,1); font-size: 1.25rem; font-weight: 600;
+      letter-spacing: 0.2em; text-transform: uppercase;
+    }
+    .warmup-header .header-title {
+      color: white; font-size: 3rem; font-weight: 900; line-height: 1.1;
+    }
+    .warmup-header .header-sub1 {
+      color: #FDE047; font-size: 1.5rem; font-weight: 700; margin-top: 0.5rem;
+    }
+    .warmup-header .header-sub2 {
+      color: rgba(254,202,202,1); font-size: 1.25rem; margin-top: 0.25rem;
+    }
+    .warmup-main {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2rem;
+      align-items: center; max-width: 80rem; width: 100%;
+    }
+    @media (max-width: 1024px) {
+      .warmup-main { grid-template-columns: 1fr; }
+    }
+    .warmup-card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 24px;
+      padding: 2rem;
+      width: 100%;
+    }
+    .warmup-card .card-label {
+      color: rgba(254,202,202,1); font-size: 1.25rem; font-weight: 600;
+      margin-bottom: 0.5rem; letter-spacing: 0.05em;
+    }
+    #warmup-count-display {
+      color: white; font-size: 9rem; font-weight: 900; line-height: 1;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    .warmup-card .card-sub {
+      color: rgba(254,202,202,1); font-size: 1.25rem; margin-top: 0.5rem;
+    }
+    .live-indicator {
+      display: inline-flex; align-items: center; gap: 0.5rem; margin-top: 1rem;
+    }
+    .live-indicator .dot {
+      width: 10px; height: 10px; border-radius: 50%; background: #4ade80;
+    }
+    .live-indicator span {
+      color: #86efac; font-size: 1.125rem; font-weight: 600;
+    }
+    #warmup-phase-badge {
+      margin-top: 1rem; padding: 0.5rem 1.25rem; border-radius: 9999px;
+      background: #facc15; color: #713f12; font-weight: 900; font-size: 1.25rem;
+      display: inline-block;
+    }
+    #warmup-qr-wrap {
+      background: white; border-radius: 24px; padding: 1.25rem;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: inline-block;
+    }
+    #warmup-qr-code {
+      width: 192px; height: 192px; display: flex; align-items: center;
+      justify-content: center; background: #f3f4f6; border-radius: 12px;
+    }
+    #warmup-qr-code img { width: 192px; height: 192px; border-radius: 8px; display: block; }
+    .warmup-qr-label {
+      color: white; font-weight: 700; font-size: 1.5rem; margin-top: 1rem;
+    }
+    .warmup-countdown-row {
+      display: flex; align-items: center; justify-content: center; gap: 0.75rem;
+    }
+    .cd-unit {
+      display: flex; flex-direction: column; align-items: center;
+      background: rgba(255,255,255,0.1); border-radius: 16px;
+      padding: 1rem 1.25rem; min-width: 80px;
+    }
+    .cd-value {
+      font-size: 4.5rem; font-weight: 900; line-height: 1; color: white;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+    .cd-sep {
+      color: white; font-size: 3rem; font-weight: 900; margin-bottom: 1rem;
+    }
+    .cd-tick {
+      font-size: 1.2rem; color: rgba(255,255,255,0.7); margin-top: 4px;
+    }
+    #warmup-countdown-started {
+      display: none; color: #FDE047; font-weight: 700; font-size: 1.5rem; margin-top: 1rem;
+    }
+    .warmup-footer {
+      margin-top: 2rem; color: #fca5a5; font-size: 1.125rem;
+    }
+    @keyframes count-pop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.25); color: #FDE047; }
+      100% { transform: scale(1); }
+    }
+    .count-pop { animation: count-pop 0.5s ease-out; }
+
+    /* ──────────────────────────
        Drawing screen (轉盤抽選) — 與 warmup 同款紅色漸層 + 飄動球
     ────────────────────────── */
     #screen-drawing {
@@ -609,6 +732,64 @@
   <img src="/images/bni-logo.png" class="idle-logo-img" alt="BNI">
   <h1>BNI 長榮 20 周年慶<br>商機變變變・產業閃電秀</h1>
   <p>等待發言者上台…</p>
+</div>
+
+<!-- ── Warmup (預熱倒數) ── -->
+<div id="screen-warmup">
+  <canvas id="warmup-bubble-canvas"></canvas>
+
+  <div class="warmup-header">
+    <div class="header-row">
+      <img src="/images/bni-logo.png" alt="BNI">
+      <div class="header-text">
+        <p class="header-eyebrow">長榮分會 · 20 周年慶</p>
+        <h1 class="header-title">商機變變變・產業閃電秀</h1>
+      </div>
+    </div>
+    <p class="header-sub1">20 年磨一劍，長榮分會為你點亮全台的商機燈號。</p>
+    <p class="header-sub2">拒絕無效社交，用數據與視覺證明你的產業影響力。</p>
+  </div>
+
+  <div class="warmup-main">
+    <!-- 左：人數 -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:1rem;">
+      <div class="warmup-card">
+        <p class="card-label">目前已登記人數</p>
+        <div id="warmup-count-display">0</div>
+        <p class="card-sub">位夥伴已加入</p>
+        <div class="live-indicator">
+          <div class="dot"></div>
+          <span>即時更新中</span>
+        </div>
+      </div>
+      <div id="warmup-phase-badge">活動預熱中</div>
+    </div>
+
+    <!-- 中：QR Code -->
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div id="warmup-qr-wrap">
+        <div id="warmup-qr-code"><span style="color:#9ca3af;font-size:0.75rem;">載入中...</span></div>
+      </div>
+      <p class="warmup-qr-label">掃碼加入活動</p>
+    </div>
+
+    <!-- 右：倒數 -->
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div class="warmup-card">
+        <p class="card-label">活動開始倒數</p>
+        <div class="warmup-countdown-row">
+          <div class="cd-unit"><span class="cd-value" id="warmup-cd-hours">--</span><span class="cd-tick">時</span></div>
+          <span class="cd-sep">:</span>
+          <div class="cd-unit"><span class="cd-value" id="warmup-cd-minutes">--</span><span class="cd-tick">分</span></div>
+          <span class="cd-sep">:</span>
+          <div class="cd-unit"><span class="cd-value" id="warmup-cd-seconds">--</span><span class="cd-tick">秒</span></div>
+        </div>
+        <p id="warmup-countdown-started">活動已開始！</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="warmup-footer">BNI 長榮 20 周年慶 · 商機變變變 · 產業閃電秀</p>
 </div>
 
 <!-- ── Drawing (抽選動畫) ── -->
@@ -1073,6 +1254,7 @@ function showSpeaker() {
   document.getElementById('screen-idle').style.display     = 'none';
   document.getElementById('screen-ended').style.display    = 'none';
   document.getElementById('screen-drawing').style.display  = 'none';
+  document.getElementById('screen-warmup').style.display   = 'none';
   document.getElementById('screen-speaker').style.display  = 'flex';
   setTimeout(tryGenerateQR, 500); // wait for QRCode.js to load
   if (!S.bulbBuilt) {
@@ -1087,6 +1269,7 @@ function showIdle() {
   document.getElementById('screen-speaker').style.display  = 'none';
   document.getElementById('screen-ended').style.display    = 'none';
   document.getElementById('screen-drawing').style.display  = 'none';
+  document.getElementById('screen-warmup').style.display   = 'none';
   S.speakerId = null;
   resetLamps();
   refreshUI();
@@ -1096,8 +1279,136 @@ function showDrawing() {
   document.getElementById('screen-idle').style.display     = 'none';
   document.getElementById('screen-speaker').style.display  = 'none';
   document.getElementById('screen-ended').style.display    = 'none';
+  document.getElementById('screen-warmup').style.display   = 'none';
   document.getElementById('screen-drawing').style.display  = 'flex';
   initDrawingBubbles();
+}
+
+function showWarmupOnDisplay() {
+  document.getElementById('screen-idle').style.display     = 'none';
+  document.getElementById('screen-speaker').style.display  = 'none';
+  document.getElementById('screen-ended').style.display    = 'none';
+  document.getElementById('screen-drawing').style.display  = 'none';
+  document.getElementById('screen-warmup').style.display   = 'flex';
+  initWarmupBubbles();
+  initWarmupQR();
+}
+
+// 重置抽選畫面到「待抽選」狀態
+function resetDrawingScreen() {
+  const wrap = document.getElementById('winner-result-wrap');
+  const tip  = document.getElementById('drawing-tip');
+  const reel = document.getElementById('draw-reel');
+  if (wrap) wrap.style.display = 'none';
+  if (tip)  tip.style.display  = '';
+  if (reel) reel.innerHTML = '';
+  S.reelAnimating = false;
+  S.lastDrawnWinnerId = null;
+}
+
+// ── 預熱倒數相關 ──
+let _warmupCount = -1;
+let _warmupCountdownTarget = null;
+let _warmupCountdownInterval = null;
+let _warmupBubblesStarted = false;
+let _warmupQRReady = false;
+
+function updateWarmupCount(n) {
+  const el = document.getElementById('warmup-count-display');
+  if (!el || n === _warmupCount) return;
+  _warmupCount = n;
+  el.textContent = n;
+  el.classList.remove('count-pop');
+  void el.offsetWidth;
+  el.classList.add('count-pop');
+}
+
+function startWarmupCountdown(targetISO) {
+  if (!targetISO) return;
+  if (targetISO === _warmupCountdownTarget) return;
+  _warmupCountdownTarget = targetISO;
+  if (_warmupCountdownInterval) clearInterval(_warmupCountdownInterval);
+  function tick() {
+    const target = new Date(_warmupCountdownTarget).getTime();
+    const diff = target - Date.now();
+    const hEl = document.getElementById('warmup-cd-hours');
+    const mEl = document.getElementById('warmup-cd-minutes');
+    const sEl = document.getElementById('warmup-cd-seconds');
+    const started = document.getElementById('warmup-countdown-started');
+    if (diff <= 0) {
+      if (hEl) hEl.textContent = '00';
+      if (mEl) mEl.textContent = '00';
+      if (sEl) sEl.textContent = '00';
+      if (started) started.style.display = '';
+      clearInterval(_warmupCountdownInterval);
+      return;
+    }
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    if (hEl) hEl.textContent = String(h).padStart(2, '0');
+    if (mEl) mEl.textContent = String(m).padStart(2, '0');
+    if (sEl) sEl.textContent = String(s).padStart(2, '0');
+    if (started) started.style.display = 'none';
+  }
+  tick();
+  _warmupCountdownInterval = setInterval(tick, 1000);
+}
+
+function initWarmupQR() {
+  if (_warmupQRReady) return;
+  _warmupQRReady = true;
+  const url = 'https://bni-changrong66-yiseadata.zeabur.app/';
+  const encoded = encodeURIComponent(url);
+  const container = document.getElementById('warmup-qr-code');
+  if (container) {
+    container.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=${encoded}&margin=4&color=000000&bgcolor=FFFFFF" alt="QR Code">`;
+  }
+}
+
+function initWarmupBubbles() {
+  if (_warmupBubblesStarted) return;
+  _warmupBubblesStarted = true;
+  const canvas = document.getElementById('warmup-bubble-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const screen = document.getElementById('screen-warmup');
+  function resize() {
+    canvas.width  = screen.clientWidth;
+    canvas.height = screen.clientHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  const COLORS = [
+    'rgba(255,100,100,0.15)', 'rgba(255,200,100,0.12)',
+    'rgba(255,255,255,0.08)', 'rgba(200,50,50,0.10)',
+  ];
+  const balls = [];
+  for (let i = 0; i < 18; i++) {
+    balls.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: 30 + Math.random() * 80,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: (Math.random() - 0.5) * 0.4,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    });
+  }
+  (function frame() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    balls.forEach(b => {
+      b.x += b.vx; b.y += b.vy;
+      if (b.x < -b.r) b.x = canvas.width + b.r;
+      if (b.x > canvas.width + b.r) b.x = -b.r;
+      if (b.y < -b.r) b.y = canvas.height + b.r;
+      if (b.y > canvas.height + b.r) b.y = -b.r;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      ctx.fillStyle = b.color;
+      ctx.fill();
+    });
+    requestAnimationFrame(frame);
+  })();
 }
 
 // 抽選背景的飄動球（lazy init，第一次顯示時才啟動）
@@ -1154,6 +1465,7 @@ function showEnded(totalConnections) {
   document.getElementById('screen-idle').style.display     = 'none';
   document.getElementById('screen-speaker').style.display  = 'none';
   document.getElementById('screen-drawing').style.display  = 'none';
+  document.getElementById('screen-warmup').style.display   = 'none';
   document.getElementById('screen-ended').style.display    = 'flex';
   document.getElementById('ended-count').textContent = totalConnections || 0;
   // 生成 QR Code（與加入活動相同網址）
@@ -1316,12 +1628,14 @@ function handleState(data) {
   // 抽選動畫秒數同步（後台可調）
   if (data.drawDuration) S.drawDurationMs = data.drawDuration * 1000;
 
-  // 預熱階段：跳轉到 warmup 頁
+  // 預熱階段：在 display 內呈現倒數畫面（不再 redirect 到 /warmup）
   if (phase === 'warmup') {
     if (_currentPhase !== phase) {
       _currentPhase = phase;
-      window.location.href = '/warmup';
+      showWarmupOnDisplay();
     }
+    if (data.memberCount != null) updateWarmupCount(data.memberCount);
+    if (data.countdownTarget) startWarmupCountdown(data.countdownTarget);
     return;
   }
 
@@ -1330,11 +1644,15 @@ function handleState(data) {
     if (_currentPhase !== phase) {
       _currentPhase = phase;
       showDrawing();
-      // 清掉前一輪 winner 記憶，準備接收新 drawResult
-      S.lastDrawnWinnerId = null;
+      resetDrawingScreen();
     }
     const dr = data.drawResult;
-    if (dr && dr.winner?.id && !S.reelAnimating && dr.winner.id !== S.lastDrawnWinnerId) {
+    if (!dr || !dr.winner?.id) {
+      // 後台清除了抽選結果 → 重置畫面回到「命運轉動中」待抽選狀態
+      if (S.lastDrawnWinnerId !== null) resetDrawingScreen();
+      return;
+    }
+    if (!S.reelAnimating && dr.winner.id !== S.lastDrawnWinnerId) {
       S.lastDrawnWinnerId = dr.winner.id;
       startReelFromState(dr);
     }
