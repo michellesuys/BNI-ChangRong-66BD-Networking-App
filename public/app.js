@@ -168,7 +168,7 @@ function startLoginPhasePolling(initialPhase = 'warmup') {
         showReturnLogin();
       }
     } catch (_) { }
-  }, 5000);
+  }, 3000);
 }
 
 function startSpeakerPolling() {
@@ -180,7 +180,7 @@ function startSpeakerPolling() {
       const es = await api('GET', '/api/event-state');
       applyPhase(es.phase);
     } catch (_) { }
-  }, 5000);
+  }, 3000);
 }
 
 // ════════════════════════════════════════════════
@@ -607,7 +607,7 @@ function renderSpeaker() {
         </div>
       `}
     </div>
-    <p class="text-center text-gray-500 text-sm">每 5 秒自動同步發言者</p>
+    <p class="text-center text-gray-500 text-sm">即時同步發言者</p>
   `;
 
   updateRewardBanner();

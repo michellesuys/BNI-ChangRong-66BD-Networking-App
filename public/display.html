@@ -1415,7 +1415,7 @@ buildLampBoard();
 buildSparkles();
 refreshUI();
 connectSSE();
-setInterval(pollState, 8000);
+setInterval(pollState, 3000); // SSE 是主要通道，這個是 fallback 保險（SSE 斷線時用）
 // 頁面載入即建立 AudioContext + 預載 light.mp3。
 // 若 launch 帶 --autoplay-policy=no-user-gesture-required → 直接 running 不用點擊
 initAudio();

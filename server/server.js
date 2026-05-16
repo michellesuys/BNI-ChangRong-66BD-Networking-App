@@ -221,7 +221,12 @@ function broadcastEventState() {
 // Middleware
 // ─────────────────────────────────────────────
 // gzip 壓縮：HTML/JS/CSS 自動壓縮，省 60-80% 流量
-app.use(compression());
+// 跳過 /api/event-stream — SSE 的 chunked output 會被 gzip buffer 住，
+// 造成 phase / 燈號切換最慢延遲到下次 polling 才生效
+app.use(compression({
+  filter: (req, res) =>
+    req.url.startsWith('/api/event-stream') ? false : compression.filter(req, res),
+}));
 
 app.use(express.json());
 

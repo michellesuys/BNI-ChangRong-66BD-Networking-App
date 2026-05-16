@@ -673,11 +673,11 @@
     // 立即抓一次狀態
     await pollWarmupStats();
 
-    // 每 5 秒輪詢（SSE 的 fallback）
+    // 每 3 秒輪詢（SSE 的 fallback）
     setInterval(async () => {
       await pollWarmupStats();
       flashLiveDot();
-    }, 5000);
+    }, 3000);
   }
 
   init();
