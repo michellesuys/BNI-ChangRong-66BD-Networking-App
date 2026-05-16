@@ -486,25 +486,28 @@
     #drawing-bubble-canvas {
       position: absolute; inset: 0; pointer-events: none; z-index: 0;
     }
-    #screen-drawing > * { position: relative; z-index: 1; }
+    /* 只把 div 子元素往上層拉，避免影響 canvas 的 absolute 定位 */
+    #screen-drawing > div { position: relative; z-index: 1; }
     #screen-drawing .draw-title-row {
       color: white;
     }
+    #screen-drawing .draw-title-row { margin-bottom: 2rem; }
     #screen-drawing .draw-eyebrow {
-      color: rgba(255,255,255,0.7);
-      font-size: clamp(1rem, 1.5vw, 1.5rem);
-      font-weight: 700;
-      letter-spacing: 0.3em;
+      color: rgba(254,202,202,1); /* red-200 */
+      font-size: 1.25rem; /* text-xl */
+      font-weight: 600;
+      letter-spacing: 0.2em;
       margin-bottom: 0.5rem;
     }
     #screen-drawing .draw-title {
-      font-size: clamp(2.5rem, 4.5vw, 4.5rem);
+      font-size: 3.75rem; /* text-6xl, 與 warmup 一致 */
       font-weight: 900;
       color: #fff;
+      line-height: 1;
     }
     #screen-drawing .draw-subtitle {
-      color: #FDE047;
-      font-size: clamp(1.2rem, 1.8vw, 1.8rem);
+      color: #FDE047; /* yellow-300 */
+      font-size: 1.5rem; /* text-2xl */
       font-weight: 700;
       margin-top: 0.5rem;
     }
@@ -551,7 +554,7 @@
     }
     .reel-item {
       height: 76px; display: flex; align-items: center; justify-content: center;
-      font-size: clamp(2rem, 3.5vw, 3.6rem);
+      font-size: 3.3rem; /* 與 warmup 一致 */
       font-weight: 900; color: white;
       letter-spacing: 0.08em;
       flex-shrink: 0; width: 100%;
@@ -575,15 +578,10 @@
       50%      { box-shadow: 0 0 0 24px rgba(253,224,71,0); }
     }
     .halo-pulse { animation: halo-pulse 1.5s ease-in-out infinite; }
-    #winner-reveal .w-eyebrow { color: #6b7280; font-size: 1.2rem; font-weight: 600; margin-bottom: 0.4rem; }
-    #winner-reveal .w-name    { color: #DC2626; font-size: clamp(3rem, 6vw, 6rem); font-weight: 900; margin: 0.3rem 0; line-height: 1; }
-    #winner-reveal .w-table   { color: #9ca3af; font-size: 1.4rem; margin-top: 0.3rem; }
-    #winner-reveal .w-needs   { color: #4b5563; font-size: 1.05rem; margin-top: 0.7rem; max-width: 26rem; margin-left: auto; margin-right: auto; }
-    #winner-result-wrap .confirm-hint {
-      color: rgba(255,255,255,0.85);
-      font-size: 1.2rem;
-      margin-top: 1.4rem;
-    }
+    #winner-reveal .w-eyebrow { color: #6b7280; font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
+    #winner-reveal .w-name    { color: #DC2626; font-size: 4.5rem; /* text-7xl */ font-weight: 900; margin: 0.5rem 0; line-height: 1; }
+    #winner-reveal .w-table   { color: #9ca3af; font-size: 1.5rem; margin-top: 0.25rem; }
+    #winner-reveal .w-needs   { color: #4b5563; font-size: 1.25rem; margin-top: 0.75rem; max-width: 20rem; margin-left: auto; margin-right: auto; }
     @keyframes confetti-fly {
       0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
       100% { transform: translateY(-120px) rotate(360deg); opacity: 0; }
@@ -594,8 +592,9 @@
       border-radius: 50%;
       animation: confetti-fly 1.2s ease-out forwards;
     }
-    #drawing-tip .tip-main { color: #FDE047; font-size: 1.6rem; font-weight: 700; }
-    #drawing-tip .tip-sub  { color: rgba(255,255,255,0.85); font-size: 1.1rem; margin-top: 0.3rem; }
+    #drawing-tip .tip-main { color: #FDE047; font-size: 1.5rem; font-weight: 700; }
+    #drawing-tip .tip-sub  { color: rgba(254,202,202,1); font-size: 1.25rem; margin-top: 0.25rem; }
+    #winner-result-wrap .confirm-hint { color: rgba(254,202,202,1); font-size: 1.25rem; margin-top: 1.5rem; }
   </style>
 </head>
 <body>
@@ -621,7 +620,7 @@
     <p class="draw-subtitle">命運之輪，即將揭曉！</p>
   </div>
 
-  <div style="width:100%;max-width:760px;position:relative;">
+  <div style="width:100%;max-width:32rem;position:relative;">
     <div id="draw-reel-container">
       <div id="reel-highlight"></div>
       <div id="draw-reel"></div>
