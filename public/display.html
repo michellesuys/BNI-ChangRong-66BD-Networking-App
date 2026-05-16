@@ -967,17 +967,25 @@ function buildLampBoard() {
   }
 }
 
-function buildBulbFrame() {
+function buildBulbFrame(retryCount = 0) {
   const shell    = document.getElementById('tower-shell');
   const lampList = document.getElementById('lamp-list');
   const frame    = document.getElementById('bulb-frame');
+
+  const sW = shell.offsetWidth;
+  const sH = shell.offsetHeight;
+
+  // Tower 還沒可見（display:none 或剛切換還沒 layout）→ 保留舊燈泡，重試
+  // 5 次後放棄，避免 speaker 長期隱藏時無限 loop
+  if (!sW || !sH) {
+    if (retryCount < 5) setTimeout(() => buildBulbFrame(retryCount + 1), 200);
+    return;
+  }
+
   frame.innerHTML = '';
 
   const STEP = 18;  // spacing between bulb centres (px)
   const R    = 5.5; // bulb radius (11px diameter)
-
-  const sW = shell.offsetWidth;
-  const sH = shell.offsetHeight;
 
   // lamp-list position relative to tower-shell (which is offsetParent via position:relative)
   const lT = lampList.offsetTop;
@@ -1257,11 +1265,10 @@ function showSpeaker() {
   document.getElementById('screen-warmup').style.display   = 'none';
   document.getElementById('screen-speaker').style.display  = 'flex';
   setTimeout(tryGenerateQR, 500); // wait for QRCode.js to load
-  if (!S.bulbBuilt) {
-    S.bulbBuilt = true;
-    // Wait one frame after display:flex so offsetWidth/Height are available
-    setTimeout(buildBulbFrame, 100);
-  }
+  // 每次都重新確認燈泡邊框存在（從 warmup/drawing 切過來時，先前可能被
+  // resize handler 在隱藏狀態下清空，導致 chase 跑馬燈失效）
+  S.bulbBuilt = true;
+  requestAnimationFrame(() => setTimeout(buildBulbFrame, 100));
 }
 
 function showIdle() {
