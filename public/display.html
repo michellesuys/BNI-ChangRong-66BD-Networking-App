@@ -464,6 +464,131 @@
       from { opacity: 0; transform: translateY(16px); }
       to   { opacity: 1; transform: translateY(0); }
     }
+
+    /* ──────────────────────────
+       Drawing screen (轉盤抽選)
+    ────────────────────────── */
+    #screen-drawing {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      gap: 2rem;
+      position: relative;
+      z-index: 5;
+      padding: 2rem;
+    }
+    #screen-drawing .draw-title-row {
+      color: white;
+    }
+    #screen-drawing .draw-eyebrow {
+      color: rgba(255,255,255,0.7);
+      font-size: clamp(1rem, 1.5vw, 1.5rem);
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      margin-bottom: 0.5rem;
+    }
+    #screen-drawing .draw-title {
+      font-size: clamp(2.5rem, 4.5vw, 4.5rem);
+      font-weight: 900;
+      color: #fff;
+    }
+    #screen-drawing .draw-subtitle {
+      color: #FDE047;
+      font-size: clamp(1.2rem, 1.8vw, 1.8rem);
+      font-weight: 700;
+      margin-top: 0.5rem;
+    }
+    #draw-reel-container {
+      position: relative;
+      height: 220px;
+      width: 100%;
+      max-width: 720px;
+      overflow: hidden;
+      border-radius: 24px;
+      border: 3px solid rgba(255,215,80,0.5);
+      background: rgba(0,0,0,0.45);
+      box-shadow: 0 0 40px rgba(255,200,50,0.2), inset 0 0 30px rgba(0,0,0,0.3);
+    }
+    #draw-reel-container::before,
+    #draw-reel-container::after {
+      content: '';
+      position: absolute; left: 0; right: 0; z-index: 2;
+      height: 72px;
+      pointer-events: none;
+    }
+    #draw-reel-container::before {
+      top: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.85), transparent);
+    }
+    #draw-reel-container::after {
+      bottom: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+    }
+    #reel-highlight {
+      position: absolute; left: 0; right: 0; top: 50%; z-index: 1;
+      transform: translateY(-50%);
+      height: 76px;
+      background: rgba(255,215,80,0.1);
+      border-top: 2px solid rgba(255,215,80,0.6);
+      border-bottom: 2px solid rgba(255,215,80,0.6);
+      pointer-events: none;
+    }
+    #draw-reel {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-start;
+      transition: none;
+      will-change: transform;
+    }
+    .reel-item {
+      height: 76px; display: flex; align-items: center; justify-content: center;
+      font-size: clamp(2rem, 3.5vw, 3.6rem);
+      font-weight: 900; color: white;
+      letter-spacing: 0.08em;
+      flex-shrink: 0; width: 100%;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.8);
+    }
+    @keyframes winner-appear {
+      0%   { transform: scale(0.6) translateY(20px); opacity: 0; }
+      70%  { transform: scale(1.05) translateY(-4px); opacity: 1; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    #winner-reveal {
+      animation: winner-appear 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      display: inline-block;
+      background: white;
+      border-radius: 24px;
+      padding: 1.8rem 2.5rem;
+      box-shadow: 0 0 60px rgba(253,224,71,0.4);
+    }
+    @keyframes halo-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(253,224,71,0.6); }
+      50%      { box-shadow: 0 0 0 24px rgba(253,224,71,0); }
+    }
+    .halo-pulse { animation: halo-pulse 1.5s ease-in-out infinite; }
+    #winner-reveal .w-eyebrow { color: #6b7280; font-size: 1.2rem; font-weight: 600; margin-bottom: 0.4rem; }
+    #winner-reveal .w-name    { color: #DC2626; font-size: clamp(3rem, 6vw, 6rem); font-weight: 900; margin: 0.3rem 0; line-height: 1; }
+    #winner-reveal .w-table   { color: #9ca3af; font-size: 1.4rem; margin-top: 0.3rem; }
+    #winner-reveal .w-needs   { color: #4b5563; font-size: 1.05rem; margin-top: 0.7rem; max-width: 26rem; margin-left: auto; margin-right: auto; }
+    #winner-result-wrap .confirm-hint {
+      color: rgba(255,255,255,0.85);
+      font-size: 1.2rem;
+      margin-top: 1.4rem;
+    }
+    @keyframes confetti-fly {
+      0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(-120px) rotate(360deg); opacity: 0; }
+    }
+    .confetti-dot {
+      position: absolute;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      animation: confetti-fly 1.2s ease-out forwards;
+    }
+    #drawing-tip .tip-main { color: #FDE047; font-size: 1.6rem; font-weight: 700; }
+    #drawing-tip .tip-sub  { color: rgba(255,255,255,0.85); font-size: 1.1rem; margin-top: 0.3rem; }
   </style>
 </head>
 <body>
@@ -478,6 +603,38 @@
   <img src="/images/bni-logo.png" class="idle-logo-img" alt="BNI">
   <h1>BNI 長榮 20 周年慶<br>商機變變變・產業閃電秀</h1>
   <p>等待發言者上台…</p>
+</div>
+
+<!-- ── Drawing (抽選動畫) ── -->
+<div id="screen-drawing">
+  <div class="draw-title-row">
+    <p class="draw-eyebrow">BNI 長榮 20 周年慶</p>
+    <h2 class="draw-title">🎰 抽選發言者</h2>
+    <p class="draw-subtitle">命運之輪，即將揭曉！</p>
+  </div>
+
+  <div style="width:100%;max-width:760px;position:relative;">
+    <div id="draw-reel-container">
+      <div id="reel-highlight"></div>
+      <div id="draw-reel"></div>
+    </div>
+
+    <div id="winner-result-wrap" style="display:none;margin-top:2rem;text-align:center;position:relative;">
+      <div id="winner-reveal" class="halo-pulse">
+        <p class="w-eyebrow">恭喜！本輪發言者</p>
+        <p class="w-name" id="winner-name">—</p>
+        <p class="w-table" id="winner-table">—</p>
+        <p class="w-needs" id="winner-needs"></p>
+      </div>
+      <div id="confetti-container" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;"></div>
+      <p class="confirm-hint">管理員請按「設為發言者」確認</p>
+    </div>
+
+    <div id="drawing-tip" style="text-align:center;margin-top:1.4rem;">
+      <p class="tip-main">命運轉動中...</p>
+      <p class="tip-sub">請稍候，即將揭曉！</p>
+    </div>
+  </div>
 </div>
 
 <!-- ── Ended ── -->
@@ -601,6 +758,10 @@ const S = {
   bulbBuilt:      false,
   chaseInterval:  null,
   chasePos:       0,
+  // ── drawing 轉盤狀態 ──
+  reelAnimating:    false,
+  drawDurationMs:   500,
+  lastDrawnWinnerId: null, // 避免同一個 drawResult 重播
 };
 
 /* ──────────────────────────────────────
@@ -902,9 +1063,10 @@ function renderSpeaker(speaker, lightCount) {
    Show / hide screens
 ────────────────────────────────────── */
 function showSpeaker() {
-  document.getElementById('screen-idle').style.display    = 'none';
-  document.getElementById('screen-ended').style.display   = 'none';
-  document.getElementById('screen-speaker').style.display = 'flex';
+  document.getElementById('screen-idle').style.display     = 'none';
+  document.getElementById('screen-ended').style.display    = 'none';
+  document.getElementById('screen-drawing').style.display  = 'none';
+  document.getElementById('screen-speaker').style.display  = 'flex';
   setTimeout(tryGenerateQR, 500); // wait for QRCode.js to load
   if (!S.bulbBuilt) {
     S.bulbBuilt = true;
@@ -914,18 +1076,27 @@ function showSpeaker() {
 }
 
 function showIdle() {
-  document.getElementById('screen-idle').style.display    = 'flex';
-  document.getElementById('screen-speaker').style.display = 'none';
-  document.getElementById('screen-ended').style.display   = 'none';
+  document.getElementById('screen-idle').style.display     = 'flex';
+  document.getElementById('screen-speaker').style.display  = 'none';
+  document.getElementById('screen-ended').style.display    = 'none';
+  document.getElementById('screen-drawing').style.display  = 'none';
   S.speakerId = null;
   resetLamps();
   refreshUI();
 }
 
+function showDrawing() {
+  document.getElementById('screen-idle').style.display     = 'none';
+  document.getElementById('screen-speaker').style.display  = 'none';
+  document.getElementById('screen-ended').style.display    = 'none';
+  document.getElementById('screen-drawing').style.display  = 'flex';
+}
+
 function showEnded(totalConnections) {
-  document.getElementById('screen-idle').style.display    = 'none';
-  document.getElementById('screen-speaker').style.display = 'none';
-  document.getElementById('screen-ended').style.display   = 'flex';
+  document.getElementById('screen-idle').style.display     = 'none';
+  document.getElementById('screen-speaker').style.display  = 'none';
+  document.getElementById('screen-drawing').style.display  = 'none';
+  document.getElementById('screen-ended').style.display    = 'flex';
   document.getElementById('ended-count').textContent = totalConnections || 0;
   // 生成 QR Code（與加入活動相同網址）
   const qrImg = document.getElementById('ended-qr-img');
@@ -938,6 +1109,144 @@ function showEnded(totalConnections) {
 }
 
 /* ──────────────────────────────────────
+   抽選動畫（轉盤）— 在 display 內呈現，不再 redirect
+────────────────────────────────────── */
+function playTick() {
+  if (!S.audioUnlocked || !S.audioCtx) return;
+  const ctx = S.audioCtx;
+  if (ctx.state === 'suspended') ctx.resume();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.frequency.value = 600 + Math.random() * 300;
+  osc.type = 'sine';
+  gain.gain.setValueAtTime(0.12, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + 0.06);
+}
+
+function playWinnerSound() {
+  if (!S.audioUnlocked || !S.audioCtx) return;
+  const ctx = S.audioCtx;
+  if (ctx.state === 'suspended') ctx.resume();
+  [523, 659, 784, 1047].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = freq;
+    osc.type = 'triangle';
+    const t = ctx.currentTime + i * 0.12;
+    gain.gain.setValueAtTime(0.18, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+    osc.start(t);
+    osc.stop(t + 0.4);
+  });
+}
+
+function spawnConfetti() {
+  const container = document.getElementById('confetti-container');
+  if (!container) return;
+  container.innerHTML = '';
+  const colors = ['#FF6B6B','#FFE66D','#6BCB77','#4D96FF','#FF9FF3'];
+  for (let i = 0; i < 30; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'confetti-dot';
+    dot.style.left = (Math.random() * 100) + '%';
+    dot.style.top = (60 + Math.random() * 30) + '%';
+    dot.style.background = colors[Math.floor(Math.random() * colors.length)];
+    dot.style.animationDelay = (Math.random() * 0.5) + 's';
+    dot.style.animationDuration = (0.8 + Math.random() * 0.8) + 's';
+    container.appendChild(dot);
+  }
+}
+
+function runReelAnimation(participants, winnerIdx, winnerData) {
+  if (S.reelAnimating) return;
+  S.reelAnimating = true;
+
+  const reel = document.getElementById('draw-reel');
+  const tip = document.getElementById('drawing-tip');
+  const result = document.getElementById('winner-result-wrap');
+  result.style.display = 'none';
+  tip.style.display = '';
+
+  const ITEM_H = 76;
+  const WRAP_H = 220;
+  const CENTER_Y = (WRAP_H - ITEM_H) / 2;
+  const winner = winnerData || participants[winnerIdx];
+
+  // 8 圈打亂名單 + winner 壓軸
+  const LOOPS = 8;
+  const items = [];
+  for (let i = 0; i < LOOPS; i++) {
+    [...participants].sort(() => Math.random() - 0.5).forEach(p => items.push(p.name));
+  }
+  items.push(winner.name);
+
+  reel.innerHTML = '';
+  reel.style.transition = 'none';
+  reel.style.transform  = `translateY(${CENTER_Y}px)`;
+  items.forEach(name => {
+    const d = document.createElement('div');
+    d.className = 'reel-item';
+    d.textContent = name;
+    reel.appendChild(d);
+  });
+  void reel.offsetHeight;
+
+  const finalY = CENTER_Y - ((items.length - 1) * ITEM_H);
+  const travel = Math.abs(finalY - CENTER_Y);
+  const DURATION = S.drawDurationMs;
+  let startTime = null;
+  let lastTickIdx = -1;
+
+  const easeOutQuart = t => 1 - Math.pow(1 - t, 4);
+
+  function frame(ts) {
+    if (!startTime) startTime = ts;
+    const t = Math.min((ts - startTime) / DURATION, 1);
+    const currentOffset = travel * easeOutQuart(t);
+    reel.style.transform = `translateY(${CENTER_Y - currentOffset}px)`;
+
+    const itemIdx = Math.floor(currentOffset / ITEM_H);
+    if (itemIdx !== lastTickIdx) {
+      lastTickIdx = itemIdx;
+      playTick();
+    }
+
+    if (t < 1) {
+      requestAnimationFrame(frame);
+    } else {
+      setTimeout(showWinner, 300);
+    }
+  }
+
+  function showWinner() {
+    document.getElementById('winner-name').textContent  = winner.name;
+    document.getElementById('winner-table').textContent = `第 ${winner.table_number || '?'} 桌`;
+    document.getElementById('winner-needs').textContent = winner.needs || '';
+    tip.style.display = 'none';
+    result.style.display = '';
+    playWinnerSound();
+    spawnConfetti();
+    S.reelAnimating = false;
+  }
+
+  requestAnimationFrame(frame);
+}
+
+function startReelFromState(drawResult) {
+  const pool = drawResult.pool || [];
+  const winner = drawResult.winner;
+  if (!pool.length || !winner?.id) return;
+  const winnerIdx = pool.findIndex(p => p.id === winner.id);
+  if (winnerIdx < 0) return;
+  showDrawing();
+  runReelAnimation(pool, winnerIdx, winner);
+}
+
+/* ──────────────────────────────────────
    Handle server state
 ────────────────────────────────────── */
 let _currentPhase = null;
@@ -946,8 +1255,11 @@ function handleState(data) {
   if (!data) return;
   const phase = data.phase || 'speaking';
 
-  // 若 admin 切換到預熱或抽選階段，跳轉到 warmup 頁面
-  if (phase === 'warmup' || phase === 'drawing') {
+  // 抽選動畫秒數同步（後台可調）
+  if (data.drawDuration) S.drawDurationMs = data.drawDuration * 1000;
+
+  // 預熱階段：跳轉到 warmup 頁
+  if (phase === 'warmup') {
     if (_currentPhase !== phase) {
       _currentPhase = phase;
       window.location.href = '/warmup';
@@ -955,9 +1267,26 @@ function handleState(data) {
     return;
   }
 
+  // 抽選階段：在 display 直接顯示動畫，不 redirect
+  if (phase === 'drawing') {
+    if (_currentPhase !== phase) {
+      _currentPhase = phase;
+      showDrawing();
+      // 清掉前一輪 winner 記憶，準備接收新 drawResult
+      S.lastDrawnWinnerId = null;
+    }
+    const dr = data.drawResult;
+    if (dr && dr.winner?.id && !S.reelAnimating && dr.winner.id !== S.lastDrawnWinnerId) {
+      S.lastDrawnWinnerId = dr.winner.id;
+      startReelFromState(dr);
+    }
+    return;
+  }
+
+  // 離開 drawing 後重置記憶
+  if (_currentPhase === 'drawing') S.lastDrawnWinnerId = null;
   _currentPhase = phase;
 
-  // 活動結束畫面
   if (phase === 'ended') {
     showEnded(data.totalConnections || 0);
     return;
