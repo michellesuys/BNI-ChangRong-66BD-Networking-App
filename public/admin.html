@@ -296,6 +296,7 @@
     let _drawWinner      = null;
     let _currentPhase    = 'warmup';
     let _excludedIds     = new Set();
+    let _autoExcludedSeen = new Set(); // 已經自動排除過的 ID（避免管理者手動取消後被同步覆寫）
     let _selectedTables  = new Set(); // 被選擇要納入抽選的桌號
 
     // ── API helper ──────────────────────────────
@@ -436,6 +437,14 @@
     async function loadCandidates() {
       try {
         _candidates = await adminApi('GET', '/api/admin/candidates');
+        // 「新觀察到」的已發言者自動加入排除；之前已經自動處理過的不重複加入，
+        // 這樣管理者手動「取消排除」一個已發言者後不會被同步覆寫
+        for (const p of _candidates) {
+          if (p.spoke_at && !_autoExcludedSeen.has(p.id)) {
+            _excludedIds.add(p.id);
+            _autoExcludedSeen.add(p.id);
+          }
+        }
         renderCandidateList(_candidates);
       } catch (e) {
         showAdminToast('載入候選名單失敗：' + e.message, 'error');
@@ -450,8 +459,6 @@
         updateDrawPoolPreview();
         return;
       }
-      // 已發言者預設排除
-      _excludedIds = new Set(list.filter(p => p.spoke_at).map(p => p.id));
 
       // 依桌號分組
       const groups = {};
