@@ -75,8 +75,22 @@
       z-index: 5;
     }
     .idle-logo-img {
-      height: 120px; width: auto;
-      box-shadow: 0 0 60px rgba(220,38,38,0.4);
+      height: 210px; width: auto;
+      /* filter:drop-shadow 沿 logo alpha 形狀發光，避免 box-shadow 的矩形微光感 */
+      animation: idleLogoPulse 3s ease-in-out infinite;
+    }
+    @keyframes idleLogoPulse {
+      0%, 100% {
+        filter:
+          drop-shadow(0 0 6px  rgba(220, 38, 38, 0.40))
+          drop-shadow(0 0 16px rgba(220, 38, 38, 0.25));
+      }
+      50% {
+        filter:
+          drop-shadow(0 0 10px rgba(220, 38, 38, 0.75))
+          drop-shadow(0 0 28px rgba(220, 38, 38, 0.50))
+          drop-shadow(0 0 48px rgba(255, 100, 60, 0.30));
+      }
     }
     #screen-idle h1 {
       font-size: clamp(1.8rem, 3.5vw, 3rem);
@@ -490,8 +504,8 @@
     .warmup-header .header-row {
       display: inline-flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;
     }
-    .warmup-header .header-row img { height: 56px; }
-    .warmup-header .header-text { text-align: left; }
+    .warmup-header .header-row img { height: 147px; }
+    .warmup-header .header-text { text-align: center; }
     .warmup-header .header-eyebrow {
       color: rgba(254,202,202,1); font-size: 1.25rem; font-weight: 600;
       letter-spacing: 0.2em; text-transform: uppercase;
@@ -506,11 +520,27 @@
       color: rgba(254,202,202,1); font-size: 1.25rem; margin-top: 0.25rem;
     }
     .warmup-main {
-      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2rem;
-      align-items: center; max-width: 80rem; width: 100%;
+      display: grid;
+      /* minmax(0,1fr) 強制 3 欄等寬，避免內容 min-content 推大欄寬導致左右卡片不等寬 */
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+      gap: 3rem;
+      align-items: stretch; /* 所有欄高度拉齊（cards 等高） */
+      justify-items: stretch;
+      max-width: 80rem;
+      width: 100%;
     }
     @media (max-width: 1024px) {
       .warmup-main { grid-template-columns: 1fr; }
+    }
+    .warmup-main > div { width: 100%; min-width: 0; }
+    /* 左右兩張 warmup-card 在欄內 flex:1 填滿欄高，內容垂直+水平置中
+       （特別是「即時更新中」flex item 需 align-items:center 才會與上方數字對齊） */
+    .warmup-main > div > .warmup-card {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
     }
     .warmup-card {
       background: rgba(255,255,255,0.1);
@@ -563,14 +593,16 @@
     .cd-unit {
       display: flex; flex-direction: column; align-items: center;
       background: rgba(255,255,255,0.1); border-radius: 16px;
-      padding: 1rem 1.25rem; min-width: 80px;
+      padding: 0.85rem 1rem;
+      /* 移除 min-width：讓 cd-unit 依內容大小，避免 3 個橫排超出卡片寬 */
     }
     .cd-value {
-      font-size: 4.5rem; font-weight: 900; line-height: 1; color: white;
+      font-size: 3.5rem; /* 4.5rem → 3.5rem 避免橫排超出 */
+      font-weight: 900; line-height: 1; color: white;
       text-shadow: 0 2px 8px rgba(0,0,0,0.4);
     }
     .cd-sep {
-      color: white; font-size: 3rem; font-weight: 900; margin-bottom: 1rem;
+      color: white; font-size: 2.5rem; font-weight: 900; margin-bottom: 0.85rem;
     }
     .cd-tick {
       font-size: 1.2rem; color: rgba(255,255,255,0.7); margin-top: 4px;
@@ -752,7 +784,7 @@
 
   <div class="warmup-main">
     <!-- 左：人數 -->
-    <div style="display:flex;flex-direction:column;align-items:center;gap:1rem;">
+    <div style="display:flex;flex-direction:column;align-items:stretch;">
       <div class="warmup-card">
         <p class="card-label">目前已登記人數</p>
         <div id="warmup-count-display">0</div>
@@ -762,11 +794,10 @@
           <span>即時更新中</span>
         </div>
       </div>
-      <div id="warmup-phase-badge">活動預熱中</div>
     </div>
 
     <!-- 中：QR Code -->
-    <div style="display:flex;flex-direction:column;align-items:center;">
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
       <div id="warmup-qr-wrap">
         <div id="warmup-qr-code"><span style="color:#9ca3af;font-size:0.75rem;">載入中...</span></div>
       </div>
@@ -774,7 +805,7 @@
     </div>
 
     <!-- 右：倒數 -->
-    <div style="display:flex;flex-direction:column;align-items:center;">
+    <div style="display:flex;flex-direction:column;align-items:stretch;">
       <div class="warmup-card">
         <p class="card-label">活動開始倒數</p>
         <div class="warmup-countdown-row">
@@ -788,6 +819,8 @@
       </div>
     </div>
   </div>
+
+  <div id="warmup-phase-badge" style="margin-top:1.5rem;">活動預熱中</div>
 
   <p class="warmup-footer">BNI 長榮 20 周年慶 · 商機變變變 · 產業閃電秀</p>
 </div>

@@ -6,6 +6,22 @@
   <meta name="theme-color" content="#DC2626">
   <title>關於活動・BNI 長榮 20 周年慶</title>
   <link rel="stylesheet" href="/css/tailwind.css">
+  <style>
+    .login-logo { animation: loginLogoPulse 3s ease-in-out infinite; }
+    @keyframes loginLogoPulse {
+      0%, 100% {
+        filter:
+          drop-shadow(0 0 6px  rgba(220, 38, 38, 0.45))
+          drop-shadow(0 0 16px rgba(220, 38, 38, 0.30));
+      }
+      50% {
+        filter:
+          drop-shadow(0 0 10px rgba(220, 38, 38, 0.80))
+          drop-shadow(0 0 28px rgba(220, 38, 38, 0.55))
+          drop-shadow(0 0 48px rgba(255, 100, 60, 0.35));
+      }
+    }
+  </style>
 </head>
 <body class="bg-gradient-to-b from-red-50 to-white min-h-screen">
 
@@ -13,7 +29,7 @@
 
     <!-- Logo + 標題 -->
     <div class="text-center pt-6 pb-5">
-      <img src="/images/bni-logo.png" class="h-20 mx-auto mb-3" alt="BNI">
+      <img src="/images/bni-logo.png" class="login-logo h-36 w-auto mx-auto mb-4" alt="BNI">
       <h1 class="text-2xl font-black text-gray-800 leading-tight">BNI 長榮 20 周年慶</h1>
       <p class="text-red-600 font-bold text-base mt-1">商機變變變・產業閃電秀</p>
     </div>

@@ -13,6 +13,23 @@
     .tab-active { color: #DC2626; border-bottom: 3px solid #DC2626; font-weight: 700; }
     #toast { transition: transform 0.3s ease, opacity 0.3s ease; }
     button:active { transform: scale(0.97); }
+    /* Logo 呼吸脈動：與 display.html idle 畫面共用同一組 keyframe */
+    .login-logo {
+      animation: loginLogoPulse 3s ease-in-out infinite;
+    }
+    @keyframes loginLogoPulse {
+      0%, 100% {
+        filter:
+          drop-shadow(0 0 6px  rgba(220, 38, 38, 0.45))
+          drop-shadow(0 0 16px rgba(220, 38, 38, 0.30));
+      }
+      50% {
+        filter:
+          drop-shadow(0 0 10px rgba(220, 38, 38, 0.80))
+          drop-shadow(0 0 28px rgba(220, 38, 38, 0.55))
+          drop-shadow(0 0 48px rgba(255, 100, 60, 0.35));
+      }
+    }
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: #f1f1f1; }
     ::-webkit-scrollbar-thumb { background: #DC2626; border-radius: 2px; }
@@ -39,7 +56,7 @@
 
       <!-- Logo -->
       <div class="text-center mb-6">
-        <img src="/images/bni-logo.png" class="h-20 mx-auto mb-3" alt="BNI">
+        <img src="/images/bni-logo.png" class="login-logo h-36 w-auto mx-auto mb-4" alt="BNI">
         <h1 class="text-2xl font-black text-gray-800 leading-tight">BNI 長榮 20 周年慶</h1>
         <p class="text-red-600 font-bold text-lg mt-1">商機變變變・產業閃電秀</p>
         <p class="text-gray-500 text-sm mt-1.5">拒絕無效社交，用數據與視覺證明你的產業影響力</p>
