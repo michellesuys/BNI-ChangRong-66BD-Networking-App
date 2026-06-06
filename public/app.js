@@ -772,6 +772,12 @@ async function handleLogin() {
 
   if (!name) { showToast('請輸入你的名字', 'error'); document.getElementById('input-name').focus(); return; }
   if (!tableNum) { showToast('請輸入你的桌號', 'error'); document.getElementById('input-table').focus(); return; }
+  // 桌號必須是 1-99 的正整數（防止輸入 "Table1"、"3.5"、"e+5" 等不正常值）
+  if (!/^[0-9]+$/.test(tableNum) || +tableNum < 1 || +tableNum > 99) {
+    showToast('桌號請輸入 1-99 的整數', 'error');
+    document.getElementById('input-table').focus();
+    return;
+  }
   if (!specialty) { showToast('請填寫你的專業別', 'error'); document.getElementById('input-specialty').focus(); return; }
   if (!needs) { showToast('請填寫你的商務需求', 'error'); document.getElementById('input-needs').focus(); return; }
   if (!identityEl) { showToast('請選擇手環顏色', 'error'); return; }
@@ -998,6 +1004,11 @@ async function submitProfileEdit() {
 
   if (!name)      { showToast('請輸入姓名', 'error'); return; }
   if (!table)     { showToast('請輸入桌號', 'error'); return; }
+  if (!/^[0-9]+$/.test(table) || +table < 1 || +table > 99) {
+    showToast('桌號請輸入 1-99 的整數', 'error');
+    document.getElementById('edit-table').focus();
+    return;
+  }
   if (!specialty) { showToast('請填寫專業別', 'error'); return; }
 
   try {
