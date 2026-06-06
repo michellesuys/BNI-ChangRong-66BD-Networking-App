@@ -89,9 +89,11 @@ function initDB() {
       value TEXT
     );
 
-    CREATE INDEX IF NOT EXISTS idx_conn_user    ON connections(user_id);
-    CREATE INDEX IF NOT EXISTS idx_conn_part    ON connections(participant_id);
-    CREATE INDEX IF NOT EXISTS idx_part_speaker ON participants(is_current_speaker);
+    CREATE INDEX IF NOT EXISTS idx_conn_user      ON connections(user_id);
+    CREATE INDEX IF NOT EXISTS idx_conn_part      ON connections(participant_id);
+    CREATE INDEX IF NOT EXISTS idx_part_speaker   ON participants(is_current_speaker);
+    /* /api/lights, /api/my-report 都查 (participant_id, type)，避免全表掃描 */
+    CREATE INDEX IF NOT EXISTS idx_conn_part_type ON connections(participant_id, type);
   `);
 
   // ── 遷移：舊 participants 缺少新欄位 ──
@@ -209,12 +211,38 @@ function getEventState() {
   };
 }
 
-function broadcastEventState() {
+// broadcastEventState 加 throttle/coalesce：每 100ms 最多廣播 1 次，
+// 200 寫入/sec 場景下避免 200 次 cascade 把 event loop 塞爆。
+// 第一次呼叫立即廣播，cooldown 期間多次呼叫合併成 1 次（最後一次的 state）。
+const BROADCAST_THROTTLE_MS = 100;
+let _broadcastCooldown = null;
+let _broadcastPending = false;
+
+function _doBroadcast() {
   if (sseClients.size === 0) return;
   const data = JSON.stringify(getEventState());
+  let failures = 0;
   for (const res of sseClients) {
-    try { res.write(`event: event-state\ndata: ${data}\n\n`); } catch (_) {}
+    try { res.write(`event: event-state\ndata: ${data}\n\n`); }
+    catch (_) { failures++; }
   }
+  if (failures > 0) console.warn(`[SSE] broadcast failed for ${failures}/${sseClients.size} clients`);
+}
+
+function broadcastEventState() {
+  if (sseClients.size === 0) return;
+  if (_broadcastCooldown) {
+    _broadcastPending = true;
+    return;
+  }
+  _doBroadcast();
+  _broadcastCooldown = setTimeout(() => {
+    _broadcastCooldown = null;
+    if (_broadcastPending) {
+      _broadcastPending = false;
+      broadcastEventState();
+    }
+  }, BROADCAST_THROTTLE_MS);
 }
 
 // ─────────────────────────────────────────────

@@ -196,7 +196,8 @@ function connectSSE() {
   });
   es.onerror = () => {
     es.close();
-    setTimeout(connectSSE, 5000); // 斷線後 5 秒重連
+    // 5-10 秒 jitter：避免 300 人同時 timeout 後同步重連造成 thundering herd
+    setTimeout(connectSSE, 5000 + Math.random() * 5000);
   };
 }
 

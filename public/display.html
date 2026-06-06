@@ -1724,7 +1724,8 @@ function connectSSE() {
   es.addEventListener('event-state', e => {
     try { handleState(JSON.parse(e.data)); } catch (_) {}
   });
-  es.onerror = () => { es.close(); setTimeout(connectSSE, 5000); };
+  // 5-10 秒 jitter：避免 300 client 同時重連
+  es.onerror = () => { es.close(); setTimeout(connectSSE, 5000 + Math.random() * 5000); };
 }
 
 async function pollState() {
